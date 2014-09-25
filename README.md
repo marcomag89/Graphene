@@ -8,23 +8,24 @@ A framework for build action oriented REST web services.
 
 ##Configuration##
 Open "configs" folder and edit "settings.xml" file
-> <graphene>
->	<debug>true</debug>
->	<showLog>false</showLog>
->	<baseUrl>Graphene</baseUrl>
->	<moduleurl>modules</moduleurl>
->	<syntax>JSON</syntax>
->	<appname>graphene_framework</appname>
->	<approot></approot>
->	<localhost></localhost>
->	<storageDriver>CrudMySql</storageDriver>
->	<storageConfig>
->		<type>mysql</type>
->		<host>127.0.0.1</host>
->		<dbName>sanitronic_db</dbName>
->		<prefix>stc</prefix>
->		<username>root</username>
->		<password>mysql</password>
->	</storageConfig>
-> </graphene>
-
+```
+<graphene>
+	<debug>false</debug>
+	<showLog>false</showLog>
+	<baseUrl>Graphene</baseUrl>
+	<moduleurl>modules</moduleurl>
+	<syntax>JSON</syntax>
+	<appname>graphene_framework</appname>
+	<approot></approot>
+	<localhost></localhost>
+	<storageDriver>CrudMySql</storageDriver>
+	<storageConfig>
+		<type>mysql</type>
+		<host>127.0.0.1</host>
+		<dbName>sanitronic_db</dbName>
+		<prefix>stc</prefix>
+		<username>root</username>
+		<password>mysql</password>
+	</storageConfig>
+</graphene>
+```
