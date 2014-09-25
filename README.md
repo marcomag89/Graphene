@@ -1,8 +1,15 @@
 #Graphene#
+This framework allows you to create Action Oriented REST services with more less lines of code, like this:
+```PHP
+class HelloWorld extends Action{
+	public function run ()
+	{
+		$this->sendMessage('Hello world');
+	}
+}
+```
 
-A framework for build action oriented REST web services.
-
-##Install to your project##
+##Creating Graphene project##
 1. Download Graphene as ZIP file and extract content into a folder named "Graphene".
 2. Copy Graphene folder into your project root.
 
@@ -15,9 +22,9 @@ Open "configs" folder and edit "settings.xml" file
 	<baseUrl>Graphene</baseUrl>
 	<moduleurl>modules</moduleurl>
 	<syntax>JSON</syntax>
-	<appname>graphene_framework</appname>
-	<approot></approot>
-	<localhost></localhost>
+	<appname>your_app_name</appname>
+	<approot>root_of_your_app</approot>
+	<localhost>Host_of_your_production_server</localhost>
 	<storageDriver>CrudMySql</storageDriver>
 	<storageConfig>
 		<type>mysql</type>
@@ -29,3 +36,6 @@ Open "configs" folder and edit "settings.xml" file
 	</storageConfig>
 </graphene>
 ```
+<b>StorageDriver</b> is a name of database driver. Is now supported mySql for native storage
+
+##Ready to go##
