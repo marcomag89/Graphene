@@ -8,7 +8,7 @@ A framework for build action oriented REST web services.
 
 ##Configuration##
 Open "configs" folder and edit "settings.xml" file
-```
+```XML
 <graphene>
 	<debug>false</debug>
 	<showLog>false</showLog>
