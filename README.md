@@ -28,11 +28,11 @@ Open "configs" folder and edit "settings.xml" file
 	<storageDriver>CrudMySql</storageDriver>
 	<storageConfig>
 		<type>mysql</type>
-		<host>127.0.0.1</host>
-		<dbName>sanitronic_db</dbName>
-		<prefix>stc</prefix>
-		<username>root</username>
-		<password>mysql</password>
+		<host>db_Host</host>
+		<dbName>db_name</dbName>
+		<prefix>tables_prefix</prefix>
+		<username>db_usernale</username>
+		<password>db_password</password>
 	</storageConfig>
 </graphene>
 ```
