@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphene>
+	<debug>true</debug>
+	<showLog>false</showLog>
+	<baseUrl>Graphene</baseUrl>
+	<moduleurl>modules</moduleurl>
+	<syntax>JSON</syntax>
+	<appname>graphene_framework</appname>
+	<approot></approot>
+	<localhost></localhost>
+	<storageDriver>CrudMySql</storageDriver>
+	<storageConfig>
+		<type>mysql</type>
+		<host>127.0.0.1</host>
+		<dbName>sanitronic_db</dbName>
+		<prefix>stc</prefix>
+		<username>root</username>
+		<password>mysql</password>
+	</storageConfig>
+</graphene>
