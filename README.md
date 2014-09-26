@@ -29,3 +29,5 @@ Open "configs" folder and edit "settings.xml" file
 	</storageConfig>
 </graphene>
 ```
+<b>Debug:</b> enables php debug.
+<b></b>
