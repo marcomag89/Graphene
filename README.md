@@ -20,5 +20,4 @@ class HelloWorld extends Action{
 we are very excited that you want to use Graphene therefore we are working so that you can use it to its full potential by writing up to date wiki.
 https://github.com/marcomag89/Graphene/wiki
 ###HowTo###
-**Hello world** https://github.com/marcomag89/Graphene/wiki/examples/helloWorld
-**StorageDriver** is a name of database driver. Is now supported mySql for native storage
+**Hello world** https://github.com/marcomag89/Graphene/wiki/Hello-World-tutorial
