@@ -13,7 +13,7 @@ class HelloWorld extends Action{
 1. Download Graphene as ZIP file and extract content into your project root.
 2. If you running apache server, change filename of htaccess.txt to .htaccess.
 3. Edit configuration file.
-4. Check if you are ready to go on `yourProject.address`/_system/status<b> on your browser.
+4. Check if you are ready to go on `yourProject.address/_system/status` on your browser.
 5. Enjoy creating your first module!
 
 ##Configuration##
@@ -67,5 +67,5 @@ you are ready to start your project with graphene ;)
 we are very excited that you want to use Graphene therefore we are working so that you can use it to its full potential by writing up to date wiki.
 https://github.com/marcomag89/Graphene/wiki
 ###HowTo###
-<b>Hello world</b> https://github.com/marcomag89/Graphene/wiki/examples/helloWorld
-<b>StorageDriver</b> is a name of database driver. Is now supported mySql for native storage
+**Hello world** https://github.com/marcomag89/Graphene/wiki/examples/helloWorld
+**StorageDriver** is a name of database driver. Is now supported mySql for native storage
