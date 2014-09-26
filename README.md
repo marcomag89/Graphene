@@ -11,12 +11,12 @@ class HelloWorld extends Action{
 
 ##Creating Graphene project##
 1. Download Graphene as ZIP file and extract content into your project root.
-2. If you running apache server, change filename of htaccess.txt to .htaccess.
+2. If you running apache server, change filename of `htaccess.txt` to `.htaccess` it will enable apache url rewriting module.
 3. Edit configuration file.
 4. Check if you are ready to go on `yourProject.address/_system/status` on your browser.
 5. Enjoy creating your first module!
 
-##Configuration##
+##First Configuration##
 Open `Graphene/configs` folder and edit `settings.xml` file
 ```XML
 <graphene>
