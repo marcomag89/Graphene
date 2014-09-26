@@ -10,11 +10,11 @@ class HelloWorld extends Action{
 ```
 
 ##Creating Graphene project##
-1. Download Graphene as ZIP file and extract content into a folder named "Graphene".
-2. Copy Graphene folder into your project root.
+1. Download Graphene as ZIP file and extract content into your project root.
+2. If you running apache server, change filename of htaccess.txt to .htaccess
 
 ##Configuration##
-Open "configs" folder and edit "settings.xml" file
+Open "Graphene/configs" folder and edit "settings.xml" file
 ```XML
 <graphene>
 	<debug>false</debug>
