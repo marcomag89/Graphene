@@ -29,7 +29,7 @@ class Graphene
 	private function __construct ()
 	{
 		$this->startTime= round(microtime(true) * 1000);
-		$this->settings = simplexml_load_file('Graphene/configs/settings.xml');
+		$this->settings = simplexml_load_file('settings.xml');
 		$this->debugMode = strcasecmp($this->settings->debug, 'true') == 0;
 		$this->showLog = strcasecmp($this->settings->showLog, 'true') == 0;
 		if ($this->isDebugMode()) {
