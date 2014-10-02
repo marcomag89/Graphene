@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module v="0.0.0.1">
+	<info>
+		<version>0.0.0.1</version>
+		<name>system.graphene.grTests</name>
+		<authorName>Marco Magnetti</authorName>
+		<authorEmail>marcomagnetti@gmail.com</authorEmail>
+		<support>www.tests.it</support>
+	</info>
+	<doc>doc/doc.xml</doc>
+	<namespace>grTests</namespace>
+	<domain>_tests</domain>
+	<beansPath>beans</beansPath>
+
+	<actions>
+		<!-- Testing bean -->
+		<action>
+			<name>BEANS</name>
+			<query>beans</query>
+			<requestMethod>POST</requestMethod>
+			<handler>TestBeans</handler>
+			<handlerFile>actions/TestBeans.php</handlerFile>
+		</action>
+	</actions>
+</module>

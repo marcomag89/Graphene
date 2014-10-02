@@ -125,36 +125,35 @@ abstract class Bean
 	 * CRUD Storage
 	 * -----------
 	 */
-	public function getStorage(){
+	public final function getStorage(){
 		return $this->beanController->getStorage();
 	}
 	
-	public function create ()
+	public final function create ()
 	{
 		if ($this->canCreate())
 			return $this->beanController->create($this);
 	}
 
-	public function read ()
+	public final function read ()
 	{
 		if ($this->canRead())
 			return $this->beanController->read($this);
 	}
 
-	public function update ()
+	public final function update ()
 	{
 		if ($this->canUpdate())
 			return $this->beanController->update($this);
 	}
 
-	public function delete ()
+	public final function delete ()
 	{
 		if ($this->canDelete())
 			return $this->beanController->delete($this);
 	}
 
-	public function patch ()
-	{
+	public final function patch (){
 		if ($this->canPatch())
 			return $this->beanController->patch($this);
 	}
@@ -164,116 +163,47 @@ abstract class Bean
 	 * Dynamic functions
 	 * -----------
 	 */
-	function __call ($funct, $pars)
-	{
+	function __call ($funct, $pars){
 		return $this->beanController->call($funct, $pars, $this);
 	}
 	
 	/* Extensible functions */
 	public abstract function getStructs ();
 
-	public function getCustomCrudDriver ()
-	{
-		return null;
-	}
-
-	public function canCreate ()
-	{
-		return true;
-	}
-
-	public function canRead ()
-	{
-		return true;
-	}
-
-	public function canUpdate ()
-	{
-		return true;
-	}
-
-	public function canDelete ()
-	{
-		return true;
-	}
-
-	public function canPatch ()
-	{
-		return true;
-	}
+	public function getCustomCrudDriver (){return null;}
+	public function canCreate (){return true;}
+	public function canRead (){return true;}
+	public function canUpdate (){return true;}
+	public function canDelete (){return true;}
+	public function canPatch (){return true;}
 
 	private $domain = null;
-
 	private $name = null;
-
 	private $structs;
-
 	private $beanController;
-
 	protected $content = array();
 	
-	// COSTANTI TIPO
-	// value types
-	/** Check integer value */
-	const INTEGER_VALUE      = '-int';
+/*Tipo di valore*/
 	
-	/** Date field checker (format 'yy-mm-dd') */
-	const DATE_VALUE         = '-dt';
-	
-	/** String field checker */
-	const STRING_VALUE       = '-str';
-	
-	/** boolean field checker */
-	const BOOLEAN_VALUE      = '-bool';
-	
-	/** float field checker */
-	const FLOAT_VALUE        = '-f';
-	
-	/** double field checker */
-	const DOUBLE_VALUE       = '-d';
-	
-	/** long field checker */
-	const LONG_VALUE         = '-l';
-	
-	/** Alphanumeric field checker 0-9 A-Z */
-	const ALPHANUMERIC_VALUE = '-alpha';
-	
-	/** Uid field checker 0-9 A-Z */
-	const UID_VALUE = '-uid:';
+	const INTEGER 		= '--T_INTEGER';
+	const DATE 			= '--T_DATE';
+	const DATETIME 		= '--T_DATETIME';	
+	const STRING 		= '--T_STRING';
+	const BOOLEAN 		= '--T_BOOLEAN';
+	const DOUBLE   		= '--T_DOUBLE';
+	const ENUM   		= '--T_ENUM:';
+	const OBJECT   		= '--T_OBJECT:';
+	const COLLECTION   	= '--T_COLLECTION:';
 
-	/** Enum field checker
-	 * 	
-	 * @param list of enum values with commas
-	 * @example Bean::ENUM_VALUE.'foo,bar,cont'
-	 * 
-	 *  */
-	const ENUM_VALUE = '-enum:'; // controlla se e' uno dei valori dell'
-	                             // argomento
-	                             
-	// Options
-	const NOT_NULL = '-nn'; // vero se il contenuto non e' null
-
-	const NOT_EMPTY = '-ne'; // vero se il contenuto o l'array non e' vuoto
-
-	const MIN_LENGHT = '-minl:'; // lunghezza minima del campo
-
-	const MAX_LENGHT = '-maxl:'; // lunghezza massima del campo
-	                             
-	// Node clauses
-	const NODE = '-nod'; // vero se si tratta di un nodo
-
-	const NUMERIC_KEYS = '-numk'; // vero solo se il nodo e composto da chiavi
-	                              // numeriche
-	
-	const STRING_KEYS = '-strk'; // vero solo se il nodo e composto da chiavi
-	                             // stringa
-	
-	const MIN_ELEMS = '-mine:'; // vero solo se l'array ha almeno il numero di
-	                            // elementi specificati
-	
-	const MAX_ELEMS = '-maxe:'; // vero solo se l'array ha almeno il numero
-	                            // massimo di elementi
-	
-	const ENUM_KEYS = "-enk:"; // Vero solo se gli elementi dell' array sono
-		                           // compresi nell' enum definito
+	/* Checkers */	
+	const NOT_NULL 		= '--C_NOT_NULL'; 			// vero se il contenuto non e' null
+	const NOT_EMPTY 	= '--C_NOT_EMPTY'; 			// vero se il contenuto o l'array non e' vuoto
+	const MIN_LENGHT 	= '--C_MIN_LENGHT:'; 		// lunghezza minima del campo
+	const MAX_LENGHT 	= '--C_MAX_LENGHT:'; 		// lunghezza massima del campo
+	const MAX_VALUE 	= '--C_MAX_VALUE:'; 		// valore massimo del campo ASCII
+	const MIN_VALUE 	= '--C_MIN_VALUE:'; 		// valore minimo del campo ASCII	
+	const MATCH_PATTERN = '--C_MATCH_PATTERN:'; 	// vero se il campo e compatibile ad un pattern regex
+	const ALPHANUMERIC 	= '--C_ALPHANUMERIC:'; 		// vero se alfanumerico	
+	const MIN_ELEMENTS 	= '--C_COLL_MIN_ELEMENTS:'; 	// vero solo se la collezione ha almeno il numero di elementi specificati
+	const MAX_ELEMS 	= '--C_COLL_MAX_ELEMENTS:'; 	// vero solo se la collezione ha almeno il numero massimo di elementi
 }
