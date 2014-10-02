@@ -29,7 +29,7 @@ class GrapheneRouter
 	{
 		$r = Graphene::getInstance();
 		$this->modulesDir = $r->getSettings()->moduleurl;
-		$this->baseUrl=(string)$r->getSettings()->baseUrl;
+		$this->baseUrl=(string)$r->getSettings()->frameworkDir.'Graphene';
 		$this->nativePath=$this->baseUrl.'/native';
 		$this->routeTable = array();
 		$this->loadModules();
@@ -65,7 +65,8 @@ class GrapheneRouter
 	 */
 	private function loadModules ()
 	{
-		$mods = scandir($this->modulesDir);
+		try{$mods = scandir($this->modulesDir);}
+		catch(\Exception $e){$mods=array();}
 		$this->modules = array();
 		foreach ($mods as $key => $moduleDir) {
 			if (is_dir($this->modulesDir . "/" . $moduleDir) && !str_starts_with($moduleDir, '.')) {

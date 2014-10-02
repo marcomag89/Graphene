@@ -2,11 +2,10 @@
 <graphene>
 	<debug>true</debug>
 	<showLog>false</showLog>
-	<baseUrl>Graphene</baseUrl>
+	<frameworkDir></frameworkDir>
 	<moduleurl>modules</moduleurl>
 	<syntax>JSON</syntax>
-	<appname>graphene_framework</appname>
-	<approot></approot>
+	<appname>graphene</appname>
 	<localhost></localhost>
 	<storageDriver>CrudMySql</storageDriver>
 	<storageConfig>
