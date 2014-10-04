@@ -102,7 +102,7 @@ class Module
 		foreach ($actions->action as $action) {
 			if (file_exists($this->module_dir . '/' . $action->handlerFile)) {
 				require_once $this->module_dir . '/' . $action->handlerFile;
-				$handlerClass = (string) $action->handler;
+				$handlerClass = (string) $this->namespace.'\\'.$action->handler;
 				$actionClass = new $handlerClass();
 				$actionClass->setUp($this, $action, $request);
 				$this->actions[] = $actionClass;

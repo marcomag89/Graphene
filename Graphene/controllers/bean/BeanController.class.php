@@ -10,7 +10,6 @@ use Graphene\controllers\exceptions\GraphException;
 
 class BeanController
 {
-
 	public function __construct ($crudDriver, $structs, $args)
 	{
 		$this->structs = $structs;
