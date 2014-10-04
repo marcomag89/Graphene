@@ -7,18 +7,21 @@ class TestBean extends Bean{
 	public function getStructs(){
 		$lazy=array();
 		//Single fields
-		$lazy['integer']			=Bean::INTEGER_VALUE;
-		$lazy['string']				=Bean::STRING_VALUE;
-		$lazy['date']				=Bean::DATE_VALUE;
-		$lazy['boolean']			=Bean::BOOLEAN_VALUE;
-		$lazy['double']				=Bean::DOUBLE_VALUE;
-		$lazy['enumABC']			=Bean::ENUM_VALUE.'A,B,C';
+		$lazy['integer']			=Bean::INTEGER;
+		$lazy['string']				=Bean::STRING;
+		$lazy['date']				=Bean::DATE;
+		$lazy['boolean']			=Bean::BOOLEAN;
+		$lazy['double']				=Bean::DECIMAL;
+		$lazy['notEmpty']			=Bean::NOT_EMPTY;
+		$lazy['integerNotNull']		=Bean::NOT_NULL.Bean::INTEGER;
+		$lazy['enumABC']			=Bean::ENUM.'A,B,C';
 		
 		//Objects
-		$lazy['object']['stringField']=Bean::STRING_VALUE;
-		$lazy['object']['intField']=Bean::INTEGER_VALUE;
-		$lazy['object']['booleanField']=Bean::BOOLEAN_VALUE;
+		$lazy['object']['stringField']=Bean::STRING;
+		$lazy['object']['intField']=Bean::INTEGER;
+		$lazy['object']['booleanField']=Bean::BOOLEAN;
 		
+		//TODO implementare questa cosa
 		/* 
 		 #	Sets prototype of array
 		*/

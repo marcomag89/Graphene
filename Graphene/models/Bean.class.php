@@ -215,31 +215,25 @@ abstract class Bean
 	// COSTANTI TIPO
 	// value types
 	/** Check integer value */
-	const INTEGER_VALUE      = '-int';
+	const INTEGER      = '-integer';
 	
-	/** Date field checker (format 'yy-mm-dd') */
-	const DATE_VALUE         = '-dt';
+	/** Date field checker (format 'yyyy-mm-dd') */
+	const DATE         = '-date';
+	
+	/** Date field checker (format 'yyyy-mm-dd hh:mm:ss') */
+	const DATETIME         = '-datetime';
 	
 	/** String field checker */
-	const STRING_VALUE       = '-str';
+	const STRING       = '-string';
 	
 	/** boolean field checker */
-	const BOOLEAN_VALUE      = '-bool';
-	
-	/** float field checker */
-	const FLOAT_VALUE        = '-f';
+	const BOOLEAN      = '-boolean';
 	
 	/** double field checker */
-	const DOUBLE_VALUE       = '-d';
-	
-	/** long field checker */
-	const LONG_VALUE         = '-l';
-	
-	/** Alphanumeric field checker 0-9 A-Z */
-	const ALPHANUMERIC_VALUE = '-alpha';
+	const DECIMAL      = '-decimal';
 	
 	/** Uid field checker 0-9 A-Z */
-	const UID_VALUE = '-uid:';
+	const UID = '-uid:';
 
 	/** Enum field checker
 	 * 	
@@ -247,33 +241,12 @@ abstract class Bean
 	 * @example Bean::ENUM_VALUE.'foo,bar,cont'
 	 * 
 	 *  */
-	const ENUM_VALUE = '-enum:'; // controlla se e' uno dei valori dell'
+	const ENUM = '-enum:'; // controlla se e' uno dei valori dell'
 	                             // argomento
 	                             
 	// Options
-	const NOT_NULL = '-nn'; // vero se il contenuto non e' null
-
-	const NOT_EMPTY = '-ne'; // vero se il contenuto o l'array non e' vuoto
-
-	const MIN_LENGHT = '-minl:'; // lunghezza minima del campo
-
-	const MAX_LENGHT = '-maxl:'; // lunghezza massima del campo
-	                             
-	// Node clauses
-	const NODE = '-nod'; // vero se si tratta di un nodo
-
-	const NUMERIC_KEYS = '-numk'; // vero solo se il nodo e composto da chiavi
-	                              // numeriche
-	
-	const STRING_KEYS = '-strk'; // vero solo se il nodo e composto da chiavi
-	                             // stringa
-	
-	const MIN_ELEMS = '-mine:'; // vero solo se l'array ha almeno il numero di
-	                            // elementi specificati
-	
-	const MAX_ELEMS = '-maxe:'; // vero solo se l'array ha almeno il numero
-	                            // massimo di elementi
-	
-	const ENUM_KEYS = "-enk:"; // Vero solo se gli elementi dell' array sono
-		                           // compresi nell' enum definito
+	const NOT_NULL 	= '-not_null'; // vero se il contenuto non e' null
+	const NOT_EMPTY = '-not_empty'; // vero se il contenuto o l'array non e' vuoto
+	const MIN_LEN 	= '-min_len:'; // lunghezza minima del campo
+	const MAX_LEN 	= '-max_len:'; // lunghezza massima del campo
 }

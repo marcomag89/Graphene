@@ -52,8 +52,8 @@ class BeanController
 	private function createBasicStruct ()
 	{
 		$this->structs[self::BASIC_STRUCT] = array(
-			'id' => Bean::INTEGER_VALUE . Bean::NOT_EMPTY,
-			'version' => Bean::INTEGER_VALUE . Bean::NOT_EMPTY
+			'id' => Bean::INTEGER . Bean::NOT_EMPTY,
+			'version' => Bean::INTEGER . Bean::NOT_EMPTY
 		);
 	}
 	/*
