@@ -13,14 +13,16 @@ class TestBean extends Bean{
 		$lazy['boolean']			=Bean::BOOLEAN;
 		$lazy['double']				=Bean::DECIMAL;
 		$lazy['notEmpty']			=Bean::NOT_EMPTY;
-		$lazy['integerNotNull']		=Bean::NOT_NULL.Bean::INTEGER;
+		$lazy['integerNotNull']		=Bean::INTEGER;
 		$lazy['enumABC']			=Bean::ENUM.'A,B,C';
 		
 		//Objects
-		$lazy['object']['stringField']=Bean::STRING;
-		$lazy['object']['intField']=Bean::INTEGER;
-		$lazy['object']['booleanField']=Bean::BOOLEAN;
+		$lazy['object']['stringField']	=Bean::STRING;
+		$lazy['object']['intField']		=Bean::INTEGER;
+		$lazy['object']['booleanField']	=Bean::BOOLEAN;
 		
+		$delete=array();
+		$delete['integerNotNull']=Bean::INTEGER;
 		//TODO implementare questa cosa
 		/* 
 		 #	Sets prototype of array

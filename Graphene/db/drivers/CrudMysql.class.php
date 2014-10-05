@@ -300,18 +300,14 @@ class CrudMySql implements CrudDriver
 		return false;
 	}
 
-	private function jsonToPathSchema ($json)
-	{
+	private function jsonToPathSchema ($json){
 		$json = json_decode($json, true);
 		$path = '';
 		$schema = array();
-		return $this->recContentJsonToPathSchema($json['content'], $path, 
-				$schema);
+		return $this->recContentJsonToPathSchema($json['content'], $path, $schema);
 	}
 
-	private function recContentJsonToPathSchema ($parsed_content, &$path, 
-			&$schema)
-	{
+	private function recContentJsonToPathSchema ($parsed_content, &$path, &$schema){
 		foreach ($parsed_content as $key => $value) {
 			if (strcmp($path, '') == 0)
 				$tmpPath = $key;

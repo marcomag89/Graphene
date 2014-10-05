@@ -20,10 +20,11 @@ class BeanFactory
 		else if (isset($beanArr['collection'])) {
 				$ret = array();
 				foreach ($beanArr['collection'] as $content) {
-					if (($bean = self::createBean($content, $beanArr['domain'])) !=null) {
+					if (($bean = self::createBean($content, $beanArr['domain'])) !==false) {
 						$ret[] = $bean;
 					} else {
 						self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
+						echo self::$LAST_BEAN->getLastTestErrors();
 					}
 				}
 				// if(count($ret)==0)return null;

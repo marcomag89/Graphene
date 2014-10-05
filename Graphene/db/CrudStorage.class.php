@@ -5,6 +5,7 @@ use Graphene\controllers\ExceptionsCodes;
 use Graphene\controllers\bean\BeanFactory;
 use Graphene\db\CrudDriver;
 use \Exception;
+use Graphene\controllers\bean\BeanController;
 
 class CrudStorage
 {
@@ -37,19 +38,13 @@ class CrudStorage
 	{
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for create');
 		if (! $bean->isValid())
-			throw new Exception(
-					'Error on storage, ' . $bean->getName() . ' is corrupt: ' .
-							 $bean->getLastTestErrors(), 
-							ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+			throw new Exception('Error on storage, ' . $bean->getName() . ' is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
 		$bean->setVersion(1);
+		$bean->setId( uniqid(strtoupper(substr($bean->getName(),0,3))) );
 		$created = $this->driver->create($this->serializeForDb($bean));
 		if (($retb = BeanFactory::createByDbSerialization($created)) == null)
-			throw new Exception(
-					'Error when create, Stored ' . $bean->getName() .
-							 ' is corrupt', 
-							ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-		else
-			return $retb;
+			throw new Exception('Error when create, Stored ' . $bean->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		else return $retb;
 	}
 
 	/**
@@ -65,11 +60,11 @@ class CrudStorage
 	{
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for read');
 		$readed = $this->driver->read($this->serializeForDb($bean));
-		$beans = BeanFactory::createByDbSerialization($readed);	
+		//echo 'JSON Letto';
+		//echo($readed);
+		$beans = BeanFactory::createByDbSerialization($readed);
 		if (is_null($beans)) throw new Exception('Error when read, Stored ' . $bean->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-		else {
-			if (!is_array($beans))
-				$beans = array($beans); // per tornare sempre un array di risultati
+		else {if (!is_array($beans))$beans = array($beans); // per tornare sempre un array di risultati
 			return $beans;
 		}
 	}
@@ -82,34 +77,21 @@ class CrudStorage
 	 * @return Il bean modificato
 	 * @throws eccezione generica con messaggio se qualcosa va storto;
 	 */
-	public function update (Bean $bean)
-	{
+	public function update (Bean $bean){
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for update');
-		if ($bean->getId() == null)
-			throw new Exception('Unavailable ' . $bean->getName() . ' id', 
-					ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
-		if ($bean->getVersion() == null)
-			throw new Exception('Unavailable ' . $bean->getName() . ' version', 
-					ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
-		if (! $bean->isValid())
-			throw new Exception(
-					'Error on storage, ' . $bean->getName() . ' is corrupt: ' .
-							 $bean->getLastTestErrors(), 
-							ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		if ($bean->getId() == null)throw new Exception('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
+		if ($bean->getVersion() == null)throw new Exception('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
+		if (! $bean->isValid())throw new Exception('Error on storage, ' . $bean->getName() . ' is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		$bkpContent=$bean->getContent();
+		$bean->setLazy(true);
+		$bean->setContent(array('id'=>$bkpContent['id']));
 		$readed = $this->read($bean);
-		if ($readed[0]->isEmpty())
-			throw new Exception('Bean not found', 
-					ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-		if ($readed[0]->getVersion() != $bean->getVersion())
-			throw new Exception(
-					$bean->getName() . ' version mismatch, reload your ' .
-							 $bean->getName() . ' instance for updates', 
-							ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+		if ($readed[0]->isEmpty())throw new Exception($bean->getName().' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+		if ($readed[0]->getVersion() != $bkpContent['version'])throw new Exception($bean->getName() . ' version mismatch, reload your ' .$bean->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+		$bean->setContent($bkpContent);
 		$bean->setVersion($bean->getVersion() + 1);
 		$updated = $this->driver->update($this->serializeForDb($bean));
-		if (($bean = BeanFactory::createByDbSerialization($updated)) == null) {
-			throw new Exception('Updated bean is corrupt', 
-					ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		if (($bean = BeanFactory::createByDbSerialization($updated)) == null) {throw new Exception('Updated bean is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
 		} else {
 			return $bean;
 		}
@@ -127,26 +109,16 @@ class CrudStorage
 	public function delete (Bean $bean)
 	{
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
-		if ($bean->getId() == null)
-			throw new Exception('Unavailable ' . $bean->getName() . ' id', 
-					ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
-		if ($bean->getVersion() == null)
-			throw new Exception('Unavailable ' . $bean->getName() . ' version', 
-					ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
-		if (! $bean->isValid())
-			throw new Exception(
-					'Error on storage, ' . $bean->getName() . ' is corrupt: ' .
-							 $bean->getLastTestErrors(), 
-							ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		if ($bean->getId() == null)throw new Exception('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
+		if ($bean->getVersion() == null)throw new Exception('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
+		if (! $bean->isValid())throw new Exception('Error on storage, ' . $bean->getName() . ' is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		$bkpContent=$bean->getContent();
+		$bean->setLazy(true);
+		$bean->setContent(array('id'=>$bkpContent['id']));
 		$readed = $this->read($bean);
-		if ($readed[0]->isEmpty())
-			throw new Exception($bean->getName() . ' not found', 
-					ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-		if ($readed[0]->getVersion() != $bean->getVersion())
-			throw new Exception(
-					$bean->getName() .
-							 ' version Mismatch, reload bean for updates', 
-							ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+		if ($readed[0]->isEmpty())throw new Exception($bean->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+		if ($readed[0]->getVersion() != $bkpContent['version'])throw new Exception($bean->getName() .' version Mismatch, reload bean for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+		$bean->setContent($bkpContent);
 		$this->driver->delete($this->serializeForDb($bean));
 		return true;
 	}
@@ -208,6 +180,7 @@ class CrudStorage
 			'type' => 'bean',
 			'pageNo'=>$this->pageNo,
 			'pageElements'=>$this->pageElements,
+			'struct'=>$bean->getStructs()[BeanController::LAZY_STRUCT],
 			'content' => $bean->getContent()
 		);
 		$serialized = json_encode($ret);

@@ -4,12 +4,31 @@ use Graphene\controllers\Action;
 use Graphene\controllers\bean\Struct;
 use Graphene\models\Bean;
 
-class TestBeans extends Action{
+class Create extends Action{
 	public function run(){
 		$test=TestBean::getByRequest();
-		$this->sendBean($test);
-		//$test=new TestBean();
-		//echo json_encode($test->getStruct(),JSON_PRETTY_PRINT);
-		//echo json_encode(json_decode($this->request->getBody(),true));
+		$this->sendBean($test->create());
 	}	
+}
+class Read extends Action{
+	public function run(){
+		$test=new TestBean();
+		$this->sendBean($test->read());
+	}
+}
+class Update extends Action{
+	public function run(){
+		$test=TestBean::getByRequest();
+		$this->sendBean($test->update());
+	}
+}
+class Delete extends Action{
+	public function run(){
+		$test=TestBean::getByRequest();
+		if($test->delete()){
+			$this->sendMessage('Test deleted');
+		}else{
+			$this->sendError(400, 'error on delete');				
+		}
+	}
 }

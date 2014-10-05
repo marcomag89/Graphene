@@ -241,12 +241,12 @@ abstract class Bean
 	 * @example Bean::ENUM_VALUE.'foo,bar,cont'
 	 * 
 	 *  */
-	const ENUM = '-enum:'; // controlla se e' uno dei valori dell'
-	                             // argomento
-	                             
+	const ENUM = '-enum:'; // controlla se e' uno dei valori argomento
+	                       
 	// Options
-	const NOT_NULL 	= '-not_null'; // vero se il contenuto non e' null
-	const NOT_EMPTY = '-not_empty'; // vero se il contenuto o l'array non e' vuoto
-	const MIN_LEN 	= '-min_len:'; // lunghezza minima del campo
-	const MAX_LEN 	= '-max_len:'; // lunghezza massima del campo
+	const NOT_NULL 	= '-not_null'	; // vero se il contenuto non e' null
+	const UNIQUE	= '-unique'		; //Controllo effettuato dallo storage
+	const NOT_EMPTY = '-not_empty'	; // vero se il contenuto o l'array non e' vuoto
+	const MIN_LEN 	= '-min_len:'	; // lunghezza minima del campo
+	const MAX_LEN 	= '-max_len:'	; // lunghezza massima del campo
 }

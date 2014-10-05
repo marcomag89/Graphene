@@ -7,7 +7,7 @@
 	<syntax>JSON</syntax>
 	<appname>graphene</appname>
 	<localhost></localhost>
-	<storageDriver>CrudMySql</storageDriver>
+	<storageDriver>CrudMySqlv2</storageDriver>
 	<storageConfig>
 		<type>mysql</type>
 		<host>127.0.0.1</host>

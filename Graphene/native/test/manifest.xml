@@ -15,10 +15,31 @@
 	<actions>
 		<!-- Testing bean -->
 		<action>
-			<name>BEANS</name>
+			<name>BEANS_CREATE</name>
 			<query>beans</query>
 			<requestMethod>POST</requestMethod>
-			<handler>TestBeans</handler>
+			<handler>Create</handler>
+			<handlerFile>actions/TestBeans.php</handlerFile>
+		</action>
+		<action>
+			<name>BEANS_READ</name>
+			<query>beans</query>
+			<requestMethod>GET</requestMethod>
+			<handler>Read</handler>
+			<handlerFile>actions/TestBeans.php</handlerFile>
+		</action>
+		<action>
+			<name>BEANS_UPDATE</name>
+			<query>beans</query>
+			<requestMethod>PUT</requestMethod>
+			<handler>Update</handler>
+			<handlerFile>actions/TestBeans.php</handlerFile>
+		</action>
+		<action>
+			<name>BEANS_DELETE</name>
+			<query>beans</query>
+			<requestMethod>DELETE</requestMethod>
+			<handler>Delete</handler>
 			<handlerFile>actions/TestBeans.php</handlerFile>
 		</action>
 	</actions>

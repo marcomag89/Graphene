@@ -155,10 +155,10 @@ class BeanChecker
 				$s<60 && $h>=0;
 		}
 	}
-	private function checkInteger 	($val, $type){ return $val === null || is_int($val)/*preg_match("/^[0-9]+$/", ''.$val)*/;}
+	private function checkInteger 	($val, $type){ return $val === null || is_int($val) || preg_match("/^[0-9]+$/", ''.$val);}
 	private function checkString 	($val, $type){ return $val === null || is_string($val);}
-	private function checkBoolean 	($val, $type){ return $val === null || is_bool($val);  }
-	private function checkDouble 	($val, $type){ return $val === null || is_double($val);}
+	private function checkBoolean 	($val, $type){ return $val === null || is_bool($val) || preg_match("/^(0|1)+$/", ''.$val);  }
+	private function checkDouble 	($val, $type){ return $val === null || is_double($val) || doubleval($val);}
 	private function checkEnum 		($val, $type){ return $val === null || in_array($val, explode(',', explode(':', $type)[1]));}
 	private function checkNotEmpty 	($val, $type){ return $val === null || strlen($val)!=0;}
 	private function checkMinLenght ($val, $type){ return $val === null || strlen(''.$val) >= explode(':', $type)[1];}
