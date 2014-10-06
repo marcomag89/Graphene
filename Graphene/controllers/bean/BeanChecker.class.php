@@ -31,9 +31,9 @@ class BeanChecker
 	 * E' possibile ignorare o modificare il controllo su alcuni valori
 	 * estendendo il metodo 'check($label,$value)'
 	 */
-	public function checkContent (Bean $bean,$struct){
-		return 	$this->checkExceededValues($bean,$bean->getContent(),$struct) && 
-				$this->checkStructValues($bean,$bean->getContent(),$struct);
+	public function checkContent (Bean $bean,$struct,$lazyCheck=false){
+		return 	$this->checkExceededValues($bean,$bean->getContent(),$struct,$lazyCheck) && 
+				$this->checkStructValues($bean,$bean->getContent(),$struct,$lazyCheck);
 	}
 	
 	/**
@@ -41,7 +41,7 @@ class BeanChecker
 	 * Controlla se i valori del bean sono contemplati nella struttura e se sono
 	 * validi
 	 */
-	private function checkExceededValues (Bean $bean, $content = null, $struct){	
+	private function checkExceededValues (Bean $bean, $content = null, $struct,$lazyCheck=false){	
 		foreach ($content as $ck => $cv) {
 			if (is_array($cv) && !$this->checkExceededValues($bean, $cv, $struct[$ck])) return false;
 			else if ($struct == null) return false;
@@ -59,13 +59,13 @@ class BeanChecker
 	 * come not empty
 	 * sono effettivamente inseriti
 	 */
-	private function checkStructValues ($bean, $content = null, $struct){	
+	private function checkStructValues ($bean, $content = null, $struct,$lazyCheck=false){	
 		if ($content == null)$content = $bean->getContent();
 		foreach ($struct as $sk => $sv) {
 			if (!isset($content[$sk])) $content[$sk] = null;
 			//TODO Controllo se array e ha nodo prototipo inferiore
-			if(is_array($sv)){if(!$this->checkStructValues($bean, $content[$sk],$sv)) return false;}
-			else{if(!$this->isValidValue($content[$sk], $sv, $sk))return false;}
+			if(is_array($sv)){if(!$this->checkStructValues($bean, $content[$sk],$sv,$lazyCheck)) return false;}
+			else{if(!$this->isValidValue($content[$sk], $sv, $sk,$lazyCheck))return false;}
 		}
 		return true;
 	}
@@ -76,29 +76,25 @@ class BeanChecker
 	 -------------------------------
 	*/	
 	public function isValidLabel($label){
-		if(!preg_match('/^[a-zA-Z]{1}\w*$/',$label) || str_contains($label, '_')){
-			return false;
-		}
-		else 
-			return true;
+		if(!preg_match('/^[a-zA-Z]{1}\w*$/',$label) || str_contains($label, '_')){return false;}
+		else return true;
 	}
 	// Check value type
-	public function isValidValue ($val, $type, $label = 'nd'){
+	public function isValidValue ($val, $type, $label = 'nd',$lazyCheck=false){
 		if (!is_string($type)) {
 			$this->addError($label, $label . '-definition', Bean::STRING_VALUE, 'invalid field definition: '.$type);
 			return false;
 		}
-		$expl = explode('-', $type);
+		$expl = explode('--', $type);
 		unset($expl[0]);
 		$errs = 0;
 		foreach ($expl as $check) {
-			$check = '-' . $check;
-			$chResult = $this->check($check, $val);
+			$check = '--' . $check;
+			$chResult = $this->check($check, $val,$lazyCheck);
 			if ($chResult == false) {
 				$errs ++;
 				$this->addError($label, $check, $type, 'Field \'' . $label . '\':\'' . $val . '\' must be: ' .str_replace('-', ' ', $check));
-			} else 
-				if (strcasecmp($chResult, 'und') == 0) {
+			} else if (strcasecmp($chResult, 'und') == 0) {
 					$errs ++;
 					$this->addError($label, $check, $type, 'invalid type: ' . $check . ', for label: ' . $label);
 				}
@@ -110,25 +106,26 @@ class BeanChecker
 	/**
 	 * Main check function
 	 */
-	private function check ($type, $val)
-	{
-		$test = explode(':', $type)[0];
-		if (preg_match('/:/', $type))$test .= ':';
+	private function check ($type, $val,$noChecks=false){
+		$test = explode('::', $type)[0];
+		if (preg_match('/::/', $type))$test .= '::';
 		switch ($test) {
 			/* Type checkers */
-			case Bean::BOOLEAN	: return $this->checkBoolean	($val, $type);
-			case Bean::DECIMAL	: return $this->checkDouble		($val, $type);
-			case Bean::INTEGER	: return $this->checkInteger	($val, $type);
-			case Bean::STRING	: return $this->checkString		($val, $type);
-			case Bean::UID		: return $this->checkUid		($val, $type);
-			case Bean::DATE		: return $this->checkDate		($val, $type);
-			case Bean::DATETIME : return $this->checkDateTime	($val, $type);
-			case Bean::ENUM		: return $this->checkEnum		($val, $type);
+			case Bean::BOOLEAN		: return $this->checkBoolean	($val, $type);
+			case Bean::DECIMAL		: return $this->checkDouble		($val, $type);
+			case Bean::INTEGER		: return $this->checkInteger	($val, $type);
+			case Bean::STRING		: return $this->checkString		($val, $type);
+			case Bean::UID			: return $this->checkUid		($val, $type);
+			case Bean::DATE			: return $this->checkDate		($val, $type);
+			case Bean::DATETIME 	: return $this->checkDateTime	($val, $type);
+			case Bean::ENUM			: return $this->checkEnum		($val, $type);
+			case Bean::MATCH		: return $this->checkMatch		($val, $type);
+				
 			/* Content checkers */
-			case Bean::NOT_EMPTY	: return $this->checkNotEmpty	($val, $type);
-			case Bean::NOT_NULL     : return $this->checkNotNull	($val, $type);
-			case Bean::MIN_LEN   	: return $this->checkMinLenght	($val, $type);
-			case Bean::MAX_LEN   	: return $this->checkMaxLenght	($val, $type);
+			case Bean::NOT_EMPTY	: return $noChecks || $this->checkNotEmpty	($val, $type);
+			case Bean::NOT_NULL     : return $noChecks || $this->checkNotNull	($val, $type);
+			case Bean::MIN_LEN   	: return $noChecks || $this->checkMinLenght	($val, $type);
+			case Bean::MAX_LEN   	: return $noChecks || $this->checkMaxLenght	($val, $type);
 			default                 : return true;
 		}
 	}
@@ -159,7 +156,11 @@ class BeanChecker
 	private function checkString 	($val, $type){ return $val === null || is_string($val);}
 	private function checkBoolean 	($val, $type){ return $val === null || is_bool($val) || preg_match("/^(0|1)+$/", ''.$val);  }
 	private function checkDouble 	($val, $type){ return $val === null || is_double($val) || doubleval($val);}
-	private function checkEnum 		($val, $type){ return $val === null || in_array($val, explode(',', explode(':', $type)[1]));}
+	private function checkEnum 		($val, $type){ return $val === null || in_array($val, explode(',', explode('::', $type)[1]));}
+	private function checkMatch 	($val, $type){ return $val === null || preg_match(explode('::', $type)[1], ''.$val);}
+	
+	
+	//Checks values
 	private function checkNotEmpty 	($val, $type){ return $val === null || strlen($val)!=0;}
 	private function checkMinLenght ($val, $type){ return $val === null || strlen(''.$val) >= explode(':', $type)[1];}
 	private function checkMaxLenght ($val, $type){ return $val === null || strlen($val . '') <= explode(':', $type)[1];}

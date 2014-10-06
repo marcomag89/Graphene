@@ -34,11 +34,10 @@ class CrudStorage
 	 * @return Nuovo bean [senza id e versione]
 	 * @throws eccezione generica con messaggio se qualcosa va storto;
 	 */
-	public function create (Bean $bean)
-	{
+	public function create (Bean $bean){
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for create');
-		if (! $bean->isValid())
-			throw new Exception('Error on storage, ' . $bean->getName() . ' is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		$bean->setLazy(false);
+		if (! $bean->isValid())	throw new Exception('Bean, ' . $bean->getName() . ' is not valid for storage: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
 		$bean->setVersion(1);
 		$bean->setId( uniqid(strtoupper(substr($bean->getName(),0,3))) );
 		$created = $this->driver->create($this->serializeForDb($bean));
@@ -180,7 +179,7 @@ class CrudStorage
 			'type' => 'bean',
 			'pageNo'=>$this->pageNo,
 			'pageElements'=>$this->pageElements,
-			'struct'=>$bean->getStructs()[BeanController::LAZY_STRUCT],
+			'struct'=>$bean->getStruct(),
 			'content' => $bean->getContent()
 		);
 		$serialized = json_encode($ret);

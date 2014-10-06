@@ -8,15 +8,12 @@ use Graphene\controllers\bean\BeanChecker;
 use Graphene\controllers\exceptions\GraphException;
 
 
-class BeanController
-{
-	public function __construct ($crudDriver, $structs, $args)
-	{
+class BeanController{
+	public function __construct ($crudDriver, $structs, $args){
 		$this->structs = $structs;
 		$this->args = $args;
 		$this->corrupt = false;
 		$this->beanChecker = new BeanChecker();
-		$this->createBasicStruct();
 		// Controlla se e stato settato un driver personalizzato
 		if ($crudDriver != null)
 			$this->setCrudDriver($crudDriver);
@@ -38,22 +35,16 @@ class BeanController
 			}
 	}
 	/* Initialization */
-	private function emptyInit ()
-	{}
-
-	private function requestInit (GraphRequest $request)
-	{}
-
-	private function parInit (String $par)
-	{
+	private function emptyInit (){}
+	private function requestInit (GraphRequest $request){}
+	private function parInit (String $par){
 		$this->settings[$par] = true;
 	}
 
-	private function createBasicStruct ()
-	{
-		$this->structs[self::BASIC_STRUCT] = array(
-			'id' 		=> Bean::STRING . Bean::NOT_EMPTY,
-			'version' 	=> Bean::INTEGER . Bean::NOT_EMPTY
+	private function getBasicStruct (){
+		return  array(
+			'id' 		=> Bean::STRING . 	Bean::NOT_EMPTY,
+			'version' 	=> Bean::INTEGER. 	Bean::NOT_EMPTY
 		);
 	}
 	/*
@@ -61,30 +52,19 @@ class BeanController
 	 * Struct management
 	 * --------
 	 */
-	public function getStruct (){
-		
-		log_write(self::LOG_NAME . 'getting struct for: '.$this->getCurrentAction()->getActionName());
+	public function getStruct (){	
 		$struct = array();
-		$action = $this->getCurrentAction()->getActionName();
-		if (isset($this->structs[self::BASIC_STRUCT]))
-			$struct = $this->structs[self::BASIC_STRUCT];
-		if (isset($this->structs[self::LAZY_STRUCT]))
-			$struct = array_merge_recursive($struct, 
-					$this->structs[self::LAZY_STRUCT]);
-		if ($this->getSetting(self::FLAG_LAZY) || ! isset($this->structs[$action]))
-			$retstr=$struct;
-		else
-			$retstr=array_replace_recursive($struct, $actionStruct = $this->structs[$action]);
-		if(!$this->beanChecker->checkValidStruct($retstr)) throw new GraphException('Invalid bean struct', 500, 500);
-		return $retstr;
+		$basic=$this->getBasicStruct();
+		$ret=$basic+$this->structs;
+		if(!$this->beanChecker->checkValidStruct($ret)) throw new GraphException('Invalid bean struct', 500, 500);
+		return $ret;
 	}
 	/*
 	 * --------
 	 * Getters and setters
 	 * --------
 	 */
-	public function call ($funct, $pars, Bean $bean)
-	{
+	public function call ($funct, $pars, Bean $bean){
 		log_write(self::LOG_NAME . 'called dyFunct: ' . $funct);
 		$splitted=explode('_',substr($funct, 3));
 		$splitted[0]=lcfirst($splitted[0]);
@@ -131,16 +111,9 @@ class BeanController
 		}
 	}
 
-	public function isCorrupt ()
-	{
-		return $this->corrupt;
-	}
-
-	public function getCurrentAction ()
-	{
+	public function isCorrupt (){return $this->corrupt;}
+	public function getCurrentAction (){
 		$action = Graphene::getInstance()->getCurrentModule()->getCurrentAction();
-		// log_write(self::LOG_NAME.'Sending current action
-		// ('.$action->getActionName().')');
 		return $action;
 	}
 	/*
@@ -148,8 +121,7 @@ class BeanController
 	 * Storage management
 	 * --------
 	 */
-	public function setCrudDriver (CrudDriver $driver)
-	{
+	public function setCrudDriver (CrudDriver $driver){
 		$this->storage = new CrudStorage($driver);
 	}
 
@@ -160,73 +132,47 @@ class BeanController
 	public function getStorage(){
 		return $this->storage;
 	}
-	private function getSetting ($setting)
-	{
-		if (isset($this->settings[$setting]))
-			return true;
-		else
-			return false;
+	private function getSetting ($setting){
+		if (isset($this->settings[$setting]))return true;
+		else return false;
 	}
 	/*
 	 * --------
 	 * Serializzation
 	 * --------
 	 */
-	public function serialize (Bean $bean)
-	{
-		$ret = array(
-			$bean->getName() => $bean->getContent()
-		);
+	public function serialize (Bean $bean){
+		$ret = array($bean->getName() => $bean->getContent());
 		return json_encode($ret);
 	}
 	/*
 	 * CRUD-P
 	 * Create Read Update Delete and Patch routines
 	 */
-	public function create ($bean)
-	{
-		return $this->storage->create($bean);
-	}
-
-	public function read ($bean)
-	{
-		return $this->storage->read($bean);
-	}
-
-	public function update ($bean)
-	{
-		return $this->storage->update($bean);
-	}
-
-	public function delete ($bean)
-	{
-		return $this->storage->delete($bean);
-	}
-
-	public function patch ($bean)
-	{
-		return $this->storage->patch($bean);
-	}
+	public function create ($bean){return $this->storage->create($bean);}
+	public function read ($bean){return $this->storage->read($bean);}
+	public function update ($bean){	return $this->storage->update($bean);}
+	public function delete ($bean){return $this->storage->delete($bean);}
+	public function patch ($bean){return $this->storage->patch($bean);}
 	/*
 	 * --------
 	 * Utilities
 	 * --------
 	 */
-	public function setLazy ($boolean)
-	{
-		$this->settings[self::FLAG_LAZY] = $boolean;
+	public function setLazy ($boolean){
+		$this->lazy=$boolean;
 	}
 	/*
 	 * --------
 	 * Struct and content checking
 	 * --------
 	 */
-	public function checkContent(Bean $bean){
-		return $this->beanChecker->checkContent($bean, $this->getStruct());
+	public function checkContent(Bean $bean,$lazyCheck=false){
+		//var_dump($lazyCheck || $this->getSetting(self::FLAG_LAZY));
+		return $this->beanChecker->checkContent($bean, $this->getStruct(),$lazyCheck || $this->lazy);
 	}
 
-	public function haveErrors ()
-	{
+	public function haveErrors (){
 		$errs = $this->beanChecker->getLastTestErrors();
 		if(count($errs)>0)return true;
 	}
@@ -244,6 +190,7 @@ class BeanController
 	private $corrupt;
 	private $ready;
 	private $args;
+	private $lazy=false;
 	private $settings = array();
 	private $storage;
 	private $exceeded=null;

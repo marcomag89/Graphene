@@ -47,16 +47,13 @@ class BeanFactory
 		}
 		
 	}
-	public static function createByRequest (GraphRequest $request, Module $mod = null){
-		if ($mod == null)
-			$mod = Graphene::getInstance()->getCurrentModule();
-		if (($decoded = json_decode($request->getBody(), true)) == null)
-			throw new GraphException('Malformed request check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED,400);
+	public static function createByRequest (GraphRequest $request, Module $mod = null,$lazyChecks=false){
+		if ($mod == null)$mod = Graphene::getInstance()->getCurrentModule();
+		if (($decoded = json_decode($request->getBody(), true)) == null) throw new GraphException('Malformed request check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED,400);
 		$return = array();
 		foreach ($decoded as $BeanName => $beanContent) {
-			$domain = Graphene::getInstance()->getApplicationName() . '.' .
-					 $mod->getNamespace() . '.' . $BeanName;
-			if (($return[$BeanName] = self::createBean($beanContent, $domain)) ==false) {
+			$domain = Graphene::getInstance()->getApplicationName() . '.' .$mod->getNamespace() . '.' . $BeanName;
+			if (($return[$BeanName] = self::createBean($beanContent, $domain,$lazyChecks)) ==false) {
 				self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
 				throw new GraphException(self::$LAST_BEAN->getLastTestErrors(), ExceptionsCodes::REQUEST_MALFORMED, 400);
 			}
@@ -64,8 +61,7 @@ class BeanFactory
 		return $return;
 	}
 
-	private static function createBean ($beanContent, $beanDomain)
-	{
+	private static function createBean ($beanContent, $beanDomain,$lazyChecks=false){
 		$expl = explode('.', $beanDomain);
 		$beanName = $expl[1] . '\\' . $expl[2];
 		$bean = new $beanName();
@@ -73,7 +69,7 @@ class BeanFactory
 			$bean->setLazy(true);
 			$bean->setContent($beanContent);
 			self::$LAST_BEAN = $bean;
-			if ($bean->isValid()) {
+			if ($bean->isValid($lazyChecks)) {
 				return $bean;
 			} else {
 				return false;
