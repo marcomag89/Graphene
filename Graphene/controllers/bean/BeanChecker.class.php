@@ -85,7 +85,7 @@ class BeanChecker
 			$this->addError($label, $label . '-definition', Bean::STRING_VALUE, 'invalid field definition: '.$type);
 			return false;
 		}
-		$expl = explode('--', $type);
+		$expl = explode(Bean::CHECK_SEP, $type);
 		unset($expl[0]);
 		$errs = 0;
 		foreach ($expl as $check) {
@@ -93,7 +93,7 @@ class BeanChecker
 			$chResult = $this->check($check, $val,$lazyCheck);
 			if ($chResult == false) {
 				$errs ++;
-				$this->addError($label, $check, $type, 'Field \'' . $label . '\':\'' . $val . '\' must be: ' .str_replace('-', ' ', $check));
+				$this->addError($label, $check, $type, 'Field \'' . $label . '\':\'' . $val . '\' must be: ' .str_replace(Bean::CHECK_SEP, ' ', $check));
 			} else if (strcasecmp($chResult, 'und') == 0) {
 					$errs ++;
 					$this->addError($label, $check, $type, 'invalid type: ' . $check . ', for label: ' . $label);
@@ -107,8 +107,8 @@ class BeanChecker
 	 * Main check function
 	 */
 	private function check ($type, $val,$noChecks=false){
-		$test = explode('::', $type)[0];
-		if (preg_match('/::/', $type))$test .= '::';
+		$test = explode(Bean::CHECK_PAR,$type)[0];
+		if (preg_match('/'.Bean::CHECK_PAR.'/', $type))$test .= Bean::CHECK_PAR;
 		switch ($test) {
 			/* Type checkers */
 			case Bean::BOOLEAN		: return $this->checkBoolean	($val, $type);
@@ -156,14 +156,14 @@ class BeanChecker
 	private function checkString 	($val, $type){ return $val === null || is_string($val);}
 	private function checkBoolean 	($val, $type){ return $val === null || is_bool($val) || preg_match("/^(0|1)+$/", ''.$val);  }
 	private function checkDouble 	($val, $type){ return $val === null || is_double($val) || doubleval($val);}
-	private function checkEnum 		($val, $type){ return $val === null || in_array($val, explode(',', explode('::', $type)[1]));}
-	private function checkMatch 	($val, $type){ return $val === null || preg_match(explode('::', $type)[1], ''.$val);}
+	private function checkEnum 		($val, $type){ return $val === null || in_array($val, explode(',', explode(Bean::CHECK_PAR, $type)[1]));}
+	private function checkMatch 	($val, $type){ return $val === null || preg_match(explode(Bean::CHECK_PAR, $type)[1], ''.$val);}
 	
 	
 	//Checks values
 	private function checkNotEmpty 	($val, $type){ return $val === null || strlen($val)!=0;}
-	private function checkMinLenght ($val, $type){ return $val === null || strlen(''.$val) >= explode(':', $type)[1];}
-	private function checkMaxLenght ($val, $type){ return $val === null || strlen($val . '') <= explode(':', $type)[1];}
+	private function checkMinLenght ($val, $type){ return $val === null || strlen(''.$val) >= explode(Bean::CHECK_SEP, $type)[1];}
+	private function checkMaxLenght ($val, $type){ return $val === null || strlen($val . '') <= explode(Bean::CHECK_SEP, $type)[1];}
 	private function checkUid 		($val, $type){ return $val === null || true;}
 	private function checkNotNull 	($val, $type){ return $val !=  null; }
 	

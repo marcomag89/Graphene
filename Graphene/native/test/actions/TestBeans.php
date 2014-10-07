@@ -6,7 +6,7 @@ use Graphene\models\Bean;
 
 class Create extends Action{
 	public function run(){
-		$test=TestBean::getByRequest(true);
+		$test=TestBean::getByRequest();
 		$this->sendBean($test->create());
 	}	
 }
