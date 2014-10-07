@@ -8,6 +8,7 @@ class TestBean extends Bean{
 		return array(
 				'integer' 		=> Bean::INTEGER.	Bean::NOT_EMPTY.	Bean::UNIQUE,
 				'string' 	 	=> Bean::STRING.	Bean::NOT_EMPTY,
+				'string50'		=> Bean::STRING.	Bean::MAX_LEN.'50',
 				'boolean'		=> Bean::BOOLEAN,
 				'date'	  		=> Bean::DATE.		Bean::NOT_EMPTY,
 				'alphanumeric'	=> Bean::MATCH.'/^[A-Za-z0-9]+$/',

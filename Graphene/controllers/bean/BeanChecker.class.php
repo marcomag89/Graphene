@@ -162,8 +162,8 @@ class BeanChecker
 	
 	//Checks values
 	private function checkNotEmpty 	($val, $type){ return $val === null || strlen($val)!=0;}
-	private function checkMinLenght ($val, $type){ return $val === null || strlen(''.$val) >= explode(Bean::CHECK_SEP, $type)[1];}
-	private function checkMaxLenght ($val, $type){ return $val === null || strlen($val . '') <= explode(Bean::CHECK_SEP, $type)[1];}
+	private function checkMinLenght ($val, $type){ return $val === null || strlen(''.$val) >= explode(Bean::CHECK_PAR, $type)[1];}
+	private function checkMaxLenght ($val, $type){ return $val === null || strlen($val.'') <= explode(Bean::CHECK_PAR, $type)[1];}
 	private function checkUid 		($val, $type){ return $val === null || true;}
 	private function checkNotNull 	($val, $type){ return $val !=  null; }
 	

@@ -147,12 +147,12 @@ abstract class Bean{
 	 * @example Bean::ENUM_VALUE.'foo,bar,cont'
 	 * 
 	 *  */
-	const ENUM = '--enum::'; // controlla se e' uno dei valori argomento
+	const ENUM = '--t_enum::'; // controlla se e' uno dei valori argomento
 	                       
 	// CHECKS
 	const NOT_NULL 	= '--c_not_null'	; 		// vero se il contenuto non e' null
 	const UNIQUE	= '--c_unique'		; 		//Controllo effettuato dallo storage
 	const NOT_EMPTY = '--c_not_empty'	; 		// vero se il contenuto o l'array non e' vuoto
-	const MIN_LEN 	= '--c_min_len:'	; 		// lunghezza minima del campo
-	const MAX_LEN 	= '--c_max_len:'	; 		// lunghezza massima del campo
+	const MIN_LEN 	= '--c_min_len::'	; 		// lunghezza minima del campo
+	const MAX_LEN 	= '--c_max_len::'	; 		// lunghezza massima del campo
 }
