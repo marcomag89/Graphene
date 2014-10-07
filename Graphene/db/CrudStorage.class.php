@@ -37,7 +37,7 @@ class CrudStorage
 	public function create (Bean $bean){
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for create');
 		$bean->setLazy(false);
-		if (! $bean->isValid())	throw new Exception('Bean, ' . $bean->getName() . ' is not valid for storage: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		if (!$bean->isValid())	throw new Exception('Bean, ' . $bean->getName() . ' is not valid for storage: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
 		$bean->setVersion(1);
 		$bean->setId( uniqid(strtoupper(substr($bean->getName(),0,3))) );
 		$created = $this->driver->create($this->serializeForDb($bean));
@@ -78,6 +78,7 @@ class CrudStorage
 	 */
 	public function update (Bean $bean){
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for update');
+		$bean->setLazy(false);
 		if ($bean->getId() == null)throw new Exception('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
 		if ($bean->getVersion() == null)throw new Exception('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
 		if (! $bean->isValid())throw new Exception('Error on storage, ' . $bean->getName() . ' is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
@@ -85,8 +86,8 @@ class CrudStorage
 		$bean->setLazy(true);
 		$bean->setContent(array('id'=>$bkpContent['id']));
 		$readed = $this->read($bean);
-		if ($readed[0]->isEmpty())throw new Exception($bean->getName().' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-		if ($readed[0]->getVersion() != $bkpContent['version'])throw new Exception($bean->getName() . ' version mismatch, reload your ' .$bean->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+		if (count($readed)==0 || $readed[0]->isEmpty())throw new Exception($bean->getName().' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+		if (count($readed)==0 || $readed[0]->getVersion() != $bkpContent['version'])throw new Exception($bean->getName() . ' version mismatch, reload your ' .$bean->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
 		$bean->setContent($bkpContent);
 		$bean->setVersion($bean->getVersion() + 1);
 		$updated = $this->driver->update($this->serializeForDb($bean));
