@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+	<version>1.0</version>
+	<default-locale>en-US</default-locale>
+	<name>
+		<it-IT>Creazione utente</it-IT>
+		<en-US>User creation</en-US>
+	</name>
+	<description>
+		<it-IT>Consente la creazione di un nuovo utente all' interno di
+			Graphene</it-IT>
+		<en-US>Allows to create a new user into the Graphene framework</en-US>
+	</description>
+	<request>
+		<method>POST</method>
+		<bean>user</bean>
+	</request>
+	<response>
+		<bean mode="GET" hide="password">user</bean>
+	</response>
+	<exceptions>
+		<exc>
+			<status>500</status>
+			<message>Error when saving user</message>
+		</exc>
+		<exc>
+			<status>403</status>
+			<message>username already exists</message>
+		</exc>
+		<exc>
+			<status>400</status>
+			<message>invalid username or password, syntax for your request check
+				the documentation</message>
+		</exc>
+	</exceptions>
+	<example>
+		<request>
+			<method>POST</method>
+			<headers></headers>
+			<body>
+				{
+				"user": {
+				"username": "an_username",
+				"password": "apassword"
+				}
+				}
+			</body>
+		</request>
+		<response>
+			<statuscode>200</statuscode>
+			<headers></headers>
+			<body>
+				{
+				"user": {
+				"version": "1",
+				"id": "53c7f004989cc",
+				"username":
+				"an_username"
+				}
+				}
+			</body>
+		</response>
+	</example>
+</doc>
