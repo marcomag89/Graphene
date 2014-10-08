@@ -139,7 +139,7 @@ class BeanChecker
 		if($val==null || strcmp($val,'')==0)return true;
 		else{
 			sscanf($val,"%d-%d-%d",$y,$m,$d);
-		 	return checkdate($m,$d,$y);
+		 	return (intval($y)==0 && intval($m)==0 && intval($d)==0) || checkdate($m,$d,$y);
 		}
 	}
 	private function checkDateTime($val,$type){
