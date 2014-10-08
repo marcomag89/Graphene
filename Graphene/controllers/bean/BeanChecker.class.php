@@ -146,10 +146,10 @@ class BeanChecker
 		if($val==null || strcmp($val,'')==0)return true;
 		else{
 			sscanf($val,"%d-%d-%d %d:%d:%d",$y,$m,$d,$h,$m,$s);
-			return checkdate($m,$d,$y) && 
-				$h<24 && $h>=0 && 
-				$m<60 && $h>=0 &&
-				$s<60 && $h>=0;
+			return 	checkdate($m,$d,$y) && 
+				intval($h)<24 && intval($h)>=0 &&
+				intval($m)<60 && intval($h)>=0 &&
+				intval($s)<60 && intval($h)>=0;
 		}
 	}
 	private function checkInteger 	($val, $type){ return $val === null || is_int($val) || preg_match("/^[0-9]+$/", ''.$val);}
