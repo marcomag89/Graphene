@@ -12,7 +12,7 @@
 		<type>mysql</type>
 		<host>127.0.0.1</host>
 		<dbName>sanitronic_db</dbName>
-		<prefix>stc</prefix>
+		<prefix></prefix>
 		<username>root</username>
 		<password>mysql</password>
 	</storageConfig>
