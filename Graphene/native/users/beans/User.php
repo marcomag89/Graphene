@@ -21,7 +21,7 @@ class User extends Bean{
 	 */
 	public function checkPassword(){
 		$pwd=$this->content['password'];
-		return preg_match("/(?=.*[A-Z])(?=.*[0-9])[#@$-\/:-?{-~!\"^_`\[\]a-zA-Z0-9]{8,25}/", $pwd); 
+		return preg_match("/^(?=.*[^a-zA-Z])(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])\w{8,32}$/", $pwd); 
 	}
 	public function unsetPassword (){
 		if (isset($this->content['password']))

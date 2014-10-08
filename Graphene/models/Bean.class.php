@@ -55,7 +55,13 @@ abstract class Bean{
 
 	public function getContent (){return $this->content;}
 	public function getBeanController (){return $this->beanController;}
-	final public function getStruct ($prettyPrint=false){return $this->beanController->getStruct();}
+	final public function getStruct ($asString=false,$prettyPrint=false){
+		$str= $this->beanController->getStruct();
+		if($asString && !$prettyPrint)return json_encode($str);
+		if($asString && $prettyPrint)return json_encode($str,JSON_PRETTY_PRINT);
+		else return $str;
+	}
+	
 	final public function isValid ($lazyCheck=false){return $this->beanController->checkContent($this,$lazyCheck);}
 	public function isEmpty (){return count($this->content) == 0;}
 
