@@ -1,5 +1,6 @@
 <?php
 namespace Graphene\models;
+use \Exception;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\controllers\Action;
