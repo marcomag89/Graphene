@@ -7,11 +7,11 @@
 	<syntax>JSON</syntax>
 	<appname>graphene</appname>
 	<localhost></localhost>
-	<storageDriver>CrudMySqlv2</storageDriver>
+	<storageDriver>CrudMySql</storageDriver>
 	<storageConfig>
 		<type>mysql</type>
 		<host>127.0.0.1</host>
-		<dbName>sanitronic_db</dbName>
+		<dbName>graphene_db</dbName>
 		<prefix></prefix>
 		<username>root</username>
 		<password>mysql</password>

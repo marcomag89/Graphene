@@ -6,6 +6,7 @@ use Graphene\controllers\bean\BeanFactory;
 use Graphene\db\CrudDriver;
 use \Exception;
 use Graphene\controllers\bean\BeanController;
+use Graphene\controllers\exceptions\GraphException;
 
 class CrudStorage
 {
@@ -109,15 +110,15 @@ class CrudStorage
 	public function delete (Bean $bean)
 	{
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
-		if ($bean->getId() == null)throw new Exception('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
-		if ($bean->getVersion() == null)throw new Exception('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
-		if (! $bean->isValid())throw new Exception('Error on storage, ' . $bean->getName() . ' is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		if ($bean->getId() == null)			throw new GraphException('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE,400);
+		if ($bean->getVersion() == null)	throw new GraphException('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE,500);
+		if (! $bean->isValid())				throw new GraphException('Error on storage, ' . $bean->getName() . ' is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,500);
 		$bkpContent=$bean->getContent();
 		$bean->setLazy(true);
 		$bean->setContent(array('id'=>$bkpContent['id']));
 		$readed = $this->read($bean);
-		if ($readed[0]->isEmpty())throw new Exception($bean->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-		if ($readed[0]->getVersion() != $bkpContent['version'])throw new Exception($bean->getName() .' version Mismatch, reload bean for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+		if (!isset($readed[0]) || $readed[0]->isEmpty())		throw new GraphException($bean->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND, 404);
+		if ($readed[0]->getVersion() != $bkpContent['version'])	throw new GraphException($bean->getName() .' version Mismatch, reload bean for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH,400);
 		$bean->setContent($bkpContent);
 		$this->driver->delete($this->serializeForDb($bean));
 		return true;

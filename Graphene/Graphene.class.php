@@ -28,8 +28,8 @@ class Graphene
 
 	private function __construct ()
 	{
-		$this->startTime= round(microtime(true) * 1000);
-		$this->settings = simplexml_load_file('settings.xml');
+		$this->startTime	= round(microtime(true) * 1000);
+		$this->settings 	= simplexml_load_file('settings.xml');
 		$this->debugMode = strcasecmp($this->settings->debug, 'true') == 0;
 		$this->showLog = strcasecmp($this->settings->showLog, 'true') == 0;
 		if ($this->isDebugMode()) {
@@ -216,7 +216,6 @@ class Graphene
 			$modInfos = array();
 			$modInfos['name'] = $mod->getName();
 			$modInfos['author'] = $mod->getAuthor();
-			$modInfos['author-contact'] = $mod->getAuthorEmail();
 			$modInfos['support'] = $mod->getSupport();
 			$modInfos['version'] = $mod->getVersion();
 			$modInfos['namespace'] = $mod->getNamespace();
@@ -272,9 +271,11 @@ class Graphene
 		$current = end($this->requests);
 		return $current;
 	}
+	public function getRouter (){
+		return $this->router;
+	}
 
 	const INFO = 'Graphene 0.1b developed by Marco Magnetti <marcomagnetti@gmail.com>';
-
 	const VERSION = '0.1b';
 	private $startTime,$endTime;
 	private $showLog;

@@ -1,4 +1,5 @@
 <?php
+namespace users;
 use Graphene\controllers\Action;
 use users\User;
 

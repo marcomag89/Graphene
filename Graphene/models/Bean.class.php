@@ -90,11 +90,11 @@ abstract class Bean{
 	 * -----------
 	 */
 	public function getStorage()	{return $this->beanController->getStorage();}
-	public function create ()		{if ($this->canCreate())	return 	$this->beanController->create($this);	}
-	public function read ()			{if ($this->canRead())		return 	$this->beanController->read($this);		}
-	public function update ()		{if ($this->canUpdate())	return 	$this->beanController->update($this);	}
-	public function delete ()		{if ($this->canDelete())	return 	$this->beanController->delete($this);	}
-	public function patch ()		{if ($this->canPatch())		return 	$this->beanController->patch($this);	}
+	public function create ()		{if ($this->canCreate()) $this->onCreate();	return 	$this->beanController->create($this);	}
+	public function read ()			{if ($this->canRead())	 $this->onRead();	return 	$this->beanController->read($this);		}
+	public function update ()		{if ($this->canUpdate()) $this->onUpdate();	return 	$this->beanController->update($this);	}
+	public function delete ()		{if ($this->canDelete()) $this->onDelete();	return 	$this->beanController->delete($this);	}
+	public function patch ()		{if ($this->canPatch())	 $this->onPatch();	return 	$this->beanController->patch($this);	}
 	
 	/*
 	 * -----------
@@ -107,20 +107,34 @@ abstract class Bean{
 	public abstract function defineStruct ();
 
 	public function getCustomCrudDriver (){return null;}
-	public function canCreate (){return true;}
-	public function canRead (){return true;}
-	public function canUpdate (){return true;}
-	public function canDelete (){return true;}
-	public function canPatch (){return true;}
-
-	private $domain = null;
-	private $name = null;
-	private $structs;
-	private $beanController;
-	protected $content = array();
 	
-	const CHECK_SEP='--';
-	const CHECK_PAR='::';
+	public function canCreate (){return true;}
+	public function onCreate (){}
+	
+	public function canRead (){return true;}
+	public function onRead (){}
+	
+	public function canUpdate (){return true;}
+	public function onUpdate (){}
+	
+	public function canDelete (){return true;}
+	public function onDelete (){}
+	
+	public function canPatch (){return true;}
+	public function onPatch (){}
+	
+	public function onSend(){}
+	public function onSerialize(){}
+
+
+	private 	$structs;
+	private 	$beanController;
+	private 	$domain  = null;
+	private 	$name 	 = null;
+	protected 	$content = array();
+	
+	const CHECK_SEP	= '--';
+	const CHECK_PAR	= '::';
 	// COSTANTI TIPO
 	// value types
 	/** Check integer value */

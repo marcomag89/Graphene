@@ -1,79 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module v="0.0.0.1">
-	<info>
-		<name>system.graphene.users</name>
-		<version>0.0.0.1</version>
-		<authorName>Marco Magnetti</authorName>
-		<authorEmail>marcomagnetti@gmail.com</authorEmail>
-		<support>www.tests.it</support>
-	</info>
-	<namespace>users</namespace>
-	<domain>users</domain>
-	<doc>doc/doc.xml</doc>
-	<beansPath>beans</beansPath>
-	<actions>
-		<action>
-			<name>VALIDATE</name>
-			<query>validate</query>
-			<requestMethod>POST</requestMethod>
-			<handler>Validate</handler>
-			<handlerFile>actions/Validate.php</handlerFile>
-		</action>
-		<action>
-			<name>READ_ALL</name>
-			<query>all</query>
-			<requestMethod>GET</requestMethod>
-			<handler>ReadAll</handler>
-			<handlerFile>actions/AdvancedActions.php</handlerFile>
-		</action>
-	
-		<action>
-			<name>CREATE</name>
-			<requestMethod>POST</requestMethod>
-			<handler>Create</handler>
-			<handlerFile>actions/BasicActions.php</handlerFile>
-		</action>
+<module v="0.0.1.0">
+		<info
+			version		= "0.1.0.1"
+			name		= "com.graphene.users"
+			namespace	= "users"
+			author		= "Marco Magnetti [marcomagnetti@gmail.com]"
+			support		= "{{host.addr}}/doc/user"
+			beans-path	= "beans"
+		/>
+
+		<action name="VALIDATE" handler="Validate@actions/Validate.php" 	method="get" 	query="validate" 	/>
+		<action name="ALL" 		handler="AllUsers@actions/UserGetAll.php" 	method="get" 	query="all" 		/>
 		
-		<action>
-			<name>READ</name>
-			<query>:id</query>
-			<requestMethod>GET</requestMethod>
-			<handler>Read</handler>
-			<handlerFile>actions/BasicActions.php</handlerFile>
-		</action>
-		
-		<action>
-			<name>UPDATE</name>
-			<query></query>
-			<requestMethod>PUT</requestMethod>
-			<handler>Update</handler>
-			<handlerFile>actions/BasicActions.php</handlerFile>
-		</action>
-		
-		<action>
-			<name>DELETE</name>
-			<query></query>
-			<requestMethod>DELETE</requestMethod>
-			<handler>Delete</handler>
-			<handlerFile>actions/BasicActions.php</handlerFile>
-		</action>
-		<!--
-			<action>
-				<name>READ_BY_USERNAME</name>
-				<query>:username</query>
-				<requestMethod>GET</requestMethod>
-				<handler>UserByUsername</handler>
-				<handlerFile>actions/UserGetByUsername.php</handlerFile>
-				<doc>doc/userGetByUsername.xml</doc>
-			</action>
-			<action>
-				<name>PATCH</name>
-				<query></query>
-				<requestMethod>PATCH</requestMethod>
-				<handler>UserPatch</handler>
-				<handlerFile>actions/UserPatch.php</handlerFile>
-				<doc>doc/userPatch.xml</doc>
-			</action>
-		-->
-	</actions>
+		<!-- CRUD ACTIONS INJECTION-->
+		<action name="$CRUD" pars="users\User" />
 </module>

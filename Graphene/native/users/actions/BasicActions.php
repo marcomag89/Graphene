@@ -3,11 +3,12 @@ namespace users;
 use \Exception;
 use users\User;
 use Graphene\controllers\Action;
+use Graphene\controllers\exceptions\GraphException;
  
 class Create extends Action{
  	public function run (){
  		$user = User::getByRequest();
- 		if(!$user instanceof User){$this->sendError('400', 'invalid request');return;}
+ 		if(!$user instanceof User) throw new GraphException('invalid user', 4001, 400);
  		if(!$user->checkPassword()){$this->sendError('400', 'Password requires one upper and one number 6-25 chars');return;}
  		$user->encryptPassword();
  		try{
@@ -15,7 +16,7 @@ class Create extends Action{
  			$created->unsetPassword();
  			$this->sendBean($created);
  		}catch(Exception $e){
- 			if($e->getCode()=='3100')$this->sendError('400', 'user already exists');
+ 			if($e->getCode()=='3100')throw new GraphException('User: '.$user->getEmail().', already exists',4002,400);
 			else $this->sendError(500, $e->getMessage());
  		}
  	}

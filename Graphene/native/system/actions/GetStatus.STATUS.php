@@ -1,4 +1,5 @@
 <?php
+namespace system;
 use Graphene\controllers\Action;
 use Graphene\Graphene;
 

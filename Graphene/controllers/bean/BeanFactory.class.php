@@ -64,7 +64,8 @@ class BeanFactory
 	private static function createBean ($beanContent, $beanDomain,$lazyChecks=false){
 		$expl = explode('.', $beanDomain);
 		$beanName = $expl[1] . '\\' . $expl[2];
-		$bean = new $beanName();
+		if(class_exists($beanName)) $bean = new $beanName();
+		else throw new GraphException('Bean '.$beanName.' is not handlend in this module', 5000, 500);	
 		if ($bean instanceof Bean) {
 			$bean->setLazy(true);
 			$bean->setContent($beanContent);
@@ -74,8 +75,8 @@ class BeanFactory
 			} else {
 				return false;
 			}
-		} else				
-			return false;
+		} else		
+			throw new GraphException('Bean '.$beanName.' is not handlend in this module', 5000, 500);
 	}
 
 	public static function getBeanParsingErrs()

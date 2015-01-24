@@ -3,7 +3,11 @@ namespace Graphene\db\drivers;
 use Graphene\db\CrudDriver;
 use \mysqli;
 use \Exception;
-
+use Graphene\controllers\exceptions\GraphException;
+use Graphene\controllers\exceptions\ExceptionCodes;
+use Graphene\models\Bean;
+use \PDO;
+use \PDOStatement;
 class CrudMySql implements CrudDriver
 {
 
@@ -22,446 +26,259 @@ class CrudMySql implements CrudDriver
 	 * ---------------------------------------
 	 */
 	// Connection
-	public function getConnection ()
-	{
+	public function getConnection (){
 		if ($this->connection == null) {
-			$this->connection = new mysqli($this->url, $this->username, 
-					$this->password, $this->dbname);
-			if (mysqli_connect_errno()) {
-				$this->connection = null;
-				log_write(self::LOG_NAME . 'mySql connection fails');
-				return false;
-			} else {
+			try{
+				$this->connection = new PDO('mysql:host='.$this->url.';dbname='.$this->dbname, $this->username, $this->password);
 				log_write(self::LOG_NAME . 'mySql connection success');
 				return $this->connection;
+			}catch (Exception $e){
+				log_write(self::LOG_NAME . 'mySql connection fails: '.$e->getMessage());
+				$this->connection = null;
+				throw new GraphException('Error on mysql connection: '.$e->getMessage(), ExceptionCodes::DRIVER_CONNECTION, 500);
 			}
-		} else {
-			return $this->connection;
-		}
-	}
-	
-	/* TAG Create */
-	public function create ($json, $id = null)
-	{
-		// log_write(self::LOG_NAME.'Creation request');
-		if (! $this->InitDb($json))
-			throw new Exception(
-					'Error when init mySql JSON-CRUD table db for:' .
-							 CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $db = $this->getConnection())
-			throw new Exception('Connection error', 
-					CrudDriver::INITALIZATION_ERROR_CODE);
-		if ($id == null)
-			$id = uniqid();
-		try {
-			$db->autocommit(false);
-			$db->begin_transaction();
-			$db->query('SET @new_id=\'' . $id . '\';');
-			$insertq = $this->getCreationInsertQueries($json);
-			foreach ($insertq as $ins) {
-				$db->query($ins);
-			}
-			// $db->end_transaction();
-			$db->commit();
-			$db->autocommit(true);
-			$j = json_decode($json, true);
-			$j['content']['id'] = $id;
-			$json = json_encode($j, JSON_PRETTY_PRINT);
-			log_write(
-					self::LOG_NAME . 'Creation of: ' . $this->getDomain($json) .
-							 ':' . $id . ' successful');
-			return $json;
-		} catch (Exception $e) {
-			$db->rollback();
-			log_write(self::LOG_NAME . 'Exception ' . $e->getMessage());
-			throw new Exception(
-					'Query error when insert rollback' .
-							 CrudDriver::CREATING_GENERIC_ERROR_CODE);
-		}
-	}
-	
-	/* TAG Read */
-	public function read ($json)
-	{
-		// log_write(self::LOG_NAME.'Reading request');
-		if (! $this->InitDb($json))
-			throw new Exception(
-					'Error when init mySql JSON-CRUD table db for:' .
-							 CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $db = $this->getConnection())
-			throw new Exception('Connection error', 
-					CrudDriver::INITALIZATION_ERROR_CODE);
-		$schema = $this->jsonToPathSchema($json);
-		// se e settato l'id carica solo in base all' id, altrimenti esegue la
-		// query in and;
-		if (isset($schema['id']))
-			return $this->readFromId($json);
-		else
-			return $this->readFromQuery($json);
-	}
-	
-	/* TAG Update */
-	public function update ($json)
-	{
-		// log_write(self::LOG_NAME.'Updating request');
-		if (! $this->InitDb($json))
-			throw new Exception(
-					'Error when init mySql JSON-CRUD table db for:' .
-							 CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $db = $this->getConnection())
-			throw new Exception('Connection error', 
-					CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $id = $this->getId($json))
-			throw new Exception('Storage id not found', 
-					CrudDriver::EDITING_GENERIC_ERROR_CODE);
-		if (! $this->readFromId($json))
-			throw new Exception('Element not found', 
-					CrudDriver::EDITING_GENERIC_ERROR_CODE);
+		} else return $this->connection;
 		
-		try {
-			$this->delete($json);
-			$created = $this->create($json, $id);
-			log_write(
-					self::LOG_NAME . 'Update of: ' . $this->getDomain($json) .
-							 ':' . $id . ' successful');
-			return $created;
-		} catch (Exception $e) {
-			log_write(self::LOG_NAME . 'Update Exception ' . $e->getMessage());
-			throw new Exception(
-					'Editing error: ' . $e->getMessage() .
-							 CrudDriver::EDITING_GENERIC_ERROR_CODE);
+	}
+
+	/* TAG Create */
+	public function create ($json){
+		$this->init($json);
+		$decoded=json_decode($json,true);
+		$cols=$this->columnsByStruct($decoded['content']);
+		$colNames='';
+		$colValues='';
+		foreach($cols as $name=>$value){
+			$colNames=$colNames.'`'.$name.'`,';
+			if($value===false)$colValues = $colValues.'\'0\',';
+			else if($value===true)$colValues = $colValues.'\'1\',';
+			else $colValues=$colValues.'\''.$value.'\',';
 		}
+		$colNames=	substr($colNames, 0,-1);
+		$colValues=	substr($colValues, 0,-1);
+		$q=self::INSERT_PTT;
+		$q=str_replace('<fields>',$colNames, $q);
+		$q=str_replace('<values>',$colValues, $q);
+		$q=str_replace('<dbname>',$this->dbname, $q);
+		$q=str_replace('<tableName>',$this->prefix.'_'.str_replace('.','_',$decoded['domain']).'_bean', $q);
+		//Query
+		$res=$this->connection->query($q);
+		$err=$this->connection->errorInfo();
+		if(strcasecmp($err[0], '00000')!=0)	throw new GraphException('mySql CREATE exception '.$err[2], ExceptionCodes::DRIVER_CREATE, 500);
+		if($res instanceof PDOStatement)$res->fetchAll();
+		$tmpJ=$decoded;
+		unset($tmpJ['content']);
+		$tmpJ['content']['id']=$decoded['content']['id'];
+		return $this->read(json_encode($tmpJ));
+
+		//print_r($cols);
+	}
+
+	/* TAG Read */
+	public function read ($json){
+		$this->init($json);
+		$decoded=json_decode($json,true);
+		$q=self::SELECT_PTT;
+		$cols=$this->columnsByStruct($decoded['content']);
+		$cond='\'1\'=\'1\'';
+		foreach($cols as $name=>$value){$cond=$cond.' AND `'.$name.'`=\''.$value.'\'';}
+		$q=str_replace('<dbname>',$this->dbname, $q);
+		$q=str_replace('<tableName>',$this->prefix.'_'.str_replace('.','_',$decoded['domain']).'_bean', $q);
+		$q=str_replace('<cond>',$cond, $q);
+		$return=array();
+		//Exec query
+		$res=$this->connection->query($q);
+		$err=$this->connection->errorInfo();
+		if(strcasecmp($err[0], '00000')!=0)	throw new GraphException('mySql driver READ exception '.$err[2], ExceptionCodes::DRIVER_READ, 500);		
+		if($res instanceof PDOStatement){
+			$results=array();
+			$i=0;
+			while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
+				foreach($row as $rk=>$rv){$results[$i][$rk]=$rv;}
+				$i++;
+			}
+			foreach($results as $res){
+				$return[]=$this->colsToJsonArr($res);
+			}
+		}
+		$retJson=$decoded;
+		unset($retJson['content']);
+		$retJson['collection']=$return;
+		return json_encode($retJson,JSON_PRETTY_PRINT);
+	}
+
+	/* TAG Update */
+	public function update ($json)	{
+		$this->init($json);
+		$decoded=json_decode($json,true);
+		$cols=$this->columnsByStruct($decoded['content']);
+		$q=self::UPDATE_PTT;
+		$kv=' ';
+		foreach($cols as $label=>$value){
+			if(!strcasecmp($label, 'id')==0){
+				$kv=$kv.'`'.$label.'`=\''.$value.'\',';
+			}
+		}
+		$kv=substr($kv, 0,-1);
+		$q=str_replace('<dbname>',$this->dbname, $q);
+		$q=str_replace('<tableName>',$this->prefix.'_'.str_replace('.','_',$decoded['domain']).'_bean', $q);
+		$q=str_replace('<kv>',$kv, $q);
+		$q=str_replace('<id>',$cols['id'],$q);
+		$res=$this->connection->query($q);
+		$err=$this->connection->errorInfo();
+		if(strcasecmp($err[0], '00000')!=0)	throw new GraphException('mySql driver UPDATE exception '.$err[2], ExceptionCodes::DRIVER_UPDATE, 500);
+		if($res instanceof PDOStatement)$res->fetchAll();
+		$tmpJ=$decoded;
+		unset($tmpJ['content']);
+		$tmpJ['content']['id']=$decoded['content']['id'];
+		return $this->read(json_encode($tmpJ));
+	}
+
+	/* TAG Delete */
+	public function delete ($json){
+		$this->init($json);
+		$decoded=json_decode($json,true);
+		$q=self::DELETE_PTT;
+		$q=str_replace('<dbname>',$this->dbname, $q);
+		$q=str_replace('<tableName>',$this->prefix.'_'.str_replace('.','_',$decoded['domain']).'_bean', $q);
+		$q=str_replace('<id>',$decoded['content']['id'], $q);
+		$res=$this->connection->query($q);
+		$res=$this->connection->query($q);
+		$err=$this->connection->errorInfo();
+		if(strcasecmp($err[0], '00000')!=0)	throw new GraphException('mySql driver DELETE exception '.$err[2], ExceptionCodes::DRIVER_UPDATE, 500);	
+		if($res instanceof PDOStatement)$res->fetchAll();
+		return true;
 	}
 	
-	/* TAG Delete */
-	public function delete ($json)
-	{
-		// log_write(self::LOG_NAME.'Deletion request');
-		if (! $this->InitDb($json))
-			throw new Exception(
-					'Error when init mySql JSON-CRUD table db for:' .
-							 CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $db = $this->getConnection())
-			throw new Exception('Connection error', 
-					CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $id = $this->getId($json))
-			throw new Exception('Storage id not found', 
-					CrudDriver::DELETION_GENERIC_ERROR_CODE);
-		$delQ = $this->getDeleteQuery($json);
-		try {
-			$db->autocommit(false);
-			$db->begin_transaction();
-			$db->query('SET SQL_SAFE_UPDATES = 0;');
-			$db->query($delQ);
-			$db->query('SET SQL_SAFE_UPDATES = 1;');
-			$db->commit();
-			$db->autocommit(true);
-			log_write($delQ);
-			log_write(
-					self::LOG_NAME . 'Deletion of: ' . $this->getDomain($json) .
-							 ':' . $id . ' successful');
-			return true;
-		} catch (Exception $e) {
-			log_write(self::LOG_NAME . 'Delete Exception: ' . $e->getMessage());
-			throw new Exception('error on deletion query: ' . $e->getMessage(), 
-					CrudDriver::DELETION_GENERIC_ERROR_CODE);
+	private function init($json){
+		$this->getConnection();
+		$decoded=json_decode($json,true);
+		$tableName=$this->prefix.'_'.str_replace('.','_',$decoded['domain']).'_bean';
+		$exists=$this->connection->query('SELECT 1 FROM `'.$this->dbname.'`.`'.$tableName.'` LIMIT 1;');
+		if($exists instanceof PDOStatement)$exists->fetchAll();
+		else $this->createTable($tableName, $decoded);
+	}
+	private function createTable($tableName,$decodedJson){
+		$struct=$decodedJson['struct'];
+		$creationQ=self::TBL_CREATION_PTT;
+		$flatArray=$this->columnsByStruct($struct);
+		$cols=$this->convertTypes($flatArray);
+		$colsStr='';		
+		foreach($cols as $col=>$type){
+			$colsStr=$colsStr.'`'.$col.'` '.$type.',';
 		}
+		$creationQ=str_replace('<dbname>', $this->dbname, $creationQ);
+		$creationQ=str_replace('<tableName>', $tableName, $creationQ);
+			
+		$creationQ=str_replace('<fields>', $colsStr, $creationQ);
+		$creationQ=str_replace('<uniqueIndexes>', $this->getUniques($flatArray), $creationQ);
+		$res=$this->connection->query($creationQ);
+		$err=$this->connection->errorInfo();
+		if(strcasecmp($err[0], '00000')!=0)	throw new GraphException('mySql driver TABLE CREATION error: '.$err[2].'________QUERY_:____'.$creationQ, ExceptionCodes::DRIVER_UPDATE, 500);
+		if($res instanceof PDOStatement)$res->fetchAll();
 	}
-
-	public function getSettings ()
-	{}
-
-	public function getInfos ()
-	{
-		return self::INFO;
-	}
-	/*
-	 * ----------------------------------------
-	 * CLASS ROUTINES
-	 * ---------------------------------------
-	 *
-	 */
-	// TAG read from id
-	private function readFromId ($json)
-	{
-		if (! $this->InitDb($json))
-			throw new Exception(
-					'Error when init mySql JSON-CRUD table db for:' .
-							 CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $db = $this->getConnection())
-			throw new Exception('Connection error', 
-					CrudDriver::INITALIZATION_ERROR_CODE);
-		$result = $db->query($this->getReadIdQuery($json));
-		$jsonRet = $this->resultSetToJson($json, $result);
-		log_write(
-				self::LOG_NAME . 'Read of: ' . $this->getDomain($json) . ':' .
-						 $this->getId($json) . ' successful');
-		return $jsonRet;
-	}
-	// TAG read from query
-	private function readFromQuery ($json)
-	{
-		log_write(
-				self::LOG_NAME . 'Reading from query: ' .
-						 json_encode(json_decode($json, true)));
-		if (! $this->InitDb($json))
-			throw new Exception(
-					'Error when init mySql JSON-CRUD table db for:' .
-							 CrudDriver::INITALIZATION_ERROR_CODE);
-		if (! $db = $this->getConnection())
-			throw new Exception('Connection error', 
-					CrudDriver::INITALIZATION_ERROR_CODE);
-			/*
-		 * leggi tutto in base alle condizioni
-		 * conta le condizioni soddisfatte dai vari nodi
-		 * leggi gli id che soddisfano tutte le condizioni
-		 * invia i risultati come array json
-		 */
-		$schema = $this->jsonToPathSchema($json);
-		unset($schema['id']);
-		$result = $db->query($this->getReadListQuery($json));
-		$counts = array();
-		// Sfoglio i risultati
-		while ($row = $result->fetch_array()) {
-			if (! isset($counts[$row['id']]))
-				$counts[$row['id']] = 1;
-			else
-				$counts[$row['id']] ++;
-		}
-		$result->close();
-		// Cerco i risultati esatti
-		$results = array();
-		foreach ($counts as $id => $count) {
-			if ($count >= count($schema)) {
-				/* Creazione json solo id */
-				$q = array(
-					'domain' => $this->getDomain($json),
-					'type' => $this->getType($json),
-					'content' => array()
-				);
-				$q['content']['id'] = $id;
-				$loaded = $this->readFromId(json_encode($q));
-				$loadedArr = json_decode($loaded, true);
-				$results[] = $loadedArr['content'];
-			}
-		}
-		$return = array(
-			'domain' => $this->getDomain($json),
-			'type' => $this->getType($json),
-			'collection' => $results
-		);
-		log_write(
-				self::LOG_NAME . 'Readed ' . count($results) .
-						 ' element/s from query');
-		return json_encode($return);
-	}
-
-	private function getId ($json)
-	{
-		$decoded = json_decode($json, true);
-		if (isset($decoded['content']['id']))
-			return $decoded['content']['id'];
-		else
-			return null;
-	}
-
-	private function getDomain ($json)
-	{
-		$decoded = json_decode($json, true);
-		if (isset($decoded['domain']))
-			return $decoded['domain'];
-		else
-			return null;
-	}
-
-	private function getType ($json)
-	{
-		$decoded = json_decode($json, true);
-		if (isset($decoded['type']))
-			return $decoded['type'];
-		else
-			return null;
-	}
-
-	private function isGenericClass ($json)
-	{
-		$decoded = json_decode($json, true);
-		return count($decoded['content']) == 0;
-	}
-
-	private function initDb ($json)
-	{
-		if ($db = $this->getConnection()) {
-			if (! $db->query($this->getTableCreationQuery($json)))
-				return false;
-			else
-				return true;
-		}
-		return false;
-	}
-
-	private function jsonToPathSchema ($json){
-		$json = json_decode($json, true);
-		$path = '';
-		$schema = array();
-		return $this->recContentJsonToPathSchema($json['content'], $path, $schema);
-	}
-
-	private function recContentJsonToPathSchema ($parsed_content, &$path, &$schema){
-		foreach ($parsed_content as $key => $value) {
-			if (strcmp($path, '') == 0)
-				$tmpPath = $key;
-			else
-				$tmpPath = $path . "." . $key;
-			if (is_array($value) && $parsed_content != NULL)
-				$this->recContentJsonToPathSchema($value, $tmpPath, $schema);
-			else {
-				$schema[$tmpPath] = $value;
-			}
+	private function columnsByStruct ($parsed_struct, &$path='', &$schema=null){
+		if($schema==null) $schema=array();
+		foreach ($parsed_struct as $key => $value) {
+			if (strcmp($path, '') == 0) $tmpPath = $key;
+			else $tmpPath = $path . '_' . $key;
+			if (is_array($value) && $parsed_struct != NULL)
+				$this->columnsByStruct($value, $tmpPath, $schema);
+			else {$schema[$tmpPath] = $value;}
 		}
 		return $schema;
 	}
-
-	private function getTableName ($json)
-	{
-		$jsn = json_decode($json, true);
-		return str_replace(".", "_", $jsn['domain']) . "_" . $jsn['type'];
-	}
-
-	private function resultSetToJson ($json, $rs)
-	{
-		$j = json_decode($json, true);
-		$mainData = array();
-		$mainData['domain'] = $j['domain'];
-		$mainData['type'] = $j['type'];
-		// $mainData['content']['id']=$j['content']['id'];
-		$count = 0;
-		$v = null;
-		$result = array();
-		while ($resArr = $rs->fetch_array()) {
-			$result[$count]['path'] = $resArr['path'];
-			$result[$count]['value'] = $resArr['value'];
-			// $result [$count] ['version'] = $resArr ['version'];
-			$result[$count]['id'] = $resArr['id'];
-			$count ++;
+	private function colsToJsonArr($row){
+		$res=array();
+		foreach ($row as $k=>$v){
+			$expl=explode('_', $k);
+			$tRes=&$res;
+			if(count($expl)>1){
+				//goto leaf
+				foreach($expl as $e){
+					if(!isset($tRes[$e]))$tRes[$e]=array();
+					$tRes=&$tRes[$e];
+				}
+				//Popolate leaf
+				$tRes=$v;
+			}else{
+				$tRes[$k]=$v;
+			}
 		}
-		$rs->close();
-		$mainData['content'] = $this->getContentByResultSet($result);
-		$ret = json_encode($mainData, JSON_PRETTY_PRINT);
+		return $res;
+	}
+	private function convertTypes($flat){
+		$ret=array();
+		foreach($flat as $flatk=>$flatv){
+			$ret[$flatk]=$this->convertType($flatv);
+		}
 		return $ret;
 	}
-
-	private function getContentByResultSet ($result)
-	{
-		$content = array();
-		foreach ($result as $res) {
-			$temp = &$content;
-			$exploded = explode(".", $res['path']);
-			foreach ($exploded as $k) {
-				$temp = &$temp[$k];
-			}
-			$temp = $res['value'];
-			unset($temp);
-			$content['id'] = $res['id'];
-			// $content ['version'] = $res ['version'];
+	private function getUniques($cols){
+		$colstr=' ';
+		foreach($cols as $col=>$type){
+			if(in_array(substr(Bean::UNIQUE, strlen(Bean::CHECK_SEP)), explode(Bean::CHECK_SEP, $type)))
+				$colstr=$colstr.', UNIQUE INDEX `'.$col.'_UNIQUE` (`'.$col.'` ASC)';
 		}
-		return $content;
+		//$colstr=substr($colstr, 0,-1);
+		return $colstr;
 	}
-	/*
-	 * ----------------------------------------
-	 * QUERIES GENERATORS
-	 * ---------------------------------------
-	 *
-	 */
-	/* Delete query generator */
-	private function getDeleteQuery ($json)
-	{
-		$id = $this->getId($json);
-		$retQ = $this->getBaseQuery($json, self::DELETE_QPT);
-		$retQ = str_replace('<id>', $id, $retQ);
-		return $retQ;
-	}
-	/* ReadFromId query generator */
-	private function getReadIdQuery ($json)
-	{
-		$id = $this->getId($json);
-		$retQ = $this->getBaseQuery($json, self::READ_QPT);
-		$retQ = str_replace('<id>', $id, $retQ);
-		return $retQ;
-	}
-	/* ReadFromQuery, query generator */
-	private function getReadListQuery ($json)
-	{
-		$kv = $this->jsonToPathSchema($json);
-		$tmpQ = $this->getBaseQuery($json, self::READ_CLAUSE_OPEN_QPT);
-		if ($this->isGenericClass($json)) {
-			$tmpQ = $tmpQ . " or 1=1";
-		} else {
-			foreach ($kv as $k => $v) {
-				if ($k != null && ! strcmp($k, 'id') == 0) {
-					$clause = self::READ_CLAUSE_QPT;
-					$clause = str_replace('<pathname>', "'" . $k . "'", $clause);
-					$clause = str_replace('<value>', "'" . $v . "'", $clause);
-					$tmpQ = $tmpQ . $clause;
+	private function convertType($type){
+		$texpl =explode(Bean::CHECK_SEP, $type);
+		unset($texpl[0]);
+		array_values($texpl); 
+		$ret='';
+		foreach($texpl as $t){
+			$test =Bean::CHECK_SEP.explode(Bean::CHECK_PAR, $t)[0];
+			if (preg_match('/'.Bean::CHECK_PAR.'/', $type))$test .= Bean::CHECK_PAR;
+			switch ($test) {
+				/* Type checkers */
+				case Bean::BOOLEAN		: {$ret=' INT(1)'; break;}
+				case Bean::DECIMAL		: {$ret=' DOUBLE'; break;}
+				case Bean::INTEGER		: {$ret=' INT(11)'; break;}
+				case Bean::STRING		: {$ret=' VARCHAR(45)'; break;}
+				case Bean::UID			: {$ret=' VARCHAR(32)'; break;}
+				case Bean::DATE			: {$ret=' DATE'; break;}
+				case Bean::DATETIME 	: {$ret=' DATETIME'; break;}
+				case Bean::MATCH 		: {$ret=' VARCHAR(45)'; break;}
+				case Bean::ENUM			: {
+					$elems=explode(',',explode(Bean::CHECK_PAR, $t)[1]);
+					$tp=' ENUM(';
+					foreach($elems as $elem){
+						$tp=$tp.'\''.$elem.'\',';
+					}
+					$tp=substr($tp, 0,-1);
+					$tp=$tp.')';
+					$ret=$tp;
+					break;
 				}
+				/* Content checkers */
+				case Bean::MAX_LEN		: {$ret=' VARCHAR('.explode(Bean::CHECK_PAR, $t)[1].')'; break;}
+				case Bean::MIN_LEN		: {$ret=' VARCHAR('.(45+explode(Bean::CHECK_PAR, $t)[1]).')'; break;}
+				case Bean::NOT_NULL     : {$ret=$ret.' NOT NULL'; break;}
+				default 				: {}
 			}
 		}
-		$tmpQ = $tmpQ . ";";
-		return $tmpQ;
+		if(strcmp($ret,'')==0)$ret=' VARCHAR(200)';
+		return $ret;
 	}
-	/* Create query generator */
-	private function getCreationInsertQueries ($json)
-	{
-		$queryes = array();
-		$kv = $this->jsonToPathSchema($json);
-		foreach ($kv as $k => $v) {
-			if ($k != null && ! strcmp($k, 'id') == 0) {
-				$tmpQ = $this->getBaseQuery($json, self::INSERT_QPT);
-				$tmpQ = str_replace('<nid>', '\'' . uniqid('') . '\'', $tmpQ);
-				$tmpQ = str_replace('<id>', '@new_id', $tmpQ);
-				$tmpQ = str_replace('<pathname>', "'" . $k . "'", $tmpQ);
-				$tmpQ = str_replace('<value>', "'" . $v . "'", $tmpQ);
-				$queryes[] = $tmpQ;
-			}
-		}
-		return $queryes;
-	}
-	/* Table creation query generator */
-	private function getTableCreationQuery ($json)
-	{
-		return $this->getBaseQuery($json, self::CREATE_TABLE_QPT);
-	}
-	/* Base query generator */
-	private function getBaseQuery ($json, $query)
-	{
-		$query = str_replace('<dbname>', $this->dbname, $query);
-		$query = str_replace('<prefix>', $this->prefix, $query);
-		$query = str_replace('<table_name>', $this->getTableName($json), $query);
-		return $query;
-	}
-
+	public function getSettings (){}
+	public function getInfos (){return self::INFO;}
 	private $connection;
-
 	private $url, $username, $password, $dbname, $prefix;
-	
+
 	/*
 	 * ---------------------
 	 * COSTANTI
 	 * --------------------
 	 */
-	const LOG_NAME = '[CRUD mySql Driver] ';
-
-	const INFO = 'mySql CRUD-JSON driver v.1b, for Graphene 0.1b';
+	const TBL_CREATION_PTT ='CREATE TABLE IF NOT EXISTS `<dbname>`.`<tableName>`( <fields> PRIMARY KEY(`id`) <uniqueIndexes> ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8;';
+	const DELETE_PTT='DELETE FROM `<dbname>`.`<tableName>` WHERE `id`=\'<id>\';';
+	const SELECT_PTT='SELECT * FROM `<dbname>`.`<tableName>` WHERE <cond>';
+	const UPDATE_PTT='UPDATE `<dbname>`.`<tableName>` SET <kv>  WHERE `id`=\'<id>\'';
+	const UNIQUE_PTT='UNIQUE INDEX `<field>_UNIQUE (`<field>`)';
+	const LOG_NAME = '[CRUD mySql Driver v2] ';
 	
-	const CREATE_TABLE_QPT = 'CREATE TABLE IF NOT EXISTS `<dbname>`.`<prefix>_<table_name>` (`node_id` VARCHAR(30) NOT NULL ,`id` VARCHAR(30) NOT NULL ,`node_path` VARCHAR(256) NOT NULL ,`node_value` TEXT NULL DEFAULT NULL,PRIMARY KEY (`node_id`));';
-	// Create queries
-	const INSERT_QPT = "INSERT INTO `<dbname>`.`<prefix>_<table_name>` (`node_id`,`id`, `node_path`, `node_value`) VALUES (<nid>,<id>, <pathname>, <value>);";
-	// update queries
-	const DELETE_QPT = "DELETE FROM `<dbname>`.`<prefix>_<table_name>` WHERE `id`='<id>';";
-	// read queries
-	const READ_QPT = "SELECT id as id ,node_path as path ,node_value as value FROM `<dbname>`.`<prefix>_<table_name>` where id='<id>';";
-
-	const READ_CLAUSE_OPEN_QPT = "SELECT id FROM `<dbname>`.`<prefix>_<table_name>` where 1=2 ";
-
-	const READ_CLAUSE_QPT = " or (node_path=<pathname> and BINARY(node_value)=<value>) ";
+	const INSERT_PTT='INSERT INTO `<dbname>`.`<tableName>` (<fields>) VALUES (<values>);';
+	const INFO = 'mySql CRUD-JSON driver v.1b, for Graphene 0.1b';
 }

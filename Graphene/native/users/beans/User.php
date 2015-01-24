@@ -2,6 +2,7 @@
 namespace users;
 use Graphene\models\Bean;
 use Graphene\controllers\bean\BeanController;
+use Graphene\controllers\exceptions\GraphException;
 
 class User extends Bean{
 	public function defineStruct(){
@@ -10,6 +11,13 @@ class User extends Bean{
 							Bean::NOT_NULL. Bean::UNIQUE. Bean::MAX_LEN.'130',
 				'password' => Bean::STRING . Bean::NOT_NULL
 		);
+	}
+	public function onCreate(){
+		if(!$this->checkPassword())throw new GraphException('Password requires one upper and one number 6-25 chars', 4001, 400);
+		$this->encryptPassword();
+	}
+	public function onSend(){
+		$this->unsetPassword();
 	}
 	/**
 	 * Regole password
