@@ -102,7 +102,7 @@ class Module {
 			else $this->loadAction($action,$request);
 		}
 	}
-	private function loadAction($action,$request,$dir=null,$namespace=null,$pars=null){
+	private function loadAction($action,$request,$dir=null,$namespace=null,$pars=null,$queryPrefix=''){
 		if($dir==null)$dir=$this->getModuleDir();
 		if($namespace==null) $namespace=$this->getNamespace();
 		if($pars == null && isset($action['@attributes']['handler'])) 
@@ -119,7 +119,7 @@ class Module {
 			require_once $dir. '/' . $file;
 			$handlerClass = $namespace. '\\' . $class;
 			$actionClass = new $handlerClass ();
-			$actionClass->setUp ( $this, $action['@attributes'], $request,$pars);
+			$actionClass->setUp ( $this, $action['@attributes'], $request,$pars,$queryPrefix);
 			//echo $actionClass->getUniqueActionName()."\n";
 			$this->actions [] = $actionClass;
 		}
@@ -135,9 +135,11 @@ class Module {
 			foreach ( $actions as $action ) {
 				if(str_starts_with($action['@attributes']['name'], '$')) $this->injectActions($action,$request);
 				else{
-					if(isset($injection['@attributes']['pars']))$pars=$injection['@attributes']['pars'];
+					if(isset($injection['@attributes']['pars']))$pars=explode(',', $injection['@attributes']['pars']);
 					else $pars=array();
-					$this->loadAction($action,$request,$injectionDir.'/'.strtoupper($injectionName),'injection',explode(',', $pars));
+					if(isset($injection['@attributes']['query-prefix']))$pfx=$injection['@attributes']['query-prefix'];
+					else $pfx='';
+					$this->loadAction($action,$request,$injectionDir.'/'.strtoupper($injectionName),'injection',$pars,$pfx);
 				}
 			}
 		}else {

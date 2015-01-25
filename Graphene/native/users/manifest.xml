@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module v="0.0.1.0">
-		<info
-			version		= "0.1.0.1"
-			name		= "com.graphene.users"
-			namespace	= "users"
-			author		= "Marco Magnetti [marcomagnetti@gmail.com]"
-			support		= "{{host.addr}}/doc/user"
-			beans-path	= "beans"
-		/>
+	<info
+		version		= "0.1.0.1"
+		name		= "com.graphene.users"
+		namespace	= "users"
+		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
+		support		= "{{host.addr}}/doc/user"
+		beans-path	= "beans"
+	/>
 
-		<action name="VALIDATE" handler="Validate@actions/Validate.php" 	method="get" 	query="validate" 	/>
-		<action name="ALL" 		handler="AllUsers@actions/UserGetAll.php" 	method="get" 	query="all" 		/>
-		
-		<!-- CRUD ACTIONS INJECTION-->
-		<action name="$CRUD" pars="users\User" />
+	<action name="VALIDATE" handler="Validate@actions/Validate.php" 	method="post" 	query="validate" 	/>
+	<action name="ALL" 		handler="AllUsers@actions/UserGetAll.php" 	method="get" 	query="all" 		/>
+	
+	<!-- CRUD ACTIONS INJECTION-->
+	<action name="$CRUD" pars="users\User" query-prefix="user/"/>
 </module>

@@ -6,7 +6,6 @@
 			namespace	= "system"
 			author		= "Marco Magnetti [marcomagnetti@gmail.com]"
 			support		= "{{host.addr}}/doc/system"
-			beans-path	= "beans"
 		/>
 		
 		<handle event="install" handler="Install@handlers/install.php"   				 />

@@ -17,7 +17,6 @@ class Read extends Action{
 	public function run(){
 		$bean=new $this->pars[0];
 		$bean->setLazy(true);
-		
 		$id=$this->request->getPar('id');
 		if($id == null) throw new GraphException('Invalid id for '.$bean->getName(), 4002, 400);
 		$bean->setId($id);

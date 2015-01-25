@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module v="0.0.1.0">
+	<info
+		version		= "0.1.0.1"
+		name		= "com.graphene.auth"
+		namespace	= "auth"
+		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
+		support		= "{{host.addr}}/doc/user"
+		beans-path	= "beans"
+	/>
+
+	<action name="LOGIN" 	handler="Login@actions/Login.php" 		method="post" query="login" 	   />
+	<action name="VALIDATE" handler="Validate@actions/Validate.php" method="get"  query="validate/:at" />
+	<action name="LOGOUT"   handler="Logout@actions/Logout.php" 	method="get"  query="logout/:at"   />
+
+</module>

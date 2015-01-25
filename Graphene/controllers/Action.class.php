@@ -12,12 +12,12 @@ use \Exception;
 use Graphene\controllers\exceptions\GraphException;
 
 abstract class Action {
-	final public function setUp(Module $ownerModule, $actionSettings, GraphRequest $request,$pars) {
+	final public function setUp(Module $ownerModule, $actionSettings, GraphRequest $request,$pars,$queryPrefix='') {
 		//SETTING request query
 		if (isset ( $actionSettings['query'] ))
-			$this->urlProcessor = new UrlProcessor ( $actionSettings['query'] );
+			$this->urlProcessor = new UrlProcessor ( $queryPrefix.$actionSettings['query'] );
 		else
-			$this->urlProcessor = new UrlProcessor ( '' );
+			$this->urlProcessor = new UrlProcessor ( $queryPrefix.'' );
 		
 		//SETTING handling method
 		if (isset ( $actionSettings['method'] ))
