@@ -1,4 +1,4 @@
-#Quering Graphene
+#Queryng Graphene
 Una delle questioni ricorrenti è quella di recuperare i dati come meglio crediamo, l'approccio di graphene ingessa un po questo tipo di operazioni in favore dell' astrazione dello storage in quanto non tutte le basi di dati godono delle stesse peculiarità e caratteristiche
 ##Funzionamento
 Quando bisogna reperire i dati, **Graphene** non tiene conto dell' obbligatorietà dei campi, e quindi della clausola `NOT_NULL`, pertanto è possibile popolare parzialmente un bean, per poi invocarne il metodo `.read()`, al fine di ottenere un bean dello stesso tipo ottenuto dallo storage.
