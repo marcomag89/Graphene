@@ -7,11 +7,11 @@ class Session extends Bean{
 	public function defineStruct (){
 		$lazy = array();
 		$lazy['hostAddress']  = Bean::STRING       .Bean::NOT_EMPTY;
-		$lazy['hostAgent']    = Bean::STRING       .Bean::NOT_EMPTY;
+		$lazy['hostAgent']    = Bean::STRING       .Bean::MAX_LEN.'256'	.Bean::NOT_EMPTY;
 		$lazy['apiKey']       = Bean::UID          .Bean::NOT_EMPTY;
 		$lazy['enabled']      = Bean::BOOLEAN      .Bean::NOT_EMPTY;
-		$lazy['timeStamp']    = Bean::INTEGER      .Bean::NOT_EMPTY;
-		$lazy['accessToken']  = Bean::MATCH."/^[A-Za-z0-9]+$/" .Bean::NOT_EMPTY.Bean::MAX_LEN.'120'.Bean::UNIQUE;
+		$lazy['timeStamp']    = Bean::INTEGER      .Bean::MAX_LEN.'40'	.Bean::NOT_EMPTY;
+		$lazy['accessToken']  = Bean::MATCH."/^[A-Za-z0-9]+$/" 			.Bean::NOT_EMPTY.Bean::MAX_LEN.'120'.Bean::UNIQUE;
 		$lazy['user']         = Bean::UID          .Bean::NOT_EMPTY;
 		return $lazy;
 	}

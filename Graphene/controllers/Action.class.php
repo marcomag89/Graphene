@@ -135,28 +135,34 @@ abstract class Action {
 		$fw = Graphene::getInstance ();
 		return $fw;
 	}
-	protected function forward($url, $body = null, $method = null) {
-		$req = new GraphRequest ( true );
-		$req->setUrl ( $url );
-		$req->appendForward ( $this );
+	protected function forward ($url, $body = null, $method = null)
+	{
+		$req = new GraphRequest(true);
+		$req->setUrl($url);
 		/* Creazione metodo */
 		if ($body == null && $method == null)
-			$req->setMethod ( 'GET' );
-		else if ($body != null && $method == null)
-			$req->setMethod ( 'POST' );
-		else if ($method != null)
-			$req->setMethod ( $method );
+			$req->setMethod('GET');
+		else 
+			if ($body != null && $method == null)
+				$req->setMethod('POST');
+			else 
+				if ($method != null)
+					$req->setMethod($method);
 			/* Creazione body */
 		if ($body != null)
-			$req->setBody ( $body );
+			$req->setBody($body);
 		else
-			$req->setBody ( '' );
-		$req->setUserAgent ( $this->request->getUserAgent () );
-		$req->setHeader ( 'forwarded-by', $this->getUniqueActionName () );
+			$req->setBody('');
+		$headers=$this->request->getHeaders();
+		foreach($headers as $hk=>$hv){$req->setHeader($hk, $hv);}
+		$req->setUserAgent($this->request->getUserAgent());
+		$req->setHeader('forwarded-by', $this->getUniqueActionName());
+		$req->appendForward($this);
 		/* Forwarding */
-		$fw = $this->getFramework ();
-		return $fw->forward ( $req );
+		$fw = $this->getFramework();
+		return $fw->forward($req);
 	}
+	
 	function encodeJson($array) {
 		return json_encode ( $array, JSON_PRETTY_PRINT );
 	}

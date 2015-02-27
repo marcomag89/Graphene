@@ -137,25 +137,20 @@ class CrudStorage
 	{
 		log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
 		if ($bean->getId() == null)
-			throw new Exception('Unavailable ' . $bean->getName() . ' id', 
-					ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
+			throw new Exception('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
 		if ($bean->getVersion() == null)
-			throw new Exception('Unavailable ' . $bean->getName() . ' version', 
-					ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
+			throw new Exception('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
 		if (! $bean->isValid())
-			throw new Exception(
-					'Error on storage, bean is corrupt: ' .
-							 $bean->getLastTestErrors(), 
-							ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-		$readed = $this->read($bean);
-		if ($readed[0]->isEmpty())
-			throw new Exception($bean->getName() . ' not found', 
-					ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+			throw new Exception('Error on storage, bean is corrupt: ' .$bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+		$beanClass= get_class($bean);
+		$tBean	= new $beanClass;
+		$tBean->setContent(array('id'=>$bean->getId(),'version'=>$bean->getVersion()));
+		$readed = $this->read($tBean);
+		if (!isset($readed[0]) || $readed[0]->isEmpty())
+			throw new Exception($bean->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
 		if ($readed[0]->getVersion() != $bean->getVersion())
 			throw new Exception(
-					$bean->getName() .
-							 ' version Mismatch, reload bean for updates', 
-							ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+					$bean->getName() . ' version Mismatch, reload bean for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
 		$mainCnt = $readed[0]->getContent();
 		$patched = array_replace_recursive($mainCnt, $bean->getContent());
 		$bean->setContent($patched);
@@ -203,4 +198,39 @@ class CrudStorage
 	private $pageElements=10;
 	private $pageNo=0;
 	private $driver;
+	
+	/**
+	 * loaded if stored property is less than model property
+	 * CrudStorage::LESS_THEN.'property'
+	 * CrudStorage::LESS_THEN.'foo_bar_property'
+	 */ 
+	const LESS_THAN='-LT:';
+	
+	/**
+	 * loaded if stored property is greather than model property
+	 * CrudStorage::GREATHER_THEN.'property'
+	 * CrudStorage::GREATHER_THEN.'foo_bar_property'
+	 */
+	const GREATHER_THAN='-GT:';
+	
+	/**
+	 * loaded if stored property/ies matches regex
+	 * CrudStorage::LIKE.'regex,property1,property2'
+	 * CrudStorage::LIKE.'regex,foo_bar_property'
+	 */
+	const LIKE='-LK:';
+	
+	/**
+	 * loads k element of page n 
+	 * CrudStorage::PAGE.'6,1'; //Loads page 1
+	 * CrudStorage::PAGE.'6,2'; //Loads page 2
+	 */
+	const PAGE='-PG:';
+	
+	/**
+	 * loads k element of page n
+	 * CrudStorage::PAGE.'6,1'; //Loads page 1
+	 * CrudStorage::PAGE.'6,2'; //Loads page 2
+	 */
+	const OR_='-OR-';
 }

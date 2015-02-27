@@ -2,8 +2,6 @@
 namespace Graphene\controllers\http;
 use Graphene\controllers\Action;
 use Graphene\Graphene;
-use Slim\Http\Request;
-
 class GraphRequest
 {
 
@@ -139,6 +137,12 @@ class GraphRequest
 		else
 			return $this->headers[$key];
 	}
-
+	public function getHeaders(){
+		return $this->headers;
+	}
+	public function setHeaders($headers=null){
+		if($headers===null)$this->headers=array();
+		$this->headers=$headers;
+	}
 	private $ip, $method, $url, $pars, $headers, $body;
 }
