@@ -3,81 +3,82 @@ $log = '';
 $stdout = null;
 
 /* lib basic functions */
-function str_starts_with ($haystack, $needle)
+function str_starts_with($haystack, $needle)
 {
-	return $needle === "" || strpos($haystack, $needle) === 0;
+    return $needle === "" || strpos($haystack, $needle) === 0;
 }
 
-function str_ends_with ($haystack, $needle)
+function str_ends_with($haystack, $needle)
 {
-	return $needle === "" || substr($haystack, - strlen($needle)) === $needle;
-}
-function str_contains ($haystack, $needle){
-	if (strpos($haystack,$needle) !== false) {
-		return true;
-	}else return false;
+    return $needle === "" || substr($haystack, - strlen($needle)) === $needle;
 }
 
-function url_trimAndClean ($url)
+function str_contains($haystack, $needle)
 {
-	$url = trim($url);
-	if (str_starts_with($url, '/'))
-		$url = substr($url, 1);
-	if (str_ends_with($url, '/'))
-		$url = substr($url, 0, strlen($url) - 1);
-	return $url;
+    if (strpos($haystack, $needle) !== false) {
+        return true;
+    } else
+        return false;
 }
 
-function default_exception_handler (Exception $e)
+function url_trimAndClean($url)
 {
-	// show something to the user letting them know we fell down
-	global $haveException;
-	$haveException = true;
-	$msg = $e->getMessage();
-	echo "Oops qualcosa non va\n";
-	echo "Stiamo lavorando duro per risolvere il problema\n";
-	echo "[Eccezione] $msg";
-	echo "\n----\nStackTrace:\n";
-	$st = $e->getTrace();
-	foreach ($st as $entry) {
-		echo "\t" . 'funct ' . $entry['function'] . '() in ' . $entry['file'] .
-				 "\n";
-	}
-	// print_r($e->getTrace());
-	
-	echo "\n----\nLog\n";
-	log_print();
-	// do some logging for the exception and call the kill_programmer function.
+    $url = trim($url);
+    if (str_starts_with($url, '/'))
+        $url = substr($url, 1);
+    if (str_ends_with($url, '/'))
+        $url = substr($url, 0, strlen($url) - 1);
+    return $url;
 }
 
-function fatal_handler ()
+function default_exception_handler(Exception $e)
 {
-	global $haveException;
-	if ($haveException)
-		return;
-	echo "OhMio dio!\n";
-	echo "Qui abbiamo un problema!\n";
-	log_print();
+    global $haveException;
+    $haveException = true;
+    $msg = $e->getMessage();
+    echo "Oops qualcosa non va\n";
+    echo "Stiamo lavorando duro per risolvere il problema\n";
+    echo "[Eccezione] $msg";
+    echo "\n----\nStackTrace:\n";
+    $st = $e->getTrace();
+    foreach ($st as $entry) {
+        echo "\t" . 'funct ' . $entry['function'] . '() in ' . $entry['file'] . "\n";
+    }
+    
+    echo "\n----\nLog\n";
+    log_print();
 }
 
-function log_write ($what)
+function fatal_handler()
 {
-	global $log;
-	global $stdout;
-	if ($stdout == null)$stdout = fopen('php://stdout', 'w');
-	fputs($stdout, $what);
-	$log .= "\n\t" . $what;
-	// echo "\n".$what;
+    global $haveException;
+    if ($haveException)
+        return;
+    echo "OhMio dio!\n";
+    echo "Qui abbiamo un problema!\n";
+    log_print();
 }
 
-function log_print ()
+function log_write($what)
 {
-	global $log;
-	echo $log;
+    global $log;
+    global $stdout;
+    if ($stdout == null)
+        $stdout = fopen('php://stdout', 'w');
+    fputs($stdout, $what);
+    $log .= "\n\t" . $what;
+    // echo "\n".$what;
 }
-function init_platform(){
-	date_default_timezone_set('Europe/Rome');
+
+function log_print()
+{
+    global $log;
+    echo $log;
+}
+
+function init_platform()
+{
+    date_default_timezone_set('Europe/Rome');
 }
 $haveException = false;
-// register_shutdown_function( "fatal_handler" );
 set_exception_handler("default_exception_handler");
