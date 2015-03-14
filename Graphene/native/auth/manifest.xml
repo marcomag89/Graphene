@@ -6,7 +6,7 @@
 		namespace	= "auth"
 		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
 		support		= "{{host.addr}}/doc/user"
-		beans-path	= "beans"
+		models-path	= "models"
 	/>
 
 	<action name="LOGIN" 	handler="Login@actions/Login.php" 		method="post" query="login" 	   />

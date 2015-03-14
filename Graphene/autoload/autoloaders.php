@@ -12,16 +12,16 @@ function autol_namespace($name)
     }
 }
 
-function autol_beans($name)
+function autol_models($name)
 {
     $expl = explode('\\', $name);
     if (($mod = Graphene::getInstance()->getModule($expl[0])) == false)
         return;
-    if (($beanDir = $mod->getBeanDirectory($expl[1])) == null)
+    if (($modelDir = $mod->getModelDirectory($expl[1])) == null)
         return;
-    if (! is_readable($beanDir))
+    if (! is_readable($modelDir))
         return;
-    require_once $beanDir;
+    require_once $modelDir;
 }
 
 function autol_moduleContent($name)

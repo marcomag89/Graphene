@@ -1,9 +1,9 @@
 <?php
-namespace Graphene\controllers\bean;
+namespace Graphene\controllers\model;
 
-use Graphene\models\Bean;
+use Graphene\models\Model;
 
-class BeanChecker
+class ModelChecker
 {
 
     public function __construct()
@@ -33,31 +33,31 @@ class BeanChecker
 
     /**
      * CONTROLLO CONTENUTO
-     * Controlla se il contenuto del bean e' conforme alla sua struttura.
+     * Controlla se il contenuto del model e' conforme alla sua struttura.
      * E' possibile ignorare o modificare il controllo su alcuni valori
      * estendendo il metodo 'check($label,$value)'
      */
-    public function checkContent(Bean $bean, $struct, $lazyCheck = false)
+    public function checkContent(Model $model, $struct, $lazyCheck = false)
     {
-        return $this->checkExceededValues($bean, $bean->getContent(), $struct, $lazyCheck) && $this->checkStructValues($bean, $bean->getContent(), $struct, $lazyCheck);
+        return $this->checkExceededValues($model, $model->getContent(), $struct, $lazyCheck) && $this->checkStructValues($model, $model->getContent(), $struct, $lazyCheck);
     }
 
     /**
      * CONTROLLO VALORI SUPERFLUI
-     * Controlla se i valori del bean sono contemplati nella struttura e se sono
+     * Controlla se i valori del model sono contemplati nella struttura e se sono
      * validi
      */
-    private function checkExceededValues(Bean $bean, $content = null, $struct, $lazyCheck = false)
+    private function checkExceededValues(Model $model, $content = null, $struct, $lazyCheck = false)
     {
         foreach ($content as $ck => $cv) {
-            if (is_array($cv) && ! $this->checkExceededValues($bean, $cv, $struct[$ck]))
+            if (is_array($cv) && ! $this->checkExceededValues($model, $cv, $struct[$ck]))
                 return false;
             else 
                 if ($struct == null)
                     return false;
                 else 
                     if (! isset($struct[$ck])) {
-                        $this->addError($ck, '(undefinied)', '(undefinied)', 'Undefinied field \'' . $ck . '\' into a ' . $bean->getName() . ' struct');
+                        $this->addError($ck, '(undefinied)', '(undefinied)', 'Undefinied field \'' . $ck . '\' into a ' . $model->getName() . ' struct');
                         return false;
                     }
         }
@@ -66,20 +66,20 @@ class BeanChecker
 
     /**
      * CONTROLLO VALORI DELLA STRUTTURA
-     * Controlla se i valori del bean previsti dalla struttura come not null o
+     * Controlla se i valori del model previsti dalla struttura come not null o
      * come not empty
      * sono effettivamente inseriti
      */
-    private function checkStructValues($bean, $content = null, $struct, $lazyCheck = false)
+    private function checkStructValues($model, $content = null, $struct, $lazyCheck = false)
     {
         if ($content == null)
-            $content = $bean->getContent();
+            $content = $model->getContent();
         foreach ($struct as $sk => $sv) {
             if (! isset($content[$sk]))
                 $content[$sk] = null;
                 // TODO Controllo se array e ha nodo prototipo inferiore
             if (is_array($sv)) {
-                if (! $this->checkStructValues($bean, $content[$sk], $sv, $lazyCheck))
+                if (! $this->checkStructValues($model, $content[$sk], $sv, $lazyCheck))
                     return false;
             } else {
                 if (! $this->isValidValue($content[$sk], $sv, $sk, $lazyCheck))
@@ -105,10 +105,10 @@ class BeanChecker
     public function isValidValue($val, $type, $label = 'nd', $lazyCheck = false)
     {
         if (! is_string($type)) {
-            $this->addError($label, $label . '-definition', Bean::STRING_VALUE, 'invalid field definition: ' . $type);
+            $this->addError($label, $label . '-definition', Model::STRING_VALUE, 'invalid field definition: ' . $type);
             return false;
         }
-        $expl = explode(Bean::CHECK_SEP, $type);
+        $expl = explode(Model::CHECK_SEP, $type);
         unset($expl[0]);
         $errs = 0;
         foreach ($expl as $check) {
@@ -116,7 +116,7 @@ class BeanChecker
             $chResult = $this->check($check, $val, $lazyCheck);
             if ($chResult == false) {
                 $errs ++;
-                $this->addError($label, $check, $type, 'Field \'' . $label . '\':\'' . $val . '\' must be: ' . str_replace(Bean::CHECK_SEP, ' ', $check));
+                $this->addError($label, $check, $type, 'Field \'' . $label . '\':\'' . $val . '\' must be: ' . str_replace(Model::CHECK_SEP, ' ', $check));
             } else 
                 if (strcasecmp($chResult, 'und') == 0) {
                     $errs ++;
@@ -132,38 +132,38 @@ class BeanChecker
      */
     private function check($type, $val, $noChecks = false)
     {
-        $test = explode(Bean::CHECK_PAR, $type)[0];
-        if (preg_match('/' . Bean::CHECK_PAR . '/', $type))
-            $test .= Bean::CHECK_PAR;
+        $test = explode(Model::CHECK_PAR, $type)[0];
+        if (preg_match('/' . Model::CHECK_PAR . '/', $type))
+            $test .= Model::CHECK_PAR;
         switch ($test) {
             /* Type checkers */
-            case Bean::BOOLEAN:
+            case Model::BOOLEAN:
                 return $this->checkBoolean($val, $type);
-            case Bean::DECIMAL:
+            case Model::DECIMAL:
                 return $this->checkDouble($val, $type);
-            case Bean::INTEGER:
+            case Model::INTEGER:
                 return $this->checkInteger($val, $type);
-            case Bean::STRING:
+            case Model::STRING:
                 return $this->checkString($val, $type);
-            case Bean::UID:
+            case Model::UID:
                 return $this->checkUid($val, $type);
-            case Bean::DATE:
+            case Model::DATE:
                 return $this->checkDate($val, $type);
-            case Bean::DATETIME:
+            case Model::DATETIME:
                 return $this->checkDateTime($val, $type);
-            case Bean::ENUM:
+            case Model::ENUM:
                 return $this->checkEnum($val, $type);
-            case Bean::MATCH:
+            case Model::MATCH:
                 return $this->checkMatch($val, $type);
             
             /* Content checkers */
-            case Bean::NOT_EMPTY:
+            case Model::NOT_EMPTY:
                 return $noChecks || $this->checkNotEmpty($val, $type);
-            case Bean::NOT_NULL:
+            case Model::NOT_NULL:
                 return $noChecks || $this->checkNotNull($val, $type);
-            case Bean::MIN_LEN:
+            case Model::MIN_LEN:
                 return $noChecks || $this->checkMinLenght($val, $type);
-            case Bean::MAX_LEN:
+            case Model::MAX_LEN:
                 return $noChecks || $this->checkMaxLenght($val, $type);
             default:
                 return true;
@@ -217,12 +217,12 @@ class BeanChecker
 
     private function checkEnum($val, $type)
     {
-        return $val === null || in_array($val, explode(',', explode(Bean::CHECK_PAR, $type)[1]));
+        return $val === null || in_array($val, explode(',', explode(Model::CHECK_PAR, $type)[1]));
     }
 
     private function checkMatch($val, $type)
     {
-        return $val === null || preg_match(explode(Bean::CHECK_PAR, $type)[1], '' . $val);
+        return $val === null || preg_match(explode(Model::CHECK_PAR, $type)[1], '' . $val);
     }
     
     // Checks values
@@ -233,12 +233,12 @@ class BeanChecker
 
     private function checkMinLenght($val, $type)
     {
-        return $val === null || strlen('' . $val) >= explode(Bean::CHECK_PAR, $type)[1];
+        return $val === null || strlen('' . $val) >= explode(Model::CHECK_PAR, $type)[1];
     }
 
     private function checkMaxLenght($val, $type)
     {
-        return $val === null || strlen($val . '') <= explode(Bean::CHECK_PAR, $type)[1];
+        return $val === null || strlen($val . '') <= explode(Model::CHECK_PAR, $type)[1];
     }
 
     private function checkUid($val, $type)

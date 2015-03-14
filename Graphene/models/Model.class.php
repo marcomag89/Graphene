@@ -2,25 +2,25 @@
 namespace Graphene\models;
 
 use Graphene\Graphene;
-use Graphene\controllers\bean\BeanController;
-use Graphene\controllers\bean\BeanFactory;
+use Graphene\controllers\model\ModelController;
+use Graphene\controllers\model\ModelFactory;
 use \Exception;
 use Graphene\controllers\http\GraphResponse;
 
-abstract class Bean
+abstract class Model
 {
 
     public function __construct()
     {
         $this->structs = $this->defineStruct();
-        $this->beanController = new BeanController($this->getCustomCrudDriver(), $this->structs, $this, func_get_args());
+        $this->modelController = new ModelController($this->getCustomCrudDriver(), $this->structs, $this, func_get_args());
     }
 
     public static function getByResponse(GraphResponse $res)
     {
-        $requestBeans = BeanFactory::createByResponse($res);
-        if (isset($requestBeans[self::stcName()]))
-            return $requestBeans[self::stcName()];
+        $requestModels = ModelFactory::createByResponse($res);
+        if (isset($requestModels[self::stcName()]))
+            return $requestModels[self::stcName()];
         else
             throw new Exception('Bad response', 400);
     }
@@ -28,9 +28,9 @@ abstract class Bean
     public static function getByRequest($lazyChecks = false)
     {
         $req = Graphene::getInstance()->getRequest();
-        $requestBeans = BeanFactory::createByRequest($req, null, $lazyChecks);
-        if (isset($requestBeans[self::stcName()]))
-            return $requestBeans[self::stcName()];
+        $requestModels = ModelFactory::createByRequest($req, null, $lazyChecks);
+        if (isset($requestModels[self::stcName()]))
+            return $requestModels[self::stcName()];
         else
             throw new Exception('Bad request', 400);
     }
@@ -67,7 +67,7 @@ abstract class Bean
 
     public function setLazy($boolean)
     {
-        $this->beanController->setLazy($boolean);
+        $this->modelController->setLazy($boolean);
     }
 
     public function getContent()
@@ -75,14 +75,14 @@ abstract class Bean
         return $this->content;
     }
 
-    public function getBeanController()
+    public function getModelController()
     {
-        return $this->beanController;
+        return $this->modelController;
     }
 
     final public function getStruct($asString = false, $prettyPrint = false)
     {
-        $str = $this->beanController->getStruct();
+        $str = $this->modelController->getStruct();
         if ($asString && ! $prettyPrint)
             return json_encode($str);
         if ($asString && $prettyPrint)
@@ -93,7 +93,7 @@ abstract class Bean
 
     final public function isValid($lazyCheck = false)
     {
-        return $this->beanController->checkContent($this, $lazyCheck);
+        return $this->modelController->checkContent($this, $lazyCheck);
     }
 
     public function isEmpty()
@@ -103,7 +103,7 @@ abstract class Bean
 
     public function getLastTestErrors()
     {
-        $errs = $this->beanController->getLastTestErrors();
+        $errs = $this->modelController->getLastTestErrors();
         $ret = '';
         foreach ($errs as $errField) {
             foreach ($errField as $msm) {
@@ -116,7 +116,7 @@ abstract class Bean
     // Serializzation
     public function serialize()
     {
-        return $this->beanController->serialize($this);
+        return $this->modelController->serialize($this);
     }
 
     /*
@@ -136,42 +136,42 @@ abstract class Bean
      */
     public function getStorage()
     {
-        return $this->beanController->getStorage();
+        return $this->modelController->getStorage();
     }
 
     public function create()
     {
         if ($this->canCreate())
             $this->onCreate();
-        return $this->beanController->create($this);
+        return $this->modelController->create($this);
     }
 
     public function read()
     {
         if ($this->canRead())
             $this->onRead();
-        return $this->beanController->read($this);
+        return $this->modelController->read($this);
     }
 
     public function update()
     {
         if ($this->canUpdate())
             $this->onUpdate();
-        return $this->beanController->update($this);
+        return $this->modelController->update($this);
     }
 
     public function delete()
     {
         if ($this->canDelete())
             $this->onDelete();
-        return $this->beanController->delete($this);
+        return $this->modelController->delete($this);
     }
 
     public function patch()
     {
         if ($this->canPatch())
             $this->onPatch();
-        return $this->beanController->patch($this);
+        return $this->modelController->patch($this);
     }
 
     /*
@@ -181,7 +181,7 @@ abstract class Bean
      */
     function __call($funct, $pars)
     {
-        return $this->beanController->call($funct, $pars, $this);
+        return $this->modelController->call($funct, $pars, $this);
     }
 
     /* Extensible functions */
@@ -240,7 +240,7 @@ abstract class Bean
 
     private $structs;
 
-    private $beanController;
+    private $modelController;
 
     private $domain = null;
 
@@ -298,7 +298,7 @@ abstract class Bean
      *
      * @param
      *            list of enum values with commas
-     * @example Bean::ENUM_VALUE.'foo,bar,cont'
+     * @example Model::ENUM_VALUE.'foo,bar,cont'
      *         
      *         
      */

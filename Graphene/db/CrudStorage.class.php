@@ -1,12 +1,12 @@
 <?php
 namespace Graphene\db;
 
-use Graphene\models\Bean;
+use Graphene\models\Model;
 use Graphene\controllers\ExceptionsCodes;
-use Graphene\controllers\bean\BeanFactory;
+use Graphene\controllers\model\ModelFactory;
 use Graphene\db\CrudDriver;
 use \Exception;
-use Graphene\controllers\bean\BeanController;
+use Graphene\controllers\model\ModelController;
 use Graphene\controllers\exceptions\GraphException;
 
 class CrudStorage
@@ -33,159 +33,159 @@ class CrudStorage
     }
 
     /**
-     * Crea un nuovo record con un bean
+     * Crea un nuovo record con un model
      * assegnando a quest'ultimo un <b>ID</b> ed una <b>versione</b>
      *
-     * @param <b>Bean</b> $bean            
-     * @return Nuovo bean [senza id e versione]
+     * @param <b>Model</b> $model            
+     * @return Nuovo model [senza id e versione]
      * @throws eccezione generica con messaggio se qualcosa va storto;
      */
-    public function create(Bean $bean)
+    public function create(Model $model)
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for create');
-        $bean->setLazy(false);
-        if (! $bean->isValid())
-            throw new Exception('Bean, ' . $bean->getName() . ' is not valid for storage: ' . $bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-        $bean->setVersion(1);
-        $bean->setId(uniqid(strtoupper(substr($bean->getName(), 0, 3))));
-        $created = $this->driver->create($this->serializeForDb($bean));
-        if (($retb = BeanFactory::createByDbSerialization($created)) == null)
-            throw new Exception('Error when create, Stored ' . $bean->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+        $model->setLazy(false);
+        if (! $model->isValid())
+            throw new Exception('Model, ' . $model->getName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+        $model->setVersion(1);
+        $model->setId(uniqid(strtoupper(substr($model->getName(), 0, 3))));
+        $created = $this->driver->create($this->serializeForDb($model));
+        if (($retb = ModelFactory::createByDbSerialization($created)) == null)
+            throw new Exception('Error when create, Stored ' . $model->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
         else
             return $retb;
     }
 
     /**
-     * Carica un bean compilato parzialmente utilizzando
+     * Carica un model compilato parzialmente utilizzando
      * i campi compilati come criterio di ricerca in <b>AND<b> tra loro
      *
      * @param
-     *            <b>Bean</b> bean parzialmente compilato
-     * @return Uno o piu bean che corrispondono ai criteri di ricerca
+     *            <b>Model</b> model parzialmente compilato
+     * @return Uno o piu model che corrispondono ai criteri di ricerca
      * @throws eccezione generica con messaggio se qualcosa va storto;
      */
-    public function read(Bean $bean)
+    public function read(Model $model)
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for read');
-        $readed = $this->driver->read($this->serializeForDb($bean));
+        $readed = $this->driver->read($this->serializeForDb($model));
         // echo 'JSON Letto';
         // echo($readed);
-        $beans = BeanFactory::createByDbSerialization($readed);
-        if (is_null($beans))
-            throw new Exception('Error when read, Stored ' . $bean->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+        $models = ModelFactory::createByDbSerialization($readed);
+        if (is_null($models))
+            throw new Exception('Error when read, Stored ' . $model->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
         else {
-            if (! is_array($beans))
-                $beans = array(
-                    $beans
+            if (! is_array($models))
+                $models = array(
+                    $models
                 ); // per tornare sempre un array di risultati
-            return $beans;
+            return $models;
         }
     }
 
     /**
-     * Sovrascrive un bean fornendo id e versione
+     * Sovrascrive un model fornendo id e versione
      *
      * @param
-     *            <b>Bean</b> bean da modificare [id e versione obbligatori]
-     * @return Il bean modificato
+     *            <b>Model</b> model da modificare [id e versione obbligatori]
+     * @return Il model modificato
      * @throws eccezione generica con messaggio se qualcosa va storto;
      */
-    public function update(Bean $bean)
+    public function update(Model $model)
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for update');
-        $bean->setLazy(false);
-        if ($bean->getId() == null)
-            throw new Exception('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
-        if ($bean->getVersion() == null)
-            throw new Exception('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
-        if (! $bean->isValid())
-            throw new Exception('Error on storage, ' . $bean->getName() . ' is corrupt: ' . $bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-        $bkpContent = $bean->getContent();
-        $bean->setLazy(true);
-        $bean->setContent(array(
+        $model->setLazy(false);
+        if ($model->getId() == null)
+            throw new Exception('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
+        if ($model->getVersion() == null)
+            throw new Exception('Unavailable ' . $model->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
+        if (! $model->isValid())
+            throw new Exception('Error on storage, ' . $model->getName() . ' is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+        $bkpContent = $model->getContent();
+        $model->setLazy(true);
+        $model->setContent(array(
             'id' => $bkpContent['id']
         ));
-        $readed = $this->read($bean);
+        $readed = $this->read($model);
         if (count($readed) == 0 || $readed[0]->isEmpty())
-            throw new Exception($bean->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+            throw new Exception($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
         if (count($readed) == 0 || $readed[0]->getVersion() != $bkpContent['version'])
-            throw new Exception($bean->getName() . ' version mismatch, reload your ' . $bean->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
-        $bean->setContent($bkpContent);
-        $bean->setVersion($bean->getVersion() + 1);
-        $updated = $this->driver->update($this->serializeForDb($bean));
-        if (($bean = BeanFactory::createByDbSerialization($updated)) == null) {
-            throw new Exception('Updated bean is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+            throw new Exception($model->getName() . ' version mismatch, reload your ' . $model->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+        $model->setContent($bkpContent);
+        $model->setVersion($model->getVersion() + 1);
+        $updated = $this->driver->update($this->serializeForDb($model));
+        if (($model = ModelFactory::createByDbSerialization($updated)) == null) {
+            throw new Exception('Updated model is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
         } else {
-            return $bean;
+            return $model;
         }
     }
 
     /**
-     * Elimina il Bean dalla base di dati in base all' id fornendo la versione
+     * Elimina il Model dalla base di dati in base all' id fornendo la versione
      * corretta
      *
      * @param
-     *            <b>Bean</b> bean da eliminare [id e versione obbligatori]
+     *            <b>Model</b> model da eliminare [id e versione obbligatori]
      * @return <b>boolean</b> in base alla avvenuta cancellazione
      * @throws eccezione generica con messaggio se qualcosa va storto;
      */
-    public function delete(Bean $bean)
+    public function delete(Model $model)
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
-        if ($bean->getId() == null)
-            throw new GraphException('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE, 400);
-        if ($bean->getVersion() == null)
-            throw new GraphException('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE, 500);
-        if (! $bean->isValid())
-            throw new GraphException('Error on storage, ' . $bean->getName() . ' is corrupt: ' . $bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN, 500);
-        $bkpContent = $bean->getContent();
-        $bean->setLazy(true);
-        $bean->setContent(array(
+        if ($model->getId() == null)
+            throw new GraphException('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE, 400);
+        if ($model->getVersion() == null)
+            throw new GraphException('Unavailable ' . $model->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE, 500);
+        if (! $model->isValid())
+            throw new GraphException('Error on storage, ' . $model->getName() . ' is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN, 500);
+        $bkpContent = $model->getContent();
+        $model->setLazy(true);
+        $model->setContent(array(
             'id' => $bkpContent['id']
         ));
-        $readed = $this->read($bean);
+        $readed = $this->read($model);
         if (! isset($readed[0]) || $readed[0]->isEmpty())
-            throw new GraphException($bean->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND, 404);
+            throw new GraphException($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND, 404);
         if ($readed[0]->getVersion() != $bkpContent['version'])
-            throw new GraphException($bean->getName() . ' version Mismatch, reload bean for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH, 400);
-        $bean->setContent($bkpContent);
-        $this->driver->delete($this->serializeForDb($bean));
+            throw new GraphException($model->getName() . ' version Mismatch, reload model for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH, 400);
+        $model->setContent($bkpContent);
+        $this->driver->delete($this->serializeForDb($model));
         return true;
     }
 
     /**
-     * Esegue una patch del bean nella base di dati
+     * Esegue una patch del model nella base di dati
      * In base all' id fornendo la versione corretta
      *
      * @param
-     *            <b>Bean</b> bean da patchare [id e versione obbligatori]
+     *            <b>Model</b> model da patchare [id e versione obbligatori]
      * @return <b>boolean</b> in base alla avvenuta modifica
      * @throws eccezione generica con messaggio se qualcosa va storto;
      */
-    public function patch(Bean $bean)
+    public function patch(Model $model)
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
-        if ($bean->getId() == null)
-            throw new Exception('Unavailable ' . $bean->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
-        if ($bean->getVersion() == null)
-            throw new Exception('Unavailable ' . $bean->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
-        if (! $bean->isValid())
-            throw new Exception('Error on storage, bean is corrupt: ' . $bean->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-        $beanClass = get_class($bean);
-        $tBean = new $beanClass();
-        $tBean->setContent(array(
-            'id' => $bean->getId(),
-            'version' => $bean->getVersion()
+        if ($model->getId() == null)
+            throw new Exception('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
+        if ($model->getVersion() == null)
+            throw new Exception('Unavailable ' . $model->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
+        if (! $model->isValid())
+            throw new Exception('Error on storage, model is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+        $modelClass = get_class($model);
+        $tModel = new $modelClass();
+        $tModel->setContent(array(
+            'id' => $model->getId(),
+            'version' => $model->getVersion()
         ));
-        $readed = $this->read($tBean);
+        $readed = $this->read($tModel);
         if (! isset($readed[0]) || $readed[0]->isEmpty())
-            throw new Exception($bean->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-        if ($readed[0]->getVersion() != $bean->getVersion())
-            throw new Exception($bean->getName() . ' version Mismatch, reload bean for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+            throw new Exception($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+        if ($readed[0]->getVersion() != $model->getVersion())
+            throw new Exception($model->getName() . ' version Mismatch, reload model for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
         $mainCnt = $readed[0]->getContent();
-        $patched = array_replace_recursive($mainCnt, $bean->getContent());
-        $bean->setContent($patched);
-        return $this->update($bean);
+        $patched = array_replace_recursive($mainCnt, $model->getContent());
+        $model->setContent($patched);
+        return $this->update($model);
     }
 
     /**
@@ -200,15 +200,15 @@ class CrudStorage
         return $this->driver;
     }
 
-    private function serializeForDb(Bean $bean)
+    private function serializeForDb(Model $model)
     {
         $ret = array(
-            'domain' => $bean->getDomain(),
-            'type' => 'bean',
+            'domain' => $model->getDomain(),
+            'type' => 'model',
             'pageNo' => $this->pageNo,
             'pageElements' => $this->pageElements,
-            'struct' => $bean->getStruct(),
-            'content' => $bean->getContent()
+            'struct' => $model->getStruct(),
+            'content' => $model->getContent()
         );
         $serialized = json_encode($ret);
         return $serialized;

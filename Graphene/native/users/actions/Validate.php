@@ -1,7 +1,7 @@
 <?php
 namespace users;
 use Graphene\controllers\Action;
-use Graphene\models\Bean;
+use Graphene\models\Model;
 class Validate extends Action{
 	public function run(){
 		$user=User::getByRequest();
@@ -9,7 +9,7 @@ class Validate extends Action{
 		$readed=$user->read();
 		if(count($readed)>0){
 			$readed[0]->unsetPassword();
-			$this->sendBean($readed[0]);
+			$this->sendModel($readed[0]);
 		}else $this->sendError(404, 'invalid user');	
 	}
 }

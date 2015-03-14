@@ -6,7 +6,7 @@ use \mysqli;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\exceptions\ExceptionCodes;
-use Graphene\models\Bean;
+use Graphene\models\Model;
 use \PDO;
 use \PDOStatement;
 
@@ -69,7 +69,7 @@ class CrudMySql implements CrudDriver
         $q = str_replace('<fields>', $colNames, $q);
         $q = str_replace('<values>', $colValues, $q);
         $q = str_replace('<dbname>', $this->dbname, $q);
-        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_bean', $q);
+        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         // Query
         $res = $this->connection->query($q);
         $err = $this->connection->errorInfo();
@@ -97,7 +97,7 @@ class CrudMySql implements CrudDriver
             $cond = $cond . ' AND `' . $name . '`=\'' . $value . '\'';
         }
         $q = str_replace('<dbname>', $this->dbname, $q);
-        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_bean', $q);
+        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         $q = str_replace('<cond>', $cond, $q);
         $return = array();
         // Exec query
@@ -139,7 +139,7 @@ class CrudMySql implements CrudDriver
         }
         $kv = substr($kv, 0, - 1);
         $q = str_replace('<dbname>', $this->dbname, $q);
-        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_bean', $q);
+        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         $q = str_replace('<kv>', $kv, $q);
         $q = str_replace('<id>', $cols['id'], $q);
         $res = $this->connection->query($q);
@@ -161,7 +161,7 @@ class CrudMySql implements CrudDriver
         $decoded = json_decode($json, true);
         $q = self::DELETE_PTT;
         $q = str_replace('<dbname>', $this->dbname, $q);
-        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_bean', $q);
+        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         $q = str_replace('<id>', $decoded['content']['id'], $q);
         $res = $this->connection->query($q);
         $res = $this->connection->query($q);
@@ -177,7 +177,7 @@ class CrudMySql implements CrudDriver
     {
         $this->getConnection();
         $decoded = json_decode($json, true);
-        $tableName = $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_bean';
+        $tableName = $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model';
         $exists = $this->connection->query('SELECT 1 FROM `' . $this->dbname . '`.`' . $tableName . '` LIMIT 1;');
         if ($exists instanceof PDOStatement)
             $exists->fetchAll();
@@ -261,7 +261,7 @@ class CrudMySql implements CrudDriver
     {
         $colstr = ' ';
         foreach ($cols as $col => $type) {
-            if (in_array(substr(Bean::UNIQUE, strlen(Bean::CHECK_SEP)), explode(Bean::CHECK_SEP, $type)))
+            if (in_array(substr(Model::UNIQUE, strlen(Model::CHECK_SEP)), explode(Model::CHECK_SEP, $type)))
                 $colstr = $colstr . ', UNIQUE INDEX `' . $col . '_UNIQUE` (`' . $col . '` ASC)';
         }
         // $colstr=substr($colstr, 0,-1);
@@ -270,59 +270,59 @@ class CrudMySql implements CrudDriver
 
     private function convertType($type)
     {
-        $texpl = explode(Bean::CHECK_SEP, $type);
+        $texpl = explode(Model::CHECK_SEP, $type);
         unset($texpl[0]);
         array_values($texpl);
         $ret = '';
         foreach ($texpl as $t) {
-            $test = Bean::CHECK_SEP . explode(Bean::CHECK_PAR, $t)[0];
-            if (preg_match('/' . Bean::CHECK_PAR . '/', $type))
-                $test .= Bean::CHECK_PAR;
+            $test = Model::CHECK_SEP . explode(Model::CHECK_PAR, $t)[0];
+            if (preg_match('/' . Model::CHECK_PAR . '/', $type))
+                $test .= Model::CHECK_PAR;
             switch ($test) {
                 /* Type checkers */
-                case Bean::BOOLEAN:
+                case Model::BOOLEAN:
                     {
                         $ret = ' INT(1)';
                         break;
                     }
-                case Bean::DECIMAL:
+                case Model::DECIMAL:
                     {
                         $ret = ' DOUBLE';
                         break;
                     }
-                case Bean::INTEGER:
+                case Model::INTEGER:
                     {
                         $ret = ' INT(11)';
                         break;
                     }
-                case Bean::STRING:
+                case Model::STRING:
                     {
                         $ret = ' VARCHAR(45)';
                         break;
                     }
-                case Bean::UID:
+                case Model::UID:
                     {
                         $ret = ' VARCHAR(32)';
                         break;
                     }
-                case Bean::DATE:
+                case Model::DATE:
                     {
                         $ret = ' DATE';
                         break;
                     }
-                case Bean::DATETIME:
+                case Model::DATETIME:
                     {
                         $ret = ' DATETIME';
                         break;
                     }
-                case Bean::MATCH:
+                case Model::MATCH:
                     {
                         $ret = ' VARCHAR(45)';
                         break;
                     }
-                case Bean::ENUM:
+                case Model::ENUM:
                     {
-                        $elems = explode(',', explode(Bean::CHECK_PAR, $t)[1]);
+                        $elems = explode(',', explode(Model::CHECK_PAR, $t)[1]);
                         $tp = ' ENUM(';
                         foreach ($elems as $elem) {
                             $tp = $tp . '\'' . $elem . '\',';
@@ -333,17 +333,17 @@ class CrudMySql implements CrudDriver
                         break;
                     }
                 /* Content checkers */
-                case Bean::MAX_LEN:
+                case Model::MAX_LEN:
                     {
-                        $ret = ' VARCHAR(' . explode(Bean::CHECK_PAR, $t)[1] . ')';
+                        $ret = ' VARCHAR(' . explode(Model::CHECK_PAR, $t)[1] . ')';
                         break;
                     }
-                case Bean::MIN_LEN:
+                case Model::MIN_LEN:
                     {
-                        $ret = ' VARCHAR(' . (45 + explode(Bean::CHECK_PAR, $t)[1]) . ')';
+                        $ret = ' VARCHAR(' . (45 + explode(Model::CHECK_PAR, $t)[1]) . ')';
                         break;
                     }
-                case Bean::NOT_NULL:
+                case Model::NOT_NULL:
                     {
                         $ret = $ret . ' NOT NULL';
                         break;

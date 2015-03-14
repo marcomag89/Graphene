@@ -10,7 +10,7 @@
 	<namespace>acl</namespace>
 	<domain>acl</domain>
 	<doc>doc/doc.xml</doc>
-	<beansPath>beans</beansPath>
+	<modelsPath>models</modelsPath>
 	<actions>
 		<action>
 			<name>CREATE_GROUP</name>

@@ -6,9 +6,9 @@
 		namespace	= "users"
 		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
 		support		= "{{host.addr}}/doc/user"
-		beans-path	= "beans"
+		models-path	= "models"
 	/>
-
+	<action name="ABC" handler="Validate@actions/Validate.php" 	method="get" 	query="foo/:bar/:par/ceo" 	/>
 	<action name="VALIDATE" handler="Validate@actions/Validate.php" 	method="post" 	query="validate" 	/>
 	<action name="ALL" 		handler="AllUsers@actions/UserGetAll.php" 	method="get" 	query="all" 		/>
 	

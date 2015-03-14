@@ -14,7 +14,7 @@ class Create extends Action{
  		try{
  			$created = $user->create()[0];
  			$created->unsetPassword();
- 			$this->sendBean($created);
+ 			$this->sendModel($created);
  		}catch(Exception $e){
  			if($e->getCode()=='3100')throw new GraphException('User: '.$user->getEmail().', already exists',4002,400);
 			else $this->sendError(500, $e->getMessage());
@@ -30,7 +30,7 @@ class Read extends Action{
 		$readed=$user->read();
 		if(count($readed)==0){$this->sendError(404, 'user not found');return;}
 		else $readed[0]->unsetPassword();
-		$this->sendBean($readed[0]);
+		$this->sendModel($readed[0]);
 	}
 }
 
@@ -41,7 +41,7 @@ class Update extends Action{
 		$user->encryptPassword();
 		$updated=$user->update()[0];
 		$updated->unsetPassword();	
-		$this->sendBean($updated);
+		$this->sendModel($updated);
 	}
 }
 

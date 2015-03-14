@@ -27,11 +27,11 @@ class Module
         else
             $this->domain = $xml['info']['@attributes']['namespace'];
             
-            // Setting up beans path
-        if (isset($xm['info']['info']['@attributes']['beans-path']))
-            $this->beansPath = $xml['info']['@attributes']['beans-path'];
+            // Setting up models path
+        if (isset($xm['info']['info']['@attributes']['models-path']))
+            $this->modelsPath = $xml['info']['@attributes']['models-path'];
         else
-            $this->beansPath = 'beans';
+            $this->modelsPath = 'models';
         
         $this->author = $xml['info']['@attributes']['author'];
         $this->support = $xml['info']['@attributes']['support'];
@@ -42,9 +42,9 @@ class Module
         $this->xml = $xml;
     }
 
-    public function getBeanDirectory($beanClass)
+    public function getModelDirectory($modelClass)
     {
-        return $this->getModuleDir() . '/' . $this->beansPath . '/' . $beanClass . '.php';
+        return $this->getModuleDir() . '/' . $this->modelsPath . '/' . $modelClass . '.php';
     }
 
     private function loadFilters($filtersXml)
@@ -262,7 +262,7 @@ class Module
         return $ret;
     }
 
-    private $beansPath;
+    private $modelsPath;
 
     private $currentAction;
 

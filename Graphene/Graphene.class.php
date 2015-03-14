@@ -80,7 +80,7 @@ class Graphene
     {
         spl_autoload_register("autol_namespace");
         spl_autoload_register("autol_moduleContent");
-        spl_autoload_register("autol_beans");
+        spl_autoload_register("autol_models");
         init_platform();
     }
 

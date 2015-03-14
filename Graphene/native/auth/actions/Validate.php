@@ -12,6 +12,6 @@ class Validate extends Action{
 		if (count($results) == 0) {$this->sendError(404, 'Session not found');return;}
 		$readed = $results[0];
 		if ($readed->getEnabled() == false) {$this->sendError(403, 'Session was closed');return;}
-		$this->sendBean($readed);
+		$this->sendModel($readed);
 	}
 }

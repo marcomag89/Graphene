@@ -1,15 +1,15 @@
 <?php
 namespace users;
-use Graphene\models\Bean;
-use Graphene\controllers\bean\BeanController;
+use Graphene\models\Model;
+use Graphene\controllers\model\ModelController;
 use Graphene\controllers\exceptions\GraphException;
 
-class User extends Bean{
+class User extends Model{
 	public function defineStruct(){
 		return array(
-				'email' => 	Bean::MATCH."/^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/" . 
-							Bean::NOT_NULL. Bean::UNIQUE. Bean::MAX_LEN.'130',
-				'password' => Bean::STRING . Bean::NOT_NULL
+				'email' => 	Model::MATCH."/^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/" . 
+							Model::NOT_NULL. Model::UNIQUE. Model::MAX_LEN.'130',
+				'password' => Model::STRING . Model::NOT_NULL
 		);
 	}
 	public function onCreate(){

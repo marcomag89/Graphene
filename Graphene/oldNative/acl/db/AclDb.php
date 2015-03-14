@@ -90,14 +90,14 @@ class AclDb implements CrudDriver
 		return $queries;
 	}
 
-	private function getTableNameGroup ($BeanDomain)
+	private function getTableNameGroup ($ModelDomain)
 	{
-		return $this->prefix . '_' . str_replace('.', '_', $BeanDomain) . '_bean';
+		return $this->prefix . '_' . str_replace('.', '_', $ModelDomain) . '_model';
 	}
 
-	private function getTableNameAction ($BeanDomain)
+	private function getTableNameAction ($ModelDomain)
 	{
-		return $this->prefix . '_' . str_replace('.', '_', $BeanDomain) . '_' .
+		return $this->prefix . '_' . str_replace('.', '_', $ModelDomain) . '_' .
 				 self::TBL_ACTION_X_GROUP;
 	}
 
@@ -109,7 +109,7 @@ class AclDb implements CrudDriver
 
 	const LOG_NAME = '[ACL group storage driver] ';
 
-	const TBL_GROUP = 'Group_bean';
+	const TBL_GROUP = 'Group_model';
 
 	const TBL_ACTION_X_GROUP = 'x_action';
 

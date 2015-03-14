@@ -2,7 +2,7 @@
 namespace Graphene\controllers\http;
 
 use Graphene\Graphene;
-use Graphene\models\Bean;
+use Graphene\models\Model;
 
 class GraphResponse
 {

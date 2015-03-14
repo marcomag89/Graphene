@@ -6,7 +6,7 @@ use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\controllers\UrlProcessor;
 use Graphene\models\Module;
-use Graphene\models\Bean;
+use Graphene\models\Model;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
 
@@ -139,22 +139,22 @@ abstract class Action
         $this->response->setBody($this->encodeJson($unsupported));
     }
 
-    function sendBean($bean)
+    function sendModel($model)
     {
-        if (is_array($bean)) {
-            if (count($bean) == 0) {
+        if (is_array($model)) {
+            if (count($model) == 0) {
                 $this->sendError(404, 'resource not found');
             } else 
-                if (count($bean) == 1 && $bean[0] instanceof Bean) {
-                    $bean[0]->onSend();
-                    $this->response->setBody(json_encode(json_decode($bean[0]->serialize()), JSON_PRETTY_PRINT));
+                if (count($model) == 1 && $model[0] instanceof Model) {
+                    $model[0]->onSend();
+                    $this->response->setBody(json_encode(json_decode($model[0]->serialize()), JSON_PRETTY_PRINT));
                 } else 
-                    if (count($bean) > 1) {
+                    if (count($model) > 1) {
                         $bodyArr = array(
                             'array' => array()
                         );
-                        foreach ($bean as $elem) {
-                            if ($elem instanceof Bean) {
+                        foreach ($model as $elem) {
+                            if ($elem instanceof Model) {
                                 $elem->onSend();
                                 $bodyArr['array'][] = json_decode($elem->serialize());
                             }
@@ -162,9 +162,9 @@ abstract class Action
                         $this->response->setBody(json_encode($bodyArr, JSON_PRETTY_PRINT));
                     }
         } else 
-            if ($bean instanceof Bean) {
-                $bean->onSend();
-                $this->response->setBody(json_encode(json_decode($bean->serialize()), JSON_PRETTY_PRINT));
+            if ($model instanceof Model) {
+                $model->onSend();
+                $this->response->setBody(json_encode(json_decode($model->serialize()), JSON_PRETTY_PRINT));
             }
     }
 

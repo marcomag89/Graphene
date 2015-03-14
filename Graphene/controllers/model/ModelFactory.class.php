@@ -1,30 +1,30 @@
 <?php
-namespace Graphene\controllers\bean;
+namespace Graphene\controllers\model;
 
 use \Exception;
 use Graphene\controllers\ExceptionsCodes;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\models\Module;
 use Graphene\Graphene;
-use Graphene\models\Bean;
+use Graphene\models\Model;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\http\GraphResponse;
 
-class BeanFactory
+class ModelFactory
 {
 
     public static function createByDbSerialization($json)
     {
         // echo $json;
-        $beanArr = json_decode($json, true);
-        if (isset($beanArr['content']))
-            return self::createBean($beanArr['content'], $beanArr['domain']);
+        $modelArr = json_decode($json, true);
+        if (isset($modelArr['content']))
+            return self::createModel($modelArr['content'], $modelArr['domain']);
         else 
-            if (isset($beanArr['collection'])) {
+            if (isset($modelArr['collection'])) {
                 $ret = array();
-                foreach ($beanArr['collection'] as $content) {
-                    if (($bean = self::createBean($content, $beanArr['domain'])) !== false) {
-                        $ret[] = $bean;
+                foreach ($modelArr['collection'] as $content) {
+                    if (($model = self::createModel($content, $modelArr['domain'])) !== false) {
+                        $ret[] = $model;
                     } else {
                         self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
                         echo self::$LAST_BEAN->getLastTestErrors();
@@ -43,9 +43,9 @@ class BeanFactory
         if (($decoded = json_decode($response->getBody(), true)) == null)
             throw new GraphException('Malformed response check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED, 400);
         $return = array();
-        foreach ($decoded as $BeanName => $beanContent) {
-            $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $BeanName;
-            if (($return[$BeanName] = self::createBean($beanContent, $domain)) == false) {
+        foreach ($decoded as $ModelName => $modelContent) {
+            $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $ModelName;
+            if (($return[$ModelName] = self::createModel($modelContent, $domain)) == false) {
                 self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
                 throw new GraphException(self::$LAST_BEAN->getLastTestErrors(), ExceptionsCodes::REQUEST_MALFORMED, 400);
             }
@@ -59,9 +59,9 @@ class BeanFactory
         if (($decoded = json_decode($request->getBody(), true)) == null)
             throw new GraphException('Malformed request check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED, 400);
         $return = array();
-        foreach ($decoded as $BeanName => $beanContent) {
-            $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $BeanName;
-            if (($return[$BeanName] = self::createBean($beanContent, $domain, $lazyChecks)) == false) {
+        foreach ($decoded as $ModelName => $modelContent) {
+            $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $ModelName;
+            if (($return[$ModelName] = self::createModel($modelContent, $domain, $lazyChecks)) == false) {
                 self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
                 throw new GraphException(self::$LAST_BEAN->getLastTestErrors(), ExceptionsCodes::REQUEST_MALFORMED, 400);
             }
@@ -69,28 +69,28 @@ class BeanFactory
         return $return;
     }
 
-    private static function createBean($beanContent, $beanDomain, $lazyChecks = false)
+    private static function createModel($modelContent, $modelDomain, $lazyChecks = false)
     {
-        $expl = explode('.', $beanDomain);
-        $beanName = $expl[1] . '\\' . $expl[2];
-        if (class_exists($beanName))
-            $bean = new $beanName();
+        $expl = explode('.', $modelDomain);
+        $modelName = $expl[1] . '\\' . $expl[2];
+        if (class_exists($modelName))
+            $model = new $modelName();
         else
-            throw new GraphException('Bean ' . $beanName . ' is not handlend in this module', 5000, 500);
-        if ($bean instanceof Bean) {
-            $bean->setLazy(true);
-            $bean->setContent($beanContent);
-            self::$LAST_BEAN = $bean;
-            if ($bean->isValid($lazyChecks)) {
-                return $bean;
+            throw new GraphException('Model ' . $modelName . ' is not handlend in this module', 5000, 500);
+        if ($model instanceof Model) {
+            $model->setLazy(true);
+            $model->setContent($modelContent);
+            self::$LAST_BEAN = $model;
+            if ($model->isValid($lazyChecks)) {
+                return $model;
             } else {
                 return false;
             }
         } else
-            throw new GraphException('Bean ' . $beanName . ' is not handlend in this module', 5000, 500);
+            throw new GraphException('Model ' . $modelName . ' is not handlend in this module', 5000, 500);
     }
 
-    public static function getBeanParsingErrs()
+    public static function getModelParsingErrs()
     {
         return self::$BEAN_PARSING_ERRS;
     }

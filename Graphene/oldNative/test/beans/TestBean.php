@@ -1,21 +1,21 @@
 <?php
 namespace grTests;
-use Graphene\models\Bean;
-use Graphene\controllers\bean\BeanController;
-use Graphene\controllers\bean\Struct;
-class TestBean extends Bean{
+use Graphene\models\Model;
+use Graphene\controllers\model\ModelController;
+use Graphene\controllers\model\Struct;
+class TestModel extends Model{
 	public function defineStruct(){	
 		return array(
-				'integer' 		=> Bean::INTEGER.	Bean::NOT_EMPTY.	Bean::UNIQUE,
-				'string' 	 	=> Bean::STRING.	Bean::NOT_EMPTY,
-				'string50'		=> Bean::STRING.	Bean::MAX_LEN.'50',
-				'boolean'		=> Bean::BOOLEAN,
-				'date'	  		=> Bean::DATE.		Bean::NOT_EMPTY,
-				'alphanumeric'	=> Bean::MATCH.'/^[A-Za-z0-9]+$/',
-				'enumABC'		=> Bean::ENUM.'A,B,C',
+				'integer' 		=> Model::INTEGER.	Model::NOT_EMPTY.	Model::UNIQUE,
+				'string' 	 	=> Model::STRING.	Model::NOT_EMPTY,
+				'string50'		=> Model::STRING.	Model::MAX_LEN.'50',
+				'boolean'		=> Model::BOOLEAN,
+				'date'	  		=> Model::DATE.		Model::NOT_EMPTY,
+				'alphanumeric'	=> Model::MATCH.'/^[A-Za-z0-9]+$/',
+				'enumABC'		=> Model::ENUM.'A,B,C',
 				'object'  =>array(
-								'stringField'	=> Bean::STRING,
-								'intField'		=> Bean::INTEGER,
+								'stringField'	=> Model::STRING,
+								'intField'		=> Model::INTEGER,
 							)
 		);
 		//TODO implementare questa cosa
@@ -26,18 +26,18 @@ class TestBean extends Bean{
 		 * INTEGER Prototype
 		 * Every element of array must be an integer value
 		 * */
-		//$lazy['array']['#']=Bean::INTEGER_VALUE;
+		//$lazy['array']['#']=Model::INTEGER_VALUE;
 		/*
 		 * INTEGER or Double Prototype
 		 * Every element of array must be an integer value
 		 * */
-		//$lazy['array']['#']=array(Bean::INTEGER_VALUE,Bean::DOUBLE_VALUE);
+		//$lazy['array']['#']=array(Model::INTEGER_VALUE,Model::DOUBLE_VALUE);
 		/*
 		 * OBJECT Prototype
 		 * Every element of array must be a defined object
 		 * */
-		//$lazy['array']['#']['ObjectName']['integerField']=Bean::INTEGER_VALUE;
-		//$lazy['array']['#']['ObjectName']['stringField']=Bean::STRING_VALUE;
+		//$lazy['array']['#']['ObjectName']['integerField']=Model::INTEGER_VALUE;
+		//$lazy['array']['#']['ObjectName']['stringField']=Model::STRING_VALUE;
 			
 		return $lazy;
 	}

@@ -12,6 +12,6 @@ class ReadAll extends Action{
 			$user->unsetPassword();
 			$ret[] = $user;
 		}
-		$this->sendBean($ret);
+		$this->sendModel($ret);
 	}
 }

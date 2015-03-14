@@ -3,7 +3,7 @@ namespace Graphene\controllers\exceptions;
 
 use \Exception;
 
-class BeanException extends Exception
+class ModelException extends Exception
 {
 
     public function __construct($msg, $code)

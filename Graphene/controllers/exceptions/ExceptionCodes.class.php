@@ -64,7 +64,7 @@ class ExceptionCodes
 
     const STORAGE_PATCH_VERSION = 4502;
     
-    // Beans exception
+    // Models exception
     const BEAN = 5000;
 
     const BEAN_STRUCT = 5001;

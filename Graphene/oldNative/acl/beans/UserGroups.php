@@ -1,12 +1,12 @@
 <?php
 namespace acl;
-use Graphene\models\Bean;
+use Graphene\models\Model;
 
-class UserGroups extends Bean{
+class UserGroups extends Model{
 	public function defineStruct(){
 		return array(
-				'groupId'=>Bean::UID,
-				'permission'=>Bean::STRING,
+				'groupId'=>Model::UID,
+				'permission'=>Model::STRING,
 		);
 	}
 }

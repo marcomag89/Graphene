@@ -1,14 +1,14 @@
 <?php
-namespace Graphene\controllers\bean;
+namespace Graphene\controllers\model;
 
-use Graphene\models\Bean;
+use Graphene\models\Model;
 use Graphene\Graphene;
 use Graphene\db\CrudDriver;
 use Graphene\db\CrudStorage;
-use Graphene\controllers\bean\BeanChecker;
+use Graphene\controllers\model\ModelChecker;
 use Graphene\controllers\exceptions\GraphException;
 
-class BeanController
+class ModelController
 {
 
     public function __construct($crudDriver, $structs, $args)
@@ -16,7 +16,7 @@ class BeanController
         $this->structs = $structs;
         $this->args = $args;
         $this->corrupt = false;
-        $this->beanChecker = new BeanChecker();
+        $this->modelChecker = new ModelChecker();
         // Controlla se e stato settato un driver personalizzato
         if ($crudDriver != null)
             $this->setCrudDriver($crudDriver);
@@ -30,8 +30,8 @@ class BeanController
                 if ($arg instanceof GraphRequest)
                     $this->requestInit($request);
                 else 
-                    if ($arg instanceof Bean)
-                        $this->beanInit($bean);
+                    if ($arg instanceof Model)
+                        $this->modelInit($model);
                     else 
                         if ($arg instanceof String)
                             $this->parInit($par);
@@ -53,8 +53,8 @@ class BeanController
     private function getBasicStruct()
     {
         return array(
-            'id' => Bean::STRING . Bean::NOT_EMPTY,
-            'version' => Bean::INTEGER . Bean::NOT_EMPTY
+            'id' => Model::STRING . Model::NOT_EMPTY,
+            'version' => Model::INTEGER . Model::NOT_EMPTY
         );
     }
 
@@ -68,8 +68,8 @@ class BeanController
         $struct = array();
         $basic = $this->getBasicStruct();
         $ret = $basic + $this->structs;
-        if (! $this->beanChecker->checkValidStruct($ret))
-            throw new GraphException('Invalid bean struct', 500, 500);
+        if (! $this->modelChecker->checkValidStruct($ret))
+            throw new GraphException('Invalid model struct', 500, 500);
         return $ret;
     }
 
@@ -78,23 +78,23 @@ class BeanController
      * Getters and setters
      * --------
      */
-    public function call($funct, $pars, Bean $bean)
+    public function call($funct, $pars, Model $model)
     {
         log_write(self::LOG_NAME . 'called dyFunct: ' . $funct);
         $splitted = explode('_', substr($funct, 3));
         $splitted[0] = lcfirst($splitted[0]);
         if (str_starts_with($funct, 'get'))
-            return $this->serveGet($splitted, $bean);
+            return $this->serveGet($splitted, $model);
         else 
             if (str_starts_with($funct, 'set'))
-                return $this->serveSet($splitted, $pars[0], $bean);
+                return $this->serveSet($splitted, $pars[0], $model);
     }
 
     /* Auto Generated getters */
-    public function serveGet($funct, Bean $bean)
+    public function serveGet($funct, Model $model)
     {
         log_write(self::LOG_NAME . 'Serving get on ' . strToLower(implode('.', $funct)));
-        $content = $bean->getContent();
+        $content = $model->getContent();
         $struct = $this->getStruct();
         
         $tmps = &$struct;
@@ -111,9 +111,9 @@ class BeanController
     }
 
     /* Auto Generated setters */
-    public function serveSet($funct, $par, Bean $bean)
+    public function serveSet($funct, $par, Model $model)
     {
-        $content = $bean->getContent();
+        $content = $model->getContent();
         $struct = $this->getStruct();
         
         $tmps = &$struct;
@@ -123,10 +123,10 @@ class BeanController
             $tmps = &$tmps[$k];
             $temp = &$temp[$k];
         }
-        $this->beanChecker->newTest();
-        if ((isset($tmps) && ! is_array($tmps) && $this->beanChecker->isValidValue($par, $tmps, implode('_', $funct)))) {
+        $this->modelChecker->newTest();
+        if ((isset($tmps) && ! is_array($tmps) && $this->modelChecker->isValidValue($par, $tmps, implode('_', $funct)))) {
             $temp = $par;
-            $bean->setContent($data);
+            $model->setContent($data);
             return true;
         } else {
             $this->corrupt = true;
@@ -178,10 +178,10 @@ class BeanController
      * Serializzation
      * --------
      */
-    public function serialize(Bean $bean)
+    public function serialize(Model $model)
     {
         $ret = array(
-            $bean->getName() => $bean->getContent()
+            $model->getName() => $model->getContent()
         );
         return json_encode($ret);
     }
@@ -190,29 +190,29 @@ class BeanController
      * CRUD-P
      * Create Read Update Delete and Patch routines
      */
-    public function create($bean)
+    public function create($model)
     {
-        return $this->storage->create($bean);
+        return $this->storage->create($model);
     }
 
-    public function read($bean)
+    public function read($model)
     {
-        return $this->storage->read($bean);
+        return $this->storage->read($model);
     }
 
-    public function update($bean)
+    public function update($model)
     {
-        return $this->storage->update($bean);
+        return $this->storage->update($model);
     }
 
-    public function delete($bean)
+    public function delete($model)
     {
-        return $this->storage->delete($bean);
+        return $this->storage->delete($model);
     }
 
-    public function patch($bean)
+    public function patch($model)
     {
-        return $this->storage->patch($bean);
+        return $this->storage->patch($model);
     }
 
     /*
@@ -230,15 +230,15 @@ class BeanController
      * Struct and content checking
      * --------
      */
-    public function checkContent(Bean $bean, $lazyCheck = false)
+    public function checkContent(Model $model, $lazyCheck = false)
     {
         // var_dump($lazyCheck || $this->getSetting(self::FLAG_LAZY));
-        return $this->beanChecker->checkContent($bean, $this->getStruct(), $lazyCheck || $this->lazy);
+        return $this->modelChecker->checkContent($model, $this->getStruct(), $lazyCheck || $this->lazy);
     }
 
     public function haveErrors()
     {
-        $errs = $this->beanChecker->getLastTestErrors();
+        $errs = $this->modelChecker->getLastTestErrors();
         if (count($errs) > 0)
             return true;
     }
@@ -248,15 +248,15 @@ class BeanController
         if ($this->exceeded != null)
             return 'unexpected ' . $this->exceeded . ' field';
         else
-            $ret = $this->beanChecker->getLastTestErrors();
+            $ret = $this->modelChecker->getLastTestErrors();
         return $ret;
     }
 
     /**
      *
-     * @var BeanChecker
+     * @var ModelChecker
      */
-    private $beanChecker;
+    private $modelChecker;
 
     private $corrupt;
 
@@ -281,7 +281,7 @@ class BeanController
 
     const LAZY_STRUCT = '_lazy';
 
-    const LOG_NAME = '[Bean Controller] ';
+    const LOG_NAME = '[Model Controller] ';
 
     const FLAG_LAZY = '-lzm';
 }

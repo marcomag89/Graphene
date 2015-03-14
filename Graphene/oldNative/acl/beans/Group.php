@@ -1,13 +1,13 @@
 <?php
 namespace acl;
-use Graphene\models\Bean;
+use Graphene\models\Model;
 
-class Group extends Bean{
+class Group extends Model{
 	public function defineStruct(){
 		return array(
-			'alias'=>Bean::MATCH."/[A-Z0-9_]/". Bean::NOT_NULL.Bean::MIN_LEN.'3'.Bean::UNIQUE .Bean::MAX_LEN.'20',
-			'label'=>Bean::STRING.Bean::MAX_LEN.'150',
-			'parent'=>Bean::UID,
+			'alias'=>Model::MATCH."/[A-Z0-9_]/". Model::NOT_NULL.Model::MIN_LEN.'3'.Model::UNIQUE .Model::MAX_LEN.'20',
+			'label'=>Model::STRING.Model::MAX_LEN.'150',
+			'parent'=>Model::UID,
 		);
 	}
 }

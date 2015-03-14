@@ -10,37 +10,37 @@
 	<doc>doc/doc.xml</doc>
 	<namespace>grTests</namespace>
 	<domain>_tests</domain>
-	<beansPath>beans</beansPath>
+	<modelsPath>models</modelsPath>
 
 	<actions>
-		<!-- Testing bean -->
+		<!-- Testing model -->
 		<action>
 			<name>BEANS_CREATE</name>
-			<query>beans</query>
+			<query>models</query>
 			<requestMethod>POST</requestMethod>
 			<handler>Create</handler>
-			<handlerFile>actions/TestBeans.php</handlerFile>
+			<handlerFile>actions/TestModels.php</handlerFile>
 		</action>
 		<action>
 			<name>BEANS_READ</name>
-			<query>beans</query>
+			<query>models</query>
 			<requestMethod>GET</requestMethod>
 			<handler>Read</handler>
-			<handlerFile>actions/TestBeans.php</handlerFile>
+			<handlerFile>actions/TestModels.php</handlerFile>
 		</action>
 		<action>
 			<name>BEANS_UPDATE</name>
-			<query>beans</query>
+			<query>models</query>
 			<requestMethod>PUT</requestMethod>
 			<handler>Update</handler>
-			<handlerFile>actions/TestBeans.php</handlerFile>
+			<handlerFile>actions/TestModels.php</handlerFile>
 		</action>
 		<action>
 			<name>BEANS_DELETE</name>
-			<query>beans</query>
+			<query>models</query>
 			<requestMethod>DELETE</requestMethod>
 			<handler>Delete</handler>
-			<handlerFile>actions/TestBeans.php</handlerFile>
+			<handlerFile>actions/TestModels.php</handlerFile>
 		</action>
 	</actions>
 </module>
