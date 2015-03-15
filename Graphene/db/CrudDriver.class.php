@@ -14,7 +14,7 @@ interface CrudDriver
 
     public function create($json);
 
-    public function read($json);
+    public function read($json,$query=null);
 
     public function update($json);
 

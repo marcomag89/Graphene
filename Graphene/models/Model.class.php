@@ -6,23 +6,15 @@ use Graphene\controllers\model\ModelController;
 use Graphene\controllers\model\ModelFactory;
 use \Exception;
 use Graphene\controllers\http\GraphResponse;
+use Graphene\controllers\exceptions\GraphException;
 
-abstract class Model
+abstract class Model implements \Serializable
 {
 
     public function __construct()
     {
         $this->structs = $this->defineStruct();
         $this->modelController = new ModelController($this->getCustomCrudDriver(), $this->structs, $this, func_get_args());
-    }
-
-    public static function getByResponse(GraphResponse $res)
-    {
-        $requestModels = ModelFactory::createByResponse($res);
-        if (isset($requestModels[self::stcName()]))
-            return $requestModels[self::stcName()];
-        else
-            throw new Exception('Bad response', 400);
     }
 
     public static function getByRequest($lazyChecks = false)
@@ -118,7 +110,9 @@ abstract class Model
     {
         return $this->modelController->serialize($this);
     }
-
+    public function unserialize($serialized){
+        throw new GraphException("You can't unserialize model (yet)", 5009, 500);
+    }
     /*
      * -----
      * Setters
@@ -146,11 +140,11 @@ abstract class Model
         return $this->modelController->create($this);
     }
 
-    public function read()
+    public function read($multiple=false,$query=null)
     {
         if ($this->canRead())
             $this->onRead();
-        return $this->modelController->read($this);
+        return $this->modelController->read($this,$multiple,$query);
     }
 
     public function update()

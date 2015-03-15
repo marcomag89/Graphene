@@ -86,16 +86,12 @@ class CrudMySql implements CrudDriver
     }
 
     /* TAG Read */
-    public function read($json)
+    public function read($json, $query = null)
     {
         $this->init($json);
         $decoded = json_decode($json, true);
         $q = self::SELECT_PTT;
-        $cols = $this->columnsByStruct($decoded['content']);
-        $cond = '\'1\'=\'1\'';
-        foreach ($cols as $name => $value) {
-            $cond = $cond . ' AND `' . $name . '`=\'' . $value . '\'';
-        }
+        $cond = $this->getCondition($query, $this->columnsByStruct($decoded['content']));
         $q = str_replace('<dbname>', $this->dbname, $q);
         $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         $q = str_replace('<cond>', $cond, $q);
@@ -355,6 +351,21 @@ class CrudMySql implements CrudDriver
         if (strcmp($ret, '') == 0)
             $ret = ' VARCHAR(200)';
         return $ret;
+    }
+
+    private function getCondition($query, $cols)
+    {
+        if ($query == null) {
+            $cond = '\'1\'=\'1\'';
+            foreach ($cols as $name => $value) {
+                $cond = $cond . ' AND `' . $name . '`=\'' . $value . '\'';
+            }
+            return $cond;
+        } else {
+            var_dump($query);
+            $cond = '\'1\'=\'1\'';
+            return $cond;
+        }
     }
 
     public function getSettings()

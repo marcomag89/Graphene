@@ -183,7 +183,7 @@ class ModelController
         $ret = array(
             $model->getName() => $model->getContent()
         );
-        return json_encode($ret);
+        return json_encode($ret,JSON_PRETTY_PRINT);
     }
 
     /*
@@ -195,9 +195,9 @@ class ModelController
         return $this->storage->create($model);
     }
 
-    public function read($model)
+    public function read($model,$multiple,$query)
     {
-        return $this->storage->read($model);
+        return $this->storage->read($model,$multiple,$query);
     }
 
     public function update($model)

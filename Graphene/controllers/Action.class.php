@@ -9,6 +9,7 @@ use Graphene\models\Module;
 use Graphene\models\Model;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
+use Graphene\models\ModelCollection;
 
 abstract class Action
 {
@@ -138,8 +139,18 @@ abstract class Action
         );
         $this->response->setBody($this->encodeJson($unsupported));
     }
-
-    function sendModel($model)
+    function sendModel($model){
+        if($model == null){
+            throw new GraphException("Model not available", 404, 404);
+        }else if($model instanceof \Serializable){
+        	$model->onSend();
+            $this->response->setBody($model->serialize());
+        }else{
+            throw new GraphException("Invalid model instance on sendModel", 500, 500);
+        }
+    }
+    
+    function sendModel_old($model)
     {
         if (is_array($model)) {
             if (count($model) == 0) {

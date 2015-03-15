@@ -8,6 +8,7 @@ use Graphene\db\CrudDriver;
 use \Exception;
 use Graphene\controllers\model\ModelController;
 use Graphene\controllers\exceptions\GraphException;
+use Graphene\models\ModelCollection;
 
 class CrudStorage
 {
@@ -47,12 +48,13 @@ class CrudStorage
         if (! $model->isValid())
             throw new Exception('Model, ' . $model->getName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
         $model->setVersion(1);
-        $model->setId(uniqid(strtoupper(substr($model->getName(), 0, 3))));
+        $model->setId(uniqid(strtoupper(substr($model->getName(), 0, 4))));
         $created = $this->driver->create($this->serializeForDb($model));
         if (($retb = ModelFactory::createByDbSerialization($created)) == null)
             throw new Exception('Error when create, Stored ' . $model->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-        else
-            return $retb;
+        else{
+        	return $retb[0];
+        }
     }
 
     /**
@@ -60,25 +62,34 @@ class CrudStorage
      * i campi compilati come criterio di ricerca in <b>AND<b> tra loro
      *
      * @param
-     *            <b>Model</b> model parzialmente compilato
+     *            <b>Model</b> modello parzialmente compilato
      * @return Uno o piu model che corrispondono ai criteri di ricerca
      * @throws eccezione generica con messaggio se qualcosa va storto;
      */
-    public function read(Model $model)
+    public function read(Model $model, $multiple = false, $query = null)
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for read');
-        $readed = $this->driver->read($this->serializeForDb($model));
-        // echo 'JSON Letto';
-        // echo($readed);
-        $models = ModelFactory::createByDbSerialization($readed);
-        if (is_null($models))
-            throw new Exception('Error when read, Stored ' . $model->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
-        else {
-            if (! is_array($models))
-                $models = array(
-                    $models
-                ); // per tornare sempre un array di risultati
-            return $models;
+        $readed = $this->driver->read($this->serializeForDb($model), $query);
+        // echo "JSON Letto\n----\n";
+        // echo ($readed);
+        $result = ModelFactory::createByDbSerialization($readed);
+        if (is_null($result)) {
+            throw new Exception('Error when read, Stored ' . $model->getName() . ' is corrupt' . ModelFactory::getModelParsingErrs(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+        } else {
+            if (count($result) == 0) {
+                return null;
+            } else 
+                if ($multiple) {
+                    $ret = new ModelCollection($model);
+                    $ret->add($result);
+                    return $ret;
+                } else {
+                    if (count($result) == 1) {
+                        return $result[0];
+                    } else {
+                        throw new GraphException("Unexpected result, loaded must be single model", 5002, 500);
+                    }
+                }
         }
     }
 
@@ -105,18 +116,19 @@ class CrudStorage
         $model->setContent(array(
             'id' => $bkpContent['id']
         ));
+        
         $readed = $this->read($model);
-        if (count($readed) == 0 || $readed[0]->isEmpty())
+        if ($readed === null)
             throw new Exception($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-        if (count($readed) == 0 || $readed[0]->getVersion() != $bkpContent['version'])
+        if ($readed->getVersion() != $bkpContent['version'])
             throw new Exception($model->getName() . ' version mismatch, reload your ' . $model->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
         $model->setContent($bkpContent);
         $model->setVersion($model->getVersion() + 1);
         $updated = $this->driver->update($this->serializeForDb($model));
-        if (($model = ModelFactory::createByDbSerialization($updated)) == null) {
+        if (($model = ModelFactory::createByDbSerialization($updated)) === null) {
             throw new Exception('Updated model is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
         } else {
-            return $model;
+            return $model[0];
         }
     }
 
@@ -144,9 +156,9 @@ class CrudStorage
             'id' => $bkpContent['id']
         ));
         $readed = $this->read($model);
-        if (! isset($readed[0]) || $readed[0]->isEmpty())
+        if ($readed==null)
             throw new GraphException($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND, 404);
-        if ($readed[0]->getVersion() != $bkpContent['version'])
+        if ($readed->getVersion() != $bkpContent['version'])
             throw new GraphException($model->getName() . ' version Mismatch, reload model for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH, 400);
         $model->setContent($bkpContent);
         $this->driver->delete($this->serializeForDb($model));
@@ -178,9 +190,9 @@ class CrudStorage
             'version' => $model->getVersion()
         ));
         $readed = $this->read($tModel);
-        if (! isset($readed[0]) || $readed[0]->isEmpty())
+        if ($readed==null)
             throw new Exception($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-        if ($readed[0]->getVersion() != $model->getVersion())
+        if ($readed->getVersion() != $model->getVersion())
             throw new Exception($model->getName() . ' version Mismatch, reload model for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
         $mainCnt = $readed[0]->getContent();
         $patched = array_replace_recursive($mainCnt, $model->getContent());
