@@ -28,7 +28,7 @@ class Module
             $this->domain = $xml['info']['@attributes']['namespace'];
             
             // Setting up models path
-        if (isset($xm['info']['info']['@attributes']['models-path']))
+        if (isset($xm['info']['@attributes']['models-path']))
             $this->modelsPath = $xml['info']['@attributes']['models-path'];
         else
             $this->modelsPath = 'models';
