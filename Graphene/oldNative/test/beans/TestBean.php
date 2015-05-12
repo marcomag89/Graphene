@@ -1,7 +1,6 @@
 <?php
 namespace grTests;
 use Graphene\models\Model;
-use Graphene\controllers\model\ModelController;
 use Graphene\controllers\model\Struct;
 class TestModel extends Model{
 	public function defineStruct(){	
