@@ -12,34 +12,75 @@ class Module
 
     public function __construct($modulePath)
     {
-        if (! file_exists($modulePath . "/manifest.xml"))
-            throw new Exception('module manifest not found for: ', class_name());
-        $xml = json_decode(json_encode(simplexml_load_file($modulePath . "/manifest.xml")), true);
-        // print_r($xml);
         $this->module_dir = $modulePath;
-        $this->version = $xml['info']['@attributes']['version'];
-        $this->namespace = $xml['info']['@attributes']['namespace'];
-        $this->name = $xml['info']['@attributes']['name'];
-        
+        if(!$this->loadJsonManifest($modulePath) && !$this->loadXmlManifest($modulePath))
+            throw new Exception('module manifest not found for: '.$modulePath);
+    }
+
+    private function loadJsonManifest($modulePath){
+        if (! file_exists($modulePath . "/manifest.json")) return false;
+
+        $jsonStr = file_get_contents($modulePath . "/manifest.json");
+        $json = json_decode($jsonStr,true);
+        $this->version    = $json['info']['version'];
+        $this->namespace  = $json['info']['namespace'];
+        $this->name       = $json['info']['name'];
+        $this->author     = $json['info']['author'];
+        $this->support    = $json['info']['support'];
+
         // Setting up module domain
-        if (isset($xml['info']['@attributes']['domain']))
-            $this->domain = $xml['info']['@attributes']['domain'];
-        else
-            $this->domain = $xml['info']['@attributes']['namespace'];
-            
-            // Setting up models path
-        if (isset($xml['info']['@attributes']['models-path']))
-            $this->modelsPath = $xml['info']['@attributes']['models-path'];
-        else
-            $this->modelsPath = 'models';
-        
-        $this->author = $xml['info']['@attributes']['author'];
-        $this->support = $xml['info']['@attributes']['support'];
-        
-        if (isset($xml['filter']))
-            $this->loadFilters($xml['filter']);
-        
-        $this->xml = $xml;
+        if (isset($json['info']['domain']))  $this->domain = $json['info']['domain'];
+        else $this->domain = $json['info']['namespace'];
+
+        // Setting up models path
+        if (isset($json['info']['models-path'])) $this->modelsPath = $json['info']['models-path'];
+        else $this->modelsPath = 'models';
+
+        //Load filters
+        if (isset($json['filter'])) $this->loadFilters($json['filter']);
+
+        if (!isset($json['actions'])) $json['actions'] = array();
+        $this->manifest = $json;
+        return true;
+    }
+
+    private function loadXmlManifest($modulePath){
+        if (! file_exists($modulePath . "/manifest.xml")) return false;
+
+        $xml = json_decode(json_encode(simplexml_load_file($modulePath . "/manifest.xml")), true);
+        $xml['v']    = $xml['@attributes']['v'];
+        $xml['info'] = $xml['info']['@attributes'];
+
+        $this->version    = $xml['info']['version'];
+        $this->namespace  = $xml['info']['namespace'];
+        $this->name       = $xml['info']['name'];
+        $this->author     = $xml['info']['author'];
+        $this->support    = $xml['info']['support'];
+
+        // Setting up module domain
+        if (isset($xml['info']['domain']))  $this->domain = $xml['info']['domain'];
+        else $this->domain = $xml['info']['namespace'];
+
+        // Setting up models path
+        if (isset($xml['info']['models-path'])) $this->modelsPath = $xml['info']['models-path'];
+        else $this->modelsPath = 'models';
+
+        //Load filters
+        if (isset($xml['filter'])) $this->loadFilters($xml['filter']);
+
+        if(isset($xml['action'])) $xml['actions'] = $xml['action'];
+        else $xml['actions'] = array();
+
+        foreach($xml['actions'] as &$action){
+            $action = $action['@attributes'];
+        }
+
+        unset ($xml['action']);
+        unset ($xml['info']['@attributes']);
+        unset ($xml['@attributes']);
+
+        $this->manifest = $xml;
+        return true;
     }
 
     public function getModelDirectory($modelClass)
@@ -73,9 +114,9 @@ class Module
 
     public function exec(GraphRequest $request)
     {
-        if (! isset($this->xml['action']))
-            return null;
-        $this->instantiateActions($this->xml['action'], $request);
+        if (! isset($this->manifest['actions'])) return null;
+
+        $this->instantiateActions($this->manifest['actions'], $request);
         $rUrl = $this->getActionUrl($request);
         // print_r($this->actions);
         foreach ($this->actions as $action) {
@@ -120,14 +161,9 @@ class Module
 
     private function instantiateActions($actions, $request)
     {
-        if (isset($actions['@attributes']))
-            $actions = array(
-                $actions
-            );
-        $this->actions = array();
         /* Direttiva autloader caricamento actions namespace\actions\ */
         foreach ($actions as $action) {
-            if (str_starts_with($action['@attributes']['name'], '$'))
+            if (str_starts_with($action['name'], '$'))
                 $this->injectActions($action, $request);
             else
                 $this->loadAction($action, $request);
@@ -136,17 +172,15 @@ class Module
 
     private function loadAction($action, $request, $dir = null, $namespace = null, $pars = null, $queryPrefix = '')
     {
-        if ($dir == null)
-            $dir = $this->getModuleDir();
-        if ($namespace == null)
-            $namespace = $this->getNamespace();
-        if ($pars == null && isset($action['@attributes']['handler']))
-            $pars = explode(',', $action['@attributes']['handler']);
+        if ($dir == null) $dir = $this->getModuleDir();
+        if ($namespace == null) $namespace = $this->getNamespace();
+        if ($pars == null && isset($action['handler']))
+            $pars = explode(',', $action['handler']);
         else 
-            if ($pars == null && ! isset($action['@attributes']['handler']))
+            if ($pars == null && ! isset($action['handler']))
                 $pars = array();
         
-        $expl = explode('@', $action['@attributes']['handler']);
+        $expl = explode('@', $action['handler']);
         $file = $expl[1];
         $class = $expl[0];
         // echo $dir. '/' . $file."\n";
@@ -156,7 +190,7 @@ class Module
             require_once $dir . '/' . $file;
             $handlerClass = $namespace . '\\' . $class;
             $actionClass = new $handlerClass();
-            $actionClass->setUp($this, $action['@attributes'], $request, $pars, $queryPrefix);
+            $actionClass->setUp($this, $action, $request, $pars, $queryPrefix);
             // echo $actionClass->getUniqueActionName()."\n";
             $this->actions[] = $actionClass;
         }
@@ -165,7 +199,7 @@ class Module
     private function injectActions($injection, $request)
     {
         $injectionDir = Graphene::getInstance()->getRouter()->getInjectionDir();
-        $injectionName = strtoupper(substr($injection['@attributes']['name'], 1));
+        $injectionName = strtoupper(substr($injection['name'], 1));
         if (file_exists($injectionDir . '/' . $injectionName . '/manifest.xml')) {
             // echo 'injection is possible for: '.$injectionDir.'/'.$injectionName.'/manifest.xml';
             $injXml = json_decode(json_encode(simplexml_load_file($injectionDir . '/' . $injectionName . '/manifest.xml')), true);
@@ -173,16 +207,18 @@ class Module
                 $actions = $injXml['action'];
             else
                 $actions = array();
+
             foreach ($actions as $action) {
-                if (str_starts_with($action['@attributes']['name'], '$'))
+                $action=$action['@attributes'];
+                if (str_starts_with($action['name'], '$'))
                     $this->injectActions($action, $request);
                 else {
-                    if (isset($injection['@attributes']['pars']))
-                        $pars = explode(',', $injection['@attributes']['pars']);
+                    if (isset($injection['pars']))
+                        $pars = explode(',', $injection['pars']);
                     else
                         $pars = array();
-                    if (isset($injection['@attributes']['query-prefix']))
-                        $pfx = $injection['@attributes']['query-prefix'];
+                    if (isset($injection['query-prefix']))
+                        $pfx = $injection['query-prefix'];
                     else
                         $pfx = '';
                     $this->loadAction($action, $request, $injectionDir . '/' . strtoupper($injectionName), 'injection', $pars, $pfx);
@@ -255,7 +291,7 @@ class Module
 
     public function getActionNames()
     {
-        $this->instantiateActions($this->xml['action'], new GraphRequest());
+        $this->instantiateActions($this->manifest['actions'], new GraphRequest());
         foreach ($this->actions as $action) {
             $ret[] = strtoupper($this->namespace) . '.' . $action->getActionName();
         }
@@ -266,7 +302,7 @@ class Module
 
     private $currentAction;
 
-    private $xml;
+    private $manifest;
 
     private $request;
  // richiesta

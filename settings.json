@@ -1,0 +1,16 @@
+{
+  "debug"         : true,
+  "frameworkDir"  : "",
+  "modulesUrl"    : "",
+  "appName"       : "Graphene",
+  "localhost"     : "graphene.dev",
+  "storageDriver" : "CrudMySql",
+  "storageConfig": {
+    "type"     : "mysql",
+    "dbName"   : "graphene_db",
+    "prefix"   : "",
+    "username" : "root",
+    "password" : "mysql",
+  },
+  "logfile":"logs/logfile.log"
+}

@@ -13,6 +13,8 @@
 		<handle event="backup"  handler="Install@handlers/uninstall.php" overload="true" />
 
 		<action method="get" query="status"  name="STATUS"  handler="GetStatus@actions/GetStatus.STATUS.php" />	
-		<action method="get" query="modules" name="MODULES" handler="GetModules@actions/GetModules.MODULES.php" />		
-			
+		<action method="get" query="modules" name="MODULES" handler="GetModules@actions/GetModules.MODULES.php" />
+        <action method="get" query="modules/create" name="CREATE_MODULE" handler="CreateModule@actions/CreateModule.CREATE_MODULE.php" />
+
+
 </module>
