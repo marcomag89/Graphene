@@ -248,7 +248,7 @@ class ModelChecker
 
     private function checkNotNull($val, $type)
     {
-        return $val != null;
+        return $val !== null;
     }
 
     private function addError($field, $type, $tGlobal, $message)
