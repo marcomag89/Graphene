@@ -362,8 +362,7 @@ class CrudMySql implements CrudDriver
             }
             return $cond;
         } else {
-            var_dump($query);
-            $cond = '\'1\'=\'1\'';
+            $cond = $query;
             return $cond;
         }
     }
