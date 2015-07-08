@@ -1,16 +1,22 @@
 {
-  "debug"         : true,
-  "frameworkDir"  : "",
-  "modulesUrl"    : "",
-  "appName"       : "Graphene",
-  "localhost"     : "graphene.dev",
-  "storageDriver" : "CrudMySql",
-  "storageConfig": {
-    "type"     : "mysql",
-    "dbName"   : "graphene_db",
-    "prefix"   : "",
-    "username" : "root",
-    "password" : "mysql",
+  "debug"        : true,
+  "frameworkDir" : "",
+  "modulesUrl"   : "",
+  "appName"      : "Graphene",
+  "localhost"    : "graphene.dev",
+  "storageConfig" : {
+    "driver"    : "CrudMySql",
+    "type"      : "mysql",
+    "dbName"    : "graphene_db",
+    "prefix"    : "",
+    "username"  : "root",
+    "password"  : "mysql"
   },
-  "logfile":"logs/logfile.log"
+
+  "log" : {
+    "all"      : "logs/graphene.log",
+    "requests" : "logs/requests.log",
+    "errors"   : "logs/errors.log",
+    "debug"    : "logs/debug.log"
+  }
 }

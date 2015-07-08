@@ -6,18 +6,17 @@ class UrlProcessor
 
     public function __construct($pattern)
     {
-        $this->pattern = $pattern;
+        $pattern = url_trimAndClean($pattern);
+        $this->pattern = strtolower($pattern);
         $this->matchedPars = array();
     }
 
-    public function matches($url)
-    {
+    public function matches($url){
         return $this->checkEmpty($url) || $this->checkUrl($url);
     }
 
     /* Empty or monopar matcher */
-    private function checkEmpty($url)
-    {
+    private function checkEmpty($url){
         if (strcmp($url, '') == 0 && ($this->pattern == null || strcmp($this->pattern, '') == 0))
             return true;
         if (! str_contains($this->pattern, '/') && str_starts_with($this->pattern, ':')) {
@@ -29,23 +28,17 @@ class UrlProcessor
         }
     }
     
-    private function checkUrl($url)
-    {
+    private function checkUrl($url){
+        $url = url_trimAndClean($url);
         preg_match_all('/:(\w+)/', $this->pattern, $matches);
         $regex = str_replace('/', '\/', $this->pattern);
         $regex ='/^'.preg_replace('/:(\w+)/', '(\\w+)', $regex).'(\/|)$/';
         $parLabels = $matches[1];
         $parsKV=[];
-        //print_r($parLabels);
-        //var_dump(preg_match($regex, $url));
         
         if(preg_match($regex, $url,$matches)){
-            //print_r($matches);
-            for($i=0; $i<count($parLabels); $i++){
-                $parsKV[$parLabels[$i]] = $matches[$i+1];
-            }
+            for($i=0; $i<count($parLabels); $i++){$parsKV[$parLabels[$i]] = $matches[$i+1];}
             $this->matchedPars=$parsKV;
-            //print_r($this->matchedPars);
             return true;
         }else{
             return false;
@@ -53,8 +46,7 @@ class UrlProcessor
     }
 
     /* Url matcher */
-    public function getPars()
-    {
+    public function getPars(){
         return $this->matchedPars;
     }
 

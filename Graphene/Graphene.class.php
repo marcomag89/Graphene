@@ -30,9 +30,10 @@ class Graphene
     private function __construct()
     {
         $this->startTime = round(microtime(true) * 1000);
-        $this->settings = simplexml_load_file('settings.xml');
-        $this->debugMode = strcasecmp($this->settings->debug, 'true') == 0;
-        $this->showLog = strcasecmp($this->settings->showLog, 'true') == 0;
+        $jsonFile = file_get_contents('settings.json');
+        $this->settings  = json_decode($jsonFile, true);
+        $this->debugMode = strcasecmp($this->settings['debug'], 'true') == 0;
+        $this->showLog   = strcasecmp($this->settings['showLog'], 'true') == 0;
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
             ini_set('opcache.enabled', 0);
@@ -52,8 +53,8 @@ class Graphene
         $this->createRequest();
         $this->filterManager = new FilterManager();
         $this->router = new GrapheneRouter($this->getRequest());
-        $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->settings->storageDriver;
-        $this->storage = new CrudStorage(new $crudDriver($this->settings->storageConfig));
+        $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->settings['storageConfig']['driver'];
+        $this->storage = new CrudStorage(new $crudDriver($this->settings['storageConfig']));
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
     }

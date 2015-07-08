@@ -16,11 +16,11 @@ class CrudMySql implements CrudDriver
     public function __construct($dbConfig)
     {
         log_write(self::LOG_NAME . 'driver loaded: ' . self::INFO);
-        $this->url = $dbConfig->host;
-        $this->dbname = $dbConfig->dbName;
-        $this->username = $dbConfig->username;
-        $this->prefix = $dbConfig->prefix;
-        $this->password = $dbConfig->password;
+        $this->url      = $dbConfig['host'];
+        $this->dbname   = $dbConfig['dbName'];
+        $this->username = $dbConfig['username'];
+        $this->prefix   = $dbConfig['prefix'];
+        $this->password = $dbConfig['password'];
     }
 
     /*

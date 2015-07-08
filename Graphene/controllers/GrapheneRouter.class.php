@@ -41,18 +41,16 @@ class GrapheneRouter
      *
      * @return GraphResponse
      */
-    public function dispatch(GraphRequest $request)
-    {
+    public function dispatch(GraphRequest $request){
         $response = null;
         $url = url_trimAndClean($request->getUrl());
         foreach ($this->modules as $dir => $module) {
             $domain = (string) $module->getDomain();
-            if (str_starts_with($url, $domain)) {
+            if (str_starts_with($url, strtolower($domain))) {
                 $this->pushModule($module);
-                $response = $module->exec($request);
-                $this->popModule();
-                if ($response != null)
-                    break;
+                $response = $module -> exec($request);
+                $this -> popModule();
+                if ($response != null)break;
             }
         }
         return $this->getSafeResponse($response);
