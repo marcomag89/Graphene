@@ -26,8 +26,8 @@ class GrapheneRouter
     public function __construct()
     {
         $r = Graphene::getInstance();
-        $this->modulesDir = $r->getSettings()->moduleurl;
-        $this->baseUrl = (string) $r->getSettings()->frameworkDir . 'Graphene';
+        $this->modulesDir = $r->getSettings()['modulesUrl'];
+        $this->baseUrl = (string) $r->getSettings()['frameworkDir'] . 'Graphene';
         $this->nativePath = $this->baseUrl . '/native';
         $this->injectionDir = $this->baseUrl . '/injections';
         $this->routeTable = array();

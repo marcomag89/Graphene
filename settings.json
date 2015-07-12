@@ -1,7 +1,7 @@
 {
   "debug"        : true,
   "frameworkDir" : "",
-  "modulesUrl"   : "",
+  "modulesUrl"   : "modules",
   "appName"      : "Graphene",
   "localhost"    : "graphene.dev",
   "storageConfig" : {

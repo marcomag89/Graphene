@@ -27,7 +27,7 @@ function autol_models($name)
 function autol_moduleContent($name)
 {
     $settings = Graphene::getInstance()->getSettings();
-    $modPath = $settings->moduleurl;
+    $modPath = $settings['modulesUrl'];
     $name = str_replace('\\', '/', $name);
     $filename = $modPath . "/" . $name . ".php";
     if (is_readable($filename)) {

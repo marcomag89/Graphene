@@ -140,11 +140,10 @@ abstract class Model implements \Serializable
         return $this->modelController->create($this);
     }
 
-    public function read($multiple=false,$query=null)
+    public function read($multiple=false,$query=null,$page=null,$pageSize=null)
     {
-        if ($this->canRead())
-            $this->onRead();
-        return $this->modelController->read($this,$multiple,$query);
+        if ($this->canRead()) $this->onRead();
+        return $this->modelController->read($this,$multiple,$query,$page,$pageSize);
     }
 
     public function update()

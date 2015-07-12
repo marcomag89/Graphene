@@ -92,7 +92,7 @@ class Graphene
 
     public function getApplicationName()
     {
-        return (string) $this->settings->appname[0];
+        return (string) $this->settings['appName'];
     }
 
     public function getStorage()

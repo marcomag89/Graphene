@@ -6,7 +6,7 @@ use Graphene\Graphene;
 class CreateModule extends Action {
 
     public function run() {
-        $url = Graphene::getInstance()->getSettings()->moduleurl."";
+        $url = Graphene::getInstance()->getSettings()['modulesUrl']."";
         $namespace = 'testmod';
         $name      = 'com.test'.$namespace;
         $author    = 'Pippo rossi';

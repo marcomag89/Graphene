@@ -195,9 +195,9 @@ class ModelController
         return $this->storage->create($model);
     }
 
-    public function read($model,$multiple,$query)
+    public function read($model,$multiple,$query,$page=null,$pageSize=null)
     {
-        return $this->storage->read($model,$multiple,$query);
+        return $this->storage->read($model,$multiple,$query,$page,$pageSize);
     }
 
     public function update($model)

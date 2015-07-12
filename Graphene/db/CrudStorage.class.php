@@ -37,9 +37,10 @@ class CrudStorage
      * Crea un nuovo record con un model
      * assegnando a quest'ultimo un <b>ID</b> ed una <b>versione</b>
      *
-     * @param <b>Model</b> $model            
+     * @param Model $model
      * @return Nuovo model [senza id e versione]
-     * @throws eccezione generica con messaggio se qualcosa va storto;
+     * @throws Exception
+     * @internal param $ <b>Model</b> $model
      */
     public function create(Model $model)
     {
@@ -61,15 +62,20 @@ class CrudStorage
      * Carica un model compilato parzialmente utilizzando
      * i campi compilati come criterio di ricerca in <b>AND<b> tra loro
      *
-     * @param
-     *            <b>Model</b> modello parzialmente compilato
+     * @param Model $model
+     * @param bool $multiple
+     * @param null $query
+     * @param null $pageNo
+     * @param null $pageElements
      * @return Uno o piu model che corrispondono ai criteri di ricerca
-     * @throws eccezione generica con messaggio se qualcosa va storto;
+     * @throws Exception
+     * @throws GraphException
+     * @internal param $ <b>Model</b> modello parzialmente compilato*            <b>Model</b> modello parzialmente compilato
      */
-    public function read(Model $model, $multiple = false, $query = null)
+    public function read(Model $model, $multiple = false, $query = null, $pageNo = null, $pageElements = null)
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for read');
-        $readed = $this->driver->read($this->serializeForDb($model), $query);
+        $readed = $this->driver->read($this->serializeForDb($model, $pageNo, $pageElements), $query);
         // echo "JSON Letto\n----\n";
         // echo ($readed);
         $result = ModelFactory::createByDbSerialization($readed);
@@ -96,10 +102,11 @@ class CrudStorage
     /**
      * Sovrascrive un model fornendo id e versione
      *
-     * @param
-     *            <b>Model</b> model da modificare [id e versione obbligatori]
+     * @param Model $model
      * @return Il model modificato
-     * @throws eccezione generica con messaggio se qualcosa va storto;
+     * @throws Exception
+     * @throws GraphException
+     * @internal param $ <b>Model</b> model da modificare [id e versione obbligatori]*            <b>Model</b> model da modificare [id e versione obbligatori]
      */
     public function update(Model $model)
     {
@@ -136,10 +143,11 @@ class CrudStorage
      * Elimina il Model dalla base di dati in base all' id fornendo la versione
      * corretta
      *
-     * @param
-     *            <b>Model</b> model da eliminare [id e versione obbligatori]
-     * @return <b>boolean</b> in base alla avvenuta cancellazione
-     * @throws eccezione generica con messaggio se qualcosa va storto;
+     * @param Model $model
+     * @return bool <b>boolean</b> in base alla avvenuta cancellazione
+     * @throws Exception
+     * @throws GraphException
+     * @internal param $ <b>Model</b> model da eliminare [id e versione obbligatori]*            <b>Model</b> model da eliminare [id e versione obbligatori]
      */
     public function delete(Model $model)
     {
@@ -169,10 +177,12 @@ class CrudStorage
      * Esegue una patch del model nella base di dati
      * In base all' id fornendo la versione corretta
      *
-     * @param
-     *            <b>Model</b> model da patchare [id e versione obbligatori]
-     * @return <b>boolean</b> in base alla avvenuta modifica
-     * @throws eccezione generica con messaggio se qualcosa va storto;
+     * @param Model $model
+     * @return Il <b>boolean</b> in base alla avvenuta modifica
+     * @throws Exception
+     * @throws GraphException
+     * @internal param $ <b>Model</b> model da patchare [id e versione obbligatori]*
+     * <b>Model</b> model da patchare [id e versione obbligatori]
      */
     public function patch(Model $model)
     {
@@ -212,15 +222,17 @@ class CrudStorage
         return $this->driver;
     }
 
-    private function serializeForDb(Model $model)
+    private function serializeForDb(Model $model,$page=null,$pageSize=null)
     {
+        if($page === null) $page=$this->page;
+        if($pageSize === null) $pageSize=$this->pageSize;
         $ret = array(
-            'domain' => $model->getDomain(),
-            'type' => 'model',
-            'pageNo' => $this->pageNo,
-            'pageElements' => $this->pageElements,
-            'struct' => $model->getStruct(),
-            'content' => $model->getContent()
+            'domain'       => $model->getDomain(),
+            'type'         => 'model',
+            'page'         => $page,
+            'pageSize'     => $pageSize,
+            'struct'       => $model->getStruct(),
+            'content'      => $model->getContent()
         );
         $serialized = json_encode($ret);
         return $serialized;
@@ -242,44 +254,9 @@ class CrudStorage
      *
      * @var CrudDriver;
      */
-    private $pageElements = 10;
+    private $pageSize = 10;
 
-    private $pageNo = 0;
+    private $page = 1;
 
     private $driver;
-
-    /**
-     * loaded if stored property is less than model property
-     * CrudStorage::LESS_THEN.'property'
-     * CrudStorage::LESS_THEN.'foo_bar_property'
-     */
-    const LESS_THAN = '-LT:';
-
-    /**
-     * loaded if stored property is greather than model property
-     * CrudStorage::GREATHER_THEN.'property'
-     * CrudStorage::GREATHER_THEN.'foo_bar_property'
-     */
-    const GREATHER_THAN = '-GT:';
-
-    /**
-     * loaded if stored property/ies matches regex
-     * CrudStorage::LIKE.'regex,property1,property2'
-     * CrudStorage::LIKE.'regex,foo_bar_property'
-     */
-    const LIKE = '-LK:';
-
-    /**
-     * loads k element of page n
-     * CrudStorage::PAGE.'6,1'; //Loads page 1
-     * CrudStorage::PAGE.'6,2'; //Loads page 2
-     */
-    const PAGE = '-PG:';
-
-    /**
-     * loads k element of page n
-     * CrudStorage::PAGE.'6,1'; //Loads page 1
-     * CrudStorage::PAGE.'6,2'; //Loads page 2
-     */
-    const OR_ = '-OR-';
 }
