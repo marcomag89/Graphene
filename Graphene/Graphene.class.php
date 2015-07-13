@@ -29,6 +29,7 @@ class Graphene
 
     private function __construct()
     {
+        header('Server : Graphene v. '.Graphene::VERSION);
         $this->startTime = round(microtime(true) * 1000);
         $jsonFile = file_get_contents('settings.json');
         $this->settings  = json_decode($jsonFile, true);
