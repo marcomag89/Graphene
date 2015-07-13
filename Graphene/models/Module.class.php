@@ -121,6 +121,7 @@ class Module
         $this->instantiateActions($this->manifest['actions'], $request);
         $rUrl = $this->getActionUrl($request);
         // print_r($this->actions);
+
         foreach ($this->actions as $action) {
             $this->currentAction = $action;
             if ($action->isHandled()) {

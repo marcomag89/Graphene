@@ -51,7 +51,7 @@ class AclDb implements CrudDriver
 					 '", version=' . $arr['content']['version'];
 			$db->query($qr);
 			foreach ($qrs as $q) {
-				echo $q . "\n";
+				//echo $q . "\n";
 				$db->query($q);
 			}
 			$db->commit();

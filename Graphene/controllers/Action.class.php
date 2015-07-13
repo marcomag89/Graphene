@@ -38,6 +38,7 @@ abstract class Action
 
     final public function isHandled()
     {
+
         return strcasecmp($this->request->getMethod(), $this->handlingMethod) == 0 && $this->checkQuery() && $this->checkFilters() && $this->checkHandled();
     }
 
@@ -85,7 +86,6 @@ abstract class Action
     private function checkQuery()
     {
         $rel = $this->ownerModule->getActionUrl($this->request);
-        print_r($rel);
         if ($this->urlProcessor->matches($rel)) {
             $this->request->setPars($this->urlProcessor->getPars());
             return true;

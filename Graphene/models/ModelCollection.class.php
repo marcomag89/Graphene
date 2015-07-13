@@ -34,8 +34,7 @@ class ModelCollection implements \Iterator, \Serializable
             array_slice($this->content, $index);
     }
     // Iterator functions
-    public function current()
-    {
+    public function current(){
         $var = current($this->content);
         echo "current: $var\n";
         return $var;

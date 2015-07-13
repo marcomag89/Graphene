@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <injection name="COLLECTIONS">
-    <action name="READ_COLLECTION" handler="ReadCollection@Collections.php" query="collection"                       method="get" />
-    <action name="READ_COLLECTION" handler="ReadCollection@Collections.php" query="collection/:page"             method="get" />
-    <action name="READ_COLLECTION" handler="ReadCollection@Collections.php" query="collection/:page/:page_size" method="get" />
+    <action name="READ_ALL_COLLECTION"  handler="ReadAllCollection@Collections.php" query="collection/all"               method="get" />
+
+    <action name="READ_COLLECTION"      handler="ReadCollection@Collections.php"    query="collection"                   method="get" />
+    <action name="READ_COLLECTION"      handler="ReadCollection@Collections.php"    query="collection/:page"             method="get" />
+    <action name="READ_COLLECTION"      handler="ReadCollection@Collections.php"    query="collection/:page/:page_size"  method="get" />
 </injection>

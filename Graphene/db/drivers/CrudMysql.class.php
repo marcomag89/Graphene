@@ -92,8 +92,13 @@ class CrudMySql implements CrudDriver
         $decoded = json_decode($json, true);
         $q = self::SELECT_PTT;
         $cond = $this->getCondition($query, $this->columnsByStruct($decoded['content']));
-        $limit  = $decoded['pageSize'];
-        $offset = ($decoded['page']-1) * $decoded['pageSize'];
+        if($decoded['pageSize'] > 0){
+            $limit  = 'LIMIT '.$decoded['pageSize'];
+            $offset = 'OFFSET '.(($decoded['page']-1) * $decoded['pageSize']);
+        }else{
+            $limit='';
+            $offset='';
+        }
         $q = str_replace('<dbname>', $this->dbname, $q);
         $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         $q = str_replace('<cond>',   $cond, $q);
@@ -392,7 +397,7 @@ class CrudMySql implements CrudDriver
 
     const DELETE_PTT = 'DELETE FROM `<dbname>`.`<tableName>` WHERE `id`=\'<id>\';';
 
-    const SELECT_PTT = 'SELECT * FROM `<dbname>`.`<tableName>`  WHERE <cond> LIMIT <limit> OFFSET <offset>';
+    const SELECT_PTT = 'SELECT * FROM `<dbname>`.`<tableName>`  WHERE <cond> <limit> <offset>';
 
     const UPDATE_PTT = 'UPDATE `<dbname>`.`<tableName>` SET <kv>  WHERE `id`=\'<id>\'';
 
