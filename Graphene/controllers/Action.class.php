@@ -29,6 +29,7 @@ abstract class Action
             $this->handlingMethod = 'GET';
             
             // SETTING other infos
+        $this->actionSettings=$actionSettings;
         $this->pars = $pars;
         $this->request = $request;
         $this->actionName = self::getStandardActionName($actionSettings['name']);
@@ -84,6 +85,7 @@ abstract class Action
     private function checkQuery()
     {
         $rel = $this->ownerModule->getActionUrl($this->request);
+        print_r($rel);
         if ($this->urlProcessor->matches($rel)) {
             $this->request->setPars($this->urlProcessor->getPars());
             return true;
@@ -94,6 +96,12 @@ abstract class Action
     public function getUniqueActionName()
     {
         return strtoupper($this->ownerModule->getNamespace()) . '.' . $this->actionName;
+    }
+
+    public function getActionUrl(){
+        if(isset ($this->actionSettings['query'])){ $q='/'.$this->actionSettings['query'];}
+        else{ $q='';}
+        return strtolower($this->ownerModule->getNamespace().$q);
     }
 
     public function getActionName()
@@ -254,6 +262,8 @@ abstract class Action
      * @var GraphResponse
      */
     protected $pars;
+
+    protected $actionSettings;
 
     protected $response;
 

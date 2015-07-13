@@ -72,7 +72,9 @@ class Module
         else $xml['actions'] = array();
 
         foreach($xml['actions'] as &$action){
-            $action = $action['@attributes'];
+            if(isset ($action['@attributes'])){
+                $action = $action['@attributes'];
+            }
         }
 
         unset ($xml['action']);
@@ -156,7 +158,7 @@ class Module
     public function getAction($action)
     {
         $this->actions = array();
-        foreach ($actions->action as $action) {}
+        //foreach ($actions->action as $action) {}
     }
 
     private function instantiateActions($actions, $request)
@@ -293,7 +295,20 @@ class Module
     {
         $this->instantiateActions($this->manifest['actions'], new GraphRequest());
         foreach ($this->actions as $action) {
-            $ret[] = strtoupper($this->namespace) . '.' . $action->getActionName();
+            $ret[] = $action->getUniqueActionName();
+        }
+        return $ret;
+    }
+    public function getActionDocs()
+    {
+        $this->instantiateActions($this->manifest['actions'], new GraphRequest());
+        foreach ($this->actions as $action) {
+          //  print_r($action);
+            $ret[] = array(
+                "name"   => $action->getUniqueActionName(),
+                "url"    => $_SERVER['SERVER_NAME'].'/'.$action->getActionUrl(),
+                "method" => $action->getHandlingMethod(),
+            );
         }
         return $ret;
     }

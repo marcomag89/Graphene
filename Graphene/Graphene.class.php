@@ -29,11 +29,10 @@ class Graphene
 
     private function __construct()
     {
-        header('Server : Graphene v. '.Graphene::VERSION);
         $this->startTime = round(microtime(true) * 1000);
         $jsonFile = file_get_contents('settings.json');
         $this->settings  = json_decode($jsonFile, true);
-        $this->debugMode = strcasecmp($this->settings['debug'], 'true') == 0;
+        $this->debugMode = $this->settings['debug'] === true || strcasecmp($this->settings['debug'], 'true') == 0;
         $this->showLog   = strcasecmp($this->settings['showLog'], 'true') == 0;
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
@@ -220,12 +219,12 @@ class Graphene
         $ret = array();
         foreach ($mods as $mod) {
             $modInfos = array();
-            $modInfos['name'] = $mod->getName();
-            $modInfos['author'] = $mod->getAuthor();
-            $modInfos['support'] = $mod->getSupport();
-            $modInfos['version'] = $mod->getVersion();
+            $modInfos['name']      = $mod->getName();
+            $modInfos['author']    = $mod->getAuthor();
+            $modInfos['support']   = $mod->getSupport();
+            $modInfos['version']   = $mod->getVersion();
             $modInfos['namespace'] = $mod->getNamespace();
-            $modInfos['actions'] = $mod->getActionNames();
+            $modInfos['actions']   = $mod->getActionDocs();
             $ret[] = $modInfos;
         }
         return $ret;
