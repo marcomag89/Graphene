@@ -38,7 +38,6 @@ abstract class Action
 
     final public function isHandled()
     {
-
         return strcasecmp($this->request->getMethod(), $this->handlingMethod) == 0 && $this->checkQuery() && $this->checkFilters() && $this->checkHandled();
     }
 

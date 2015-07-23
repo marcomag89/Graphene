@@ -117,10 +117,8 @@ class Module
     public function exec(GraphRequest $request)
     {
         if (! isset($this->manifest['actions'])) return null;
-
         $this->instantiateActions($this->manifest['actions'], $request);
         $rUrl = $this->getActionUrl($request);
-        // print_r($this->actions);
 
         foreach ($this->actions as $action) {
             $this->currentAction = $action;
@@ -140,9 +138,6 @@ class Module
         $res = new GraphResponse();
         $res->setStatusCode(200);
         $res->setHeader('allow', 'HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS');
-        // var_dump($request);
-        // var_dump($request->getHeader('Access-Control-Request-Headers'));
-        // $res->setHeader('Access-Control-Allow-Headers', $request->getHeader('Access-Control-Request-Headers'));
         return $res;
     }
 
@@ -164,7 +159,7 @@ class Module
 
     private function instantiateActions($actions, $request)
     {
-        /* Direttiva autloader caricamento actions namespace\actions\ */
+        $this->actions = array();
         foreach ($actions as $action) {
             if (str_starts_with($action['name'], '$'))
                 $this->injectActions($action, $request);
@@ -186,15 +181,11 @@ class Module
         $expl = explode('@', $action['handler']);
         $file = $expl[1];
         $class = $expl[0];
-        // echo $dir. '/' . $file."\n";
-        // echo 'check file: '.$dir . '/' . $file."\n";
         if (file_exists($dir . '/' . $file)) {
-            // echo 'injecting: '.$dir . '/' . $file."\n";
             require_once $dir . '/' . $file;
             $handlerClass = $namespace . '\\' . $class;
             $actionClass = new $handlerClass();
             $actionClass->setUp($this, $action, $request, $pars, $queryPrefix);
-            // echo $actionClass->getUniqueActionName()."\n";
             $this->actions[] = $actionClass;
         }
     }
@@ -204,7 +195,6 @@ class Module
         $injectionDir = Graphene::getInstance()->getRouter()->getInjectionDir();
         $injectionName = strtoupper(substr($injection['name'], 1));
         if (file_exists($injectionDir . '/' . $injectionName . '/manifest.xml')) {
-            // echo 'injection is possible for: '.$injectionDir.'/'.$injectionName.'/manifest.xml';
             $injXml = json_decode(json_encode(simplexml_load_file($injectionDir . '/' . $injectionName . '/manifest.xml')), true);
             if (isset($injXml['action']))
                 $actions = $injXml['action'];

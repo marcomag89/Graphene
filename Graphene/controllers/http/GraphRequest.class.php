@@ -116,10 +116,10 @@ class GraphRequest
 
     public function getPar($parName)
     {
+        $parName = strtolower($parName);
         if (isset($this->pars[$parName])) {
             return $this->pars[$parName];
-        } else
-            return null;
+        } else return null;
     }
 
     public function getPars()

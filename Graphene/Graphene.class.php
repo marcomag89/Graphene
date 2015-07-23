@@ -32,8 +32,8 @@ class Graphene
         $this->startTime = round(microtime(true) * 1000);
         $jsonFile = file_get_contents('settings.json');
         $this->settings  = json_decode($jsonFile, true);
-        $this->debugMode = $this->settings['debug'] === true || strcasecmp($this->settings['debug'], 'true') == 0;
-        $this->showLog   = strcasecmp($this->settings['showLog'], 'true') == 0;
+        $this->debugMode = $this->settings['debug'] === true   || strcasecmp($this->settings['debug'], 'true') == 0;
+        $this->showLog   = $this->settings['showLog'] === true || strcasecmp($this->settings['showLog'], 'true') == 0;
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
             ini_set('opcache.enabled', 0);
@@ -109,7 +109,6 @@ class Graphene
         if (! str_starts_with($request->getUrl(), "http://")) {
             $this->pushRequest($request);
             $resp = $this->router->dispatch($request);
-            $this->popRequest();
             return $resp;
         } else {
             if (! extension_loaded('curl'))

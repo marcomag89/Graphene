@@ -135,36 +135,42 @@ abstract class Model implements \Serializable
 
     public function create()
     {
-        if ($this->canCreate())
+        if ($this->canCreate()){
             $this->onCreate();
-        return $this->modelController->create($this);
+            return $this->modelController->create($this);
+        }else throw new GraphException('cannot CREATE '.$this->getName().' model',500,500);
     }
 
     public function read($multiple=false,$query=null,$page=null,$pageSize=null)
     {
-        if ($this->canRead()) $this->onRead();
-        return $this->modelController->read($this,$multiple,$query,$page,$pageSize);
+        if ($this->canRead()){
+            $this->onRead();
+            return $this->modelController->read($this,$multiple,$query,$page,$pageSize);
+        }else throw new GraphException('cannot READ '.$this->getName().' model',500,500);
     }
 
     public function update()
     {
-        if ($this->canUpdate())
+        if ($this->canUpdate()){
             $this->onUpdate();
-        return $this->modelController->update($this);
+            return $this->modelController->update($this);
+        }else throw new GraphException('cannot UPDATE '.$this->getName().' model',500,500);
     }
 
     public function delete()
     {
-        if ($this->canDelete())
+        if ($this->canDelete()){
             $this->onDelete();
-        return $this->modelController->delete($this);
+            return $this->modelController->delete($this);
+        }else throw new GraphException('cannot DELETE '.$this->getName().' model',500,500);
     }
 
     public function patch()
     {
-        if ($this->canPatch())
+        if ($this->canPatch()){
             $this->onPatch();
-        return $this->modelController->patch($this);
+            return $this->modelController->patch($this);
+        }else throw new GraphException('cannot PATCH '.$this->getName().' model',500,500);
     }
 
     /*
