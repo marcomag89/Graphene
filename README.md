@@ -11,8 +11,8 @@ class HelloWorld extends Action{
 
 ##Install Graphene in 4 steps##
 1. Download Graphene as ZIP file and extract content into your project root.
-2. Edit configuration file.
-3. Check if you are ready to go on `yourProject.address/_system/status` on your browser.
+2. Create **settings.json** file.
+3. Check if you are ready to go on `yourProject.address/system/status` on your browser.
 4. Enjoy creating your first module!
 
 ##Wiki##
