@@ -227,11 +227,6 @@ abstract class Action
         return json_encode($array, JSON_PRETTY_PRINT);
     }
 
-    final function getUrl($url)
-    {
-        return $baseUrl . "/" . $url;
-    }
-
     protected function checkHandled()
     {
         return true;
@@ -244,28 +239,29 @@ abstract class Action
 
     public abstract function run();
 
-    /**
-     *
-     * @var Module
-     */
-    protected $ownerModule;
+
+    protected $pars;
+
+    protected $actionSettings;
 
     /**
-     *
+     * @var GraphResponse
+     */
+    protected $response;
+
+    /**
      * @var GraphRequest
      */
     protected $request;
 
     /**
-     *
-     * @var GraphResponse
+     * @var Module
      */
-    protected $pars;
+    protected $ownerModule;
 
-    protected $actionSettings;
-
-    protected $response;
-
+    /**
+     * @var UrlProcessor
+     */
     private $urlProcessor;
 
     protected $actionName;
