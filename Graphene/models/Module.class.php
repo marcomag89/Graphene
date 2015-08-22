@@ -105,6 +105,7 @@ class Module
             $file = $expl[1];
             $class = $expl[0];
             if (file_exists($this->module_dir . '/' . $file)) {
+                /** @noinspection PhpIncludeInspection */
                 require_once $this->module_dir . '/' . $file;
                 $filterClass = $this->namespace . '\\' . $class;
                 $filterClass = new $filterClass();

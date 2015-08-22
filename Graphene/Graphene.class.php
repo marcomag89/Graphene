@@ -1,18 +1,17 @@
 <?php
 namespace Graphene;
 
-use Graphene\controllers\ModuleManager;
-use Graphene\controllers\RouteCreator;
-use Graphene\db\Storage;
+/** @noinspection PhpIncludeInspection */
+include Graphene::path().'/autoload/autoloaders.php';
+
+use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\controllers\GrapheneRouter;
 use Graphene\controllers\Filter;
 use Graphene\controllers\FilterManager;
-use Graphene\models\Module;
-use Graphene\controllers\Action;
 use Graphene\db\CrudStorage;
-include 'Graphene/autoload/autoloaders.php';
+
 
 /**
  * Graphene Framework
@@ -58,6 +57,7 @@ class Graphene
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
     }
+    public static function path(){ return str_replace('/Graphene.class.php','',__FILE__);}
 
     /**
      * Recupera l'istanza del framework, o ne crea una nel caso non esista
@@ -103,6 +103,10 @@ class Graphene
     /**
      * Esegue il forwarding della richiesta per ottenere informazioni da altri
      * moduli
+     *
+     * @param GraphRequest $request
+     * @return GraphResponse
+     * @throws GraphException
      */
     public function forward(GraphRequest $request)
     {
@@ -111,18 +115,14 @@ class Graphene
             $resp = $this->router->dispatch($request);
             return $resp;
         } else {
-            if (! extension_loaded('curl'))
-                return false;
+            if (! extension_loaded('curl')){ throw new GraphException('request forwarding exception: cUrl extension is not installed',5000,500); }
             $fp = fsockopen($request->getHost(), 80, $errno, $errstr, 30);
-            if (! $fp) {
-                echo "$errstr ($errno)<br>\n";
-            } else {
+            if (! $fp) { throw new GraphException('request forwarding exception: '.$errstr ($errno),5001,500); }
+            else {
                 $msg = "GET /" . $request->getPathname() . " HTTP/1.0\r\nHost: " . $request->getHost() . "\r\n\r\n";
-                fputs($fp, $msg);
+                fwrite($fp, $msg);
                 $resString = '';
-                while (! feof($fp)) {
-                    $resString .= fgets($fp, 128);
-                }
+                while (! feof($fp)) { $resString .= fgets($fp, 128);}
                 fclose($fp);
                 return $this->parseResponse($resString);
             }
@@ -167,6 +167,8 @@ class Graphene
 
     /**
      * Invia una risposta al client in base a un istanza di GraphResponse
+     *
+     * @param GraphResponse $response
      */
     private function sendResponse(GraphResponse $response)
     {

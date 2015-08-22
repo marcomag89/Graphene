@@ -4,7 +4,8 @@ use Graphene\controllers\Action;
 use auth\Session;
 
 class Logout extends Action{
-	public function run (){
+
+    public function run (){
 		$session=new Session();
 		$session->setLazy(true);
 		$session->setAccessToken($this->request->getPar('at'));

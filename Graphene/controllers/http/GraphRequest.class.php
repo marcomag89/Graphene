@@ -92,11 +92,9 @@ class GraphRequest
 
     public function getProtocol()
     {
-        if (str_starts_with($this->url, 'http//'))
-            return 'http';
-        else 
-            if (str_starts_with($this->url, 'https//'))
-                return 'https';
+        if       (str_starts_with($this->url, 'http//'))  return 'http';
+        elseif   (str_starts_with($this->url, 'https//')) return 'https';
+        else     return 'graphene';
     }
 
     public function getPathname()
@@ -152,5 +150,5 @@ class GraphRequest
         $this->headers = $headers;
     }
 
-    private $ip, $method, $url, $pars, $headers, $body;
+    private $ip, $method, $url, $pars, $headers, $body, $userAgent;
 }

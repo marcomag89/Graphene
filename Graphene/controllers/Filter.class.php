@@ -42,7 +42,7 @@ class Filter
                 if ($this->actions == null && $this->modules == null)
                     return true; // tutte le azioni di tutti i moduli
                 foreach ($this->actions as $hAction) {
-                    if (trcasecmp($hAction, $action->getUniqueActionName()) == 0)
+                    if (strcasecmp($hAction, $action->getUniqueActionName()) == 0)
                         return true;
                 }
             }

@@ -6,9 +6,10 @@ use \Exception;
 class GraphException extends Exception
 {
 
-    public function __construct($message, $code, $httpCode)
+    public function __construct($message, $code, $httpCode = null)
     {
         parent::__construct($message, $code);
+        if($httpCode == null) $httpCode = $code;
         $this->httpCode = $httpCode;
     }
 

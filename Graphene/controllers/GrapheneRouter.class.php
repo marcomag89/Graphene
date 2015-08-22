@@ -39,6 +39,7 @@ class GrapheneRouter
      * Dirotta la richiesta al servizio che corrisponde al matching, ritornando
      * una risposta
      *
+     * @param GraphRequest $request
      * @return GraphResponse
      */
     public function dispatch(GraphRequest $request){
@@ -92,9 +93,10 @@ class GrapheneRouter
      * Crea una risposta sicura (Modulo non trovato se non e pervenuta una
      * risposta)
      *
+     * @param  GraphResponse $response
      * @return GraphResponse
      */
-    private function getSafeResponse($response)
+    private function getSafeResponse(GraphResponse $response)
     {
         $filterManager = Graphene::getInstance()->getFilterManager();
         

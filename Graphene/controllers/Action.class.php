@@ -267,4 +267,6 @@ abstract class Action
     protected $actionName;
 
     protected $handlingMethod;
+
+    protected $handlingQuery;
 }

@@ -6,6 +6,7 @@ use Graphene\controllers\ExceptionsCodes;
 use Graphene\controllers\model\ModelFactory;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\models\ModelCollection;
+use \Exception;
 
 class CrudStorage
 {
@@ -34,8 +35,8 @@ class CrudStorage
      * Crea un nuovo record con un model
      * assegnando a quest'ultimo un <b>ID</b> ed una <b>versione</b>
      *
-     * @param Model $model
-     * @return Nuovo model [senza id e versione]
+     * @param  Model $model
+     * @return Model nuovo model [senza id e versione]
      * @throws GraphException
      * @internal param $ <b>Model</b> $model
      */
@@ -64,7 +65,7 @@ class CrudStorage
      * @param null $query
      * @param null $pageNo
      * @param null $pageElements
-     * @return Uno o piu model che corrispondono ai criteri di ricerca
+     * @return Model | ModelCollection Uno o piu model che corrispondono ai criteri di ricerca
      * @throws GraphException
      * @internal param $ <b>Model</b> modello parzialmente compilato*            <b>Model</b> modello parzialmente compilato
      */
@@ -98,8 +99,8 @@ class CrudStorage
     /**
      * Sovrascrive un model fornendo id e versione
      *
-     * @param Model $model
-     * @return Il model modificato
+     * @param  Model $model
+     * @return Model Il model modificato
      * @throws GraphException
      * @internal param $ <b>Model</b> model da modificare [id e versione obbligatori]*            <b>Model</b> model da modificare [id e versione obbligatori]
      */
@@ -120,17 +121,18 @@ class CrudStorage
         ));
         
         $readed = $this->read($model);
-        if ($readed === null)
-            throw new GraphException($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
-        if ($readed->getVersion() != $bkpContent['version'])
-            throw new GraphException($model->getName() . ' version mismatch, reload your ' . $model->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH,400);
-        $model->setContent($bkpContent);
-        $model->setVersion($model->getVersion() + 1);
-        $updated = $this->driver->update($this->serializeForDb($model));
-        if (($model = ModelFactory::createByDbSerialization($updated)) === null) {
+        if ($readed === null) throw new GraphException($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+        if ($readed->getVersion() != $bkpContent['version']) throw new GraphException($model->getName() . ' version mismatch, reload your ' . $model->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH,400);
+        $model   -> setContent($bkpContent);
+        $model   -> setVersion($model->getVersion() + 1);
+        $updated =  $this->driver->update($this->serializeForDb($model));
+        $model   =  ModelFactory::createByDbSerialization($updated);
+        if ($model  === null) {
             throw new GraphException('Updated model is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
-        } else {
+        } else if(is_array($model)) {
             return $model[0];
+        }else{
+            return $model;
         }
     }
 
@@ -172,7 +174,7 @@ class CrudStorage
      * In base all' id fornendo la versione corretta
      *
      * @param Model $model
-     * @return Il <b>boolean</b> in base alla avvenuta modifica
+     * @return Boolean Il <b>boolean</b> in base alla avvenuta modifica
      * @throws GraphException
      * @internal param $ <b>Model</b> model da patchare [id e versione obbligatori]*
      * <b>Model</b> model da patchare [id e versione obbligatori]
@@ -236,6 +238,7 @@ class CrudStorage
 
     public function setPageNumber($pageNo)
     {
+        /** @noinspection PhpUndefinedFieldInspection */
         $this->pageNo = $pageNo;
     }
 
@@ -250,4 +253,6 @@ class CrudStorage
     private $page = 1;
 
     private $driver;
+
+    private $pageElements;
 }

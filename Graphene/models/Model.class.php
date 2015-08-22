@@ -49,10 +49,10 @@ abstract class Model implements \Serializable
      */
     public function getName()
     {
-        if ($this->name == null) {
-            if (! is_object($this) && ! is_string($this))
-                return false;
-            $class = explode('\\', (is_string($this) ? $object : get_class($this)));
+        if ($this->name === '') {
+            if (! is_object($this) && ! is_string($this)){ return false; }
+            $class = explode('\\', get_class($this));
+            /** @noinspection PhpUndefinedFieldInspection */
             $this->name = $class[count($class) - 1];
         }
         return $this->name;
@@ -326,9 +326,9 @@ abstract class Model implements \Serializable
 
     private $modelController;
 
-    private $domain = null;
+    private $domain;
 
-    private $name = null;
+    private $name;
 
     protected $content = array();
 
@@ -380,23 +380,16 @@ abstract class Model implements \Serializable
     /**
      * Enum field checker
      *
-     * @param
-     *            list of enum values with commas
      * @example Model::ENUM_VALUE.'foo,bar,cont'
-     *         
-     *         
      */
-    const ENUM = '--t_enum::';
- // controlla se e' uno dei valori argomento
-                               
+    const ENUM = '--t_enum::';  // controlla se e' uno dei valori argomento
+
+
     // CHECKS
-    const NOT_NULL = '--c_not_null';
- // vero se il contenuto non e' null
-    const UNIQUE = '--c_unique';
- // Controllo effettuato dallo storage
-    const NOT_EMPTY = '--c_not_empty';
- // vero se il contenuto o l'array non e' vuoto
-    const MIN_LEN = '--c_min_len::';
- // lunghezza minima del campo
-    const MAX_LEN = '--c_max_len::'; // lunghezza massima del campo
+
+    const NOT_NULL  = '--c_not_null';   // vero se il contenuto non e' null
+    const UNIQUE    = '--c_unique';     // controllo su DB se l'elemento risulta univoco
+    const NOT_EMPTY = '--c_not_empty';  // controllo stringa non vuota
+    const MIN_LEN   = '--c_min_len::';  // lunghezza minima del campo
+    const MAX_LEN   = '--c_max_len::';  // lunghezza massima del campo
 }

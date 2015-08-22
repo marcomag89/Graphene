@@ -7,7 +7,7 @@ class Group extends Model{
 		return array(
 			'alias'=>Model::MATCH."/[A-Z0-9_]/". Model::NOT_NULL.Model::MIN_LEN.'3'.Model::UNIQUE .Model::MAX_LEN.'20',
 			'label'=>Model::STRING.Model::MAX_LEN.'150',
-			'parent'=>Model::UID,
+			'parent'=>Model::UID
 		);
 	}
 }

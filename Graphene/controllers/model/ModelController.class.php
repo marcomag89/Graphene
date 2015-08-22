@@ -5,7 +5,8 @@ use Graphene\models\Model;
 use Graphene\Graphene;
 use Graphene\db\CrudDriver;
 use Graphene\db\CrudStorage;
-use Graphene\controllers\model\ModelChecker;
+
+use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\exceptions\GraphException;
 
 class ModelController
@@ -18,34 +19,28 @@ class ModelController
         $this->corrupt = false;
         $this->modelChecker = new ModelChecker();
         // Controlla se e stato settato un driver personalizzato
-        if ($crudDriver != null)
-            $this->setCrudDriver($crudDriver);
-        else
-            $this->storage = Graphene::getInstance()->getStorage();
+        if   ($crudDriver != null) $this->setCrudDriver($crudDriver);
+        else $this->storage = Graphene::getInstance()->getStorage();
             // Controlla gli argomenti passati da API
-        if ($args == null)
-            $this->emptyInit();
+        if ($args == null) $this->emptyInit();
         else
             foreach ($this->args as $arg) {
-                if ($arg instanceof GraphRequest)
-                    $this->requestInit($request);
-                else 
-                    if ($arg instanceof Model)
-                        $this->modelInit($model);
-                    else 
-                        if ($arg instanceof String)
-                            $this->parInit($par);
+                if     ($arg instanceof GraphRequest) $this->requestInit($arg);
+                elseif ($arg instanceof Model)        $this->modelInit($arg);
+                elseif (is_string($arg))              $this->parInit($arg);
             }
     }
 
     /* Initialization */
-    private function emptyInit()
-    {}
+    private function emptyInit() {}
 
     private function requestInit(GraphRequest $request)
     {}
 
-    private function parInit(String $par)
+    /**
+     * @param $par
+     */
+    private function parInit($par)
     {
         $this->settings[$par] = true;
     }
@@ -65,9 +60,9 @@ class ModelController
      */
     public function getStruct()
     {
-        $struct = array();
+        //$struct = array();
         $basic = $this->getBasicStruct();
-        $ret = $basic + $this->structs;
+        $ret = array_merge_recursive($this->structs,$basic);
         if (! $this->modelChecker->checkValidStruct($ret))
             throw new GraphException('Invalid model struct', 500, 500);
         return $ret;
@@ -83,11 +78,9 @@ class ModelController
         log_write(self::LOG_NAME . 'called dyFunct: ' . $funct);
         $splitted = explode('_', substr($funct, 3));
         $splitted[0] = lcfirst($splitted[0]);
-        if (str_starts_with($funct, 'get'))
-            return $this->serveGet($splitted, $model);
-        else 
-            if (str_starts_with($funct, 'set'))
-                return $this->serveSet($splitted, $pars[0], $model);
+        if     (str_starts_with($funct, 'get')) return $this->serveGet($splitted, $model);
+        elseif (str_starts_with($funct, 'set')) return $this->serveSet($splitted, $pars[0], $model);
+        else   return null;
     }
 
     /* Auto Generated getters */
@@ -232,17 +225,20 @@ class ModelController
      */
     public function checkContent(Model $model, $lazyCheck = false)
     {
-        // var_dump($lazyCheck || $this->getSetting(self::FLAG_LAZY));
         return $this->modelChecker->checkContent($model, $this->getStruct(), $lazyCheck || $this->lazy);
     }
 
-    public function haveErrors()
-    {
+    /**
+     * @return bool
+     */
+    public function haveErrors(){
         $errs = $this->modelChecker->getLastTestErrors();
-        if (count($errs) > 0)
-            return true;
+        return (count($errs) > 0);
     }
 
+    /**
+     * @return array
+     */
     public function getLastTestErrors()
     {
         if ($this->exceeded != null)

@@ -1,5 +1,6 @@
 <?php
 namespace ACL\db;
+use Graphene\controllers\exceptions\GraphException;
 use Graphene\db\CrudDriver;
 use \Exception;
 use Graphene\Graphene;
@@ -58,14 +59,12 @@ class AclDb implements CrudDriver
 			$db->autocommit(true);
 		} catch (Exception $e) {
 			$db->rollback();
-			throw new Exception(
-					'Error while creating group check if group already exists: ' .
-							 $e->getMessage());
+			throw new GraphException('Error while creating group check if group already exists: ' .$e->getMessage(),400,400);
 		}
 		$arr[''];
 	}
 
-	public function read ($json)
+	public function read ($json,$query=null)
 	{}
 
 	public function update ($json)

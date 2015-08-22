@@ -36,6 +36,11 @@ class ModelChecker
      * Controlla se il contenuto del model e' conforme alla sua struttura.
      * E' possibile ignorare o modificare il controllo su alcuni valori
      * estendendo il metodo 'check($label,$value)'
+     *
+     * @param Model $model
+     * @param $struct
+     * @param bool $lazyCheck
+     * @return bool
      */
     public function checkContent(Model $model, $struct, $lazyCheck = false)
     {
@@ -46,6 +51,12 @@ class ModelChecker
      * CONTROLLO VALORI SUPERFLUI
      * Controlla se i valori del model sono contemplati nella struttura e se sono
      * validi
+     *
+     * @param Model $model
+     * @param null $content
+     * @param $struct
+     * @param bool $lazyCheck
+     * @return bool
      */
     private function checkExceededValues(Model $model, $content = null, $struct, $lazyCheck = false)
     {
@@ -69,8 +80,14 @@ class ModelChecker
      * Controlla se i valori del model previsti dalla struttura come not null o
      * come not empty
      * sono effettivamente inseriti
+     *
+     * @param Model $model
+     * @param null $content
+     * @param $struct
+     * @param bool $lazyCheck
+     * @return bool
      */
-    private function checkStructValues($model, $content = null, $struct, $lazyCheck = false)
+    private function checkStructValues(Model $model, $content = null, $struct, $lazyCheck = false)
     {
         if ($content == null)
             $content = $model->getContent();
@@ -105,7 +122,7 @@ class ModelChecker
     public function isValidValue($val, $type, $label = 'nd', $lazyCheck = false)
     {
         if (! is_string($type)) {
-            $this->addError($label, $label . '-definition', Model::STRING_VALUE, 'invalid field definition: ' . $type);
+            $this->addError($label, $label . '-definition', Model::STRING, 'invalid field definition: ' . $type);
             return false;
         }
         $expl = explode(Model::CHECK_SEP, $type);
@@ -129,6 +146,11 @@ class ModelChecker
 
     /**
      * Main check function
+     *
+     * @param $type
+     * @param $val
+     * @param bool $noChecks
+     * @return bool
      */
     private function check($type, $val, $noChecks = false)
     {
@@ -181,7 +203,7 @@ class ModelChecker
             return true;
         else {
             sscanf($val, "%d-%d-%d", $y, $m, $d);
-            return (intval($y) == 0 && intval($m) == 0 && intval($d) == 0) || checkdate($m, $d, $y);
+            return ((int)$y === 0 && (int)$m === 0 && (int)$d === 0) || checkdate($m, $d, $y);
         }
     }
 
@@ -191,7 +213,7 @@ class ModelChecker
             return true;
         else {
             sscanf($val, "%d-%d-%d %d:%d:%d", $y, $m, $d, $h, $mn, $s);
-            return checkdate($m, $d, $y) && intval($h) < 24 && intval($h) >= 0 && intval($mn) < 60 && intval($mn) >= 0 && intval($s) < 60 && intval($s) >= 0;
+            return checkdate($m, $d, $y) && (int)$h < 24 && (int)$h >= 0 && (int)$mn < 60 && (int)$mn >= 0 && (int)$s < 60 && (int)$s >= 0;
         }
     }
 
@@ -228,7 +250,7 @@ class ModelChecker
     // Checks values
     private function checkNotEmpty($val, $type)
     {
-        return $val === null || strlen($val) != 0;
+        return $val === null || $val !== '';
     }
 
     private function checkMinLenght($val, $type)

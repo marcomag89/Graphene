@@ -13,6 +13,11 @@ use Graphene\controllers\http\GraphResponse;
 class ModelFactory
 {
 
+    /**
+     * @param $json
+     * @return Object[]|Boolean|null
+     * @throws GraphException
+     */
     public static function createByDbSerialization($json)
     {
         // echo $json;

@@ -2,7 +2,6 @@
 namespace users;
 
 use \Exception;
-use users\User;
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
 

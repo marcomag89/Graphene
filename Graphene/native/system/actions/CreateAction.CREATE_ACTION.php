@@ -3,7 +3,7 @@ namespace system;
 use Graphene\controllers\Action;
 use Graphene\Graphene;
 
-class CreateModule extends Action {
+class CreateAction extends Action {
 
     public function run() {
         $url = Graphene::getInstance()->getSettings()['modulesUrl']."";
