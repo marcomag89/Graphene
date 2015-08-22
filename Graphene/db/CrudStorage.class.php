@@ -4,9 +4,6 @@ namespace Graphene\db;
 use Graphene\models\Model;
 use Graphene\controllers\ExceptionsCodes;
 use Graphene\controllers\model\ModelFactory;
-use Graphene\db\CrudDriver;
-use \Exception;
-use Graphene\controllers\model\ModelController;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\models\ModelCollection;
 
@@ -39,7 +36,7 @@ class CrudStorage
      *
      * @param Model $model
      * @return Nuovo model [senza id e versione]
-     * @throws Exception
+     * @throws GraphException
      * @internal param $ <b>Model</b> $model
      */
     public function create(Model $model)
@@ -47,12 +44,12 @@ class CrudStorage
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for create');
         $model->setLazy(false);
         if (! $model->isValid())
-            throw new Exception('Model, ' . $model->getName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+            throw new GraphException('Model, ' . $model->getName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         $model->setVersion(1);
         $model->setId(uniqid(strtoupper(substr($model->getName(), 0, 4))));
         $created = $this->driver->create($this->serializeForDb($model));
         if (($retb = ModelFactory::createByDbSerialization($created)) == null)
-            throw new Exception('Error when create, Stored ' . $model->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+            throw new GraphException('Error when create, Stored ' . $model->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         else{
         	return $retb[0];
         }
@@ -68,7 +65,6 @@ class CrudStorage
      * @param null $pageNo
      * @param null $pageElements
      * @return Uno o piu model che corrispondono ai criteri di ricerca
-     * @throws Exception
      * @throws GraphException
      * @internal param $ <b>Model</b> modello parzialmente compilato*            <b>Model</b> modello parzialmente compilato
      */
@@ -80,7 +76,7 @@ class CrudStorage
         // echo ($readed);
         $result = ModelFactory::createByDbSerialization($readed);
         if (is_null($result)) {
-            throw new Exception('Error when read, Stored ' . $model->getName() . ' is corrupt' . ModelFactory::getModelParsingErrs(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+            throw new GraphException('Error when read, Stored ' . $model->getName() . ' is corrupt' . ModelFactory::getModelParsingErrs(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         } else {
             if (count($result) == 0) {
                 return null;
@@ -104,7 +100,6 @@ class CrudStorage
      *
      * @param Model $model
      * @return Il model modificato
-     * @throws Exception
      * @throws GraphException
      * @internal param $ <b>Model</b> model da modificare [id e versione obbligatori]*            <b>Model</b> model da modificare [id e versione obbligatori]
      */
@@ -113,11 +108,11 @@ class CrudStorage
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for update');
         $model->setLazy(false);
         if ($model->getId() == null)
-            throw new Exception('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
+            throw new GraphException('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE,400);
         if ($model->getVersion() == null)
-            throw new Exception('Unavailable ' . $model->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
+            throw new GraphException('Unavailable ' . $model->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE,400);
         if (! $model->isValid())
-            throw new Exception('Error on storage, ' . $model->getName() . ' is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+            throw new GraphException('Error on storage, ' . $model->getName() . ' is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         $bkpContent = $model->getContent();
         $model->setLazy(true);
         $model->setContent(array(
@@ -126,14 +121,14 @@ class CrudStorage
         
         $readed = $this->read($model);
         if ($readed === null)
-            throw new Exception($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+            throw new GraphException($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
         if ($readed->getVersion() != $bkpContent['version'])
-            throw new Exception($model->getName() . ' version mismatch, reload your ' . $model->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+            throw new GraphException($model->getName() . ' version mismatch, reload your ' . $model->getName() . ' instance for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH,400);
         $model->setContent($bkpContent);
         $model->setVersion($model->getVersion() + 1);
         $updated = $this->driver->update($this->serializeForDb($model));
         if (($model = ModelFactory::createByDbSerialization($updated)) === null) {
-            throw new Exception('Updated model is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+            throw new GraphException('Updated model is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         } else {
             return $model[0];
         }
@@ -145,7 +140,6 @@ class CrudStorage
      *
      * @param Model $model
      * @return bool <b>boolean</b> in base alla avvenuta cancellazione
-     * @throws Exception
      * @throws GraphException
      * @internal param $ <b>Model</b> model da eliminare [id e versione obbligatori]*            <b>Model</b> model da eliminare [id e versione obbligatori]
      */
@@ -179,7 +173,6 @@ class CrudStorage
      *
      * @param Model $model
      * @return Il <b>boolean</b> in base alla avvenuta modifica
-     * @throws Exception
      * @throws GraphException
      * @internal param $ <b>Model</b> model da patchare [id e versione obbligatori]*
      * <b>Model</b> model da patchare [id e versione obbligatori]
@@ -188,11 +181,11 @@ class CrudStorage
     {
         log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
         if ($model->getId() == null)
-            throw new Exception('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE);
+            throw new GraphException('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE,400);
         if ($model->getVersion() == null)
-            throw new Exception('Unavailable ' . $model->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE);
+            throw new GraphException('Unavailable ' . $model->getName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE,400);
         if (! $model->isValid())
-            throw new Exception('Error on storage, model is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN);
+            throw new GraphException('Error on storage, model is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         $modelClass = get_class($model);
         $tModel = new $modelClass();
         $tModel->setContent(array(
@@ -201,9 +194,9 @@ class CrudStorage
         ));
         $readed = $this->read($tModel);
         if ($readed==null)
-            throw new Exception($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
+            throw new GraphException($model->getName() . ' not found', ExceptionsCodes::BEAN_STORAGE_ID_NOT_FOUND);
         if ($readed->getVersion() != $model->getVersion())
-            throw new Exception($model->getName() . ' version Mismatch, reload model for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH);
+            throw new GraphException($model->getName() . ' version Mismatch, reload model for updates', ExceptionsCodes::BEAN_STORAGE_VERSION_MISMATCH,400);
         $mainCnt = $readed[0]->getContent();
         $patched = array_replace_recursive($mainCnt, $model->getContent());
         $model->setContent($patched);
@@ -213,8 +206,6 @@ class CrudStorage
     /**
      * Ritorna il driver CRUD caricato
      *
-     * @param
-     *            void
      * @return CrudDriver driver crud
      */
     public function getDriver()

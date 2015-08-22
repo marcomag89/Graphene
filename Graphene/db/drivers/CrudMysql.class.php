@@ -2,7 +2,6 @@
 namespace Graphene\db\drivers;
 
 use Graphene\db\CrudDriver;
-use \mysqli;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\exceptions\ExceptionCodes;
@@ -61,7 +60,7 @@ class CrudMySql implements CrudDriver
                 if ($value === true)
                     $colValues = $colValues . '\'1\',';
                 else
-                    $colValues = $colValues . '\'' . $value . '\',';
+                    $colValues = $colValues . $this->connection->quote($value) . ',';
         }
         $colNames = substr($colNames, 0, - 1);
         $colValues = substr($colValues, 0, - 1);
@@ -120,7 +119,7 @@ class CrudMySql implements CrudDriver
                 $i ++;
             }
             foreach ($results as $res) {
-                $return[] = $this->colsToJsonArr($res);
+                $return[] = $this->colsToJsonArr($res,$json);
             }
         }
         $retJson = $decoded;
@@ -139,14 +138,14 @@ class CrudMySql implements CrudDriver
         $kv = ' ';
         foreach ($cols as $label => $value) {
             if (! strcasecmp($label, 'id') == 0) {
-                $kv = $kv . '`' . $label . '`=\'' . $value . '\',';
+                $kv = $kv . '`' . $label . '`=' .$this->connection->quote($value) . ',';
             }
         }
         $kv = substr($kv, 0, - 1);
         $q = str_replace('<dbname>', $this->dbname, $q);
         $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         $q = str_replace('<kv>', $kv, $q);
-        $q = str_replace('<id>', $cols['id'], $q);
+        $q = str_replace('<id>', $this->connection->quote($cols['id']), $q);
         $res = $this->connection->query($q);
         $err = $this->connection->errorInfo();
         if (strcasecmp($err[0], '00000') != 0)
@@ -167,7 +166,7 @@ class CrudMySql implements CrudDriver
         $q = self::DELETE_PTT;
         $q = str_replace('<dbname>', $this->dbname, $q);
         $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
-        $q = str_replace('<id>', $decoded['content']['id'], $q);
+        $q = str_replace('<id>', $this->connection->quote($decoded['content']['id']), $q);
         $res = $this->connection->query($q);
         $res = $this->connection->query($q);
         $err = $this->connection->errorInfo();
@@ -231,22 +230,33 @@ class CrudMySql implements CrudDriver
         return $schema;
     }
 
-    private function colsToJsonArr($row)
+    /**
+     * @param $row
+     * @param $json
+     * @return array
+     */
+    private function colsToJsonArr($row,$json)
     {
         $res = array();
+        $struct = json_decode($json,true)['struct'];
+
         foreach ($row as $k => $v) {
             $expl = explode('_', $k);
             $tRes = &$res;
+            $tStruct = &$struct;
             if (count($expl) > 1) {
                 // goto leaf
                 foreach ($expl as $e) {
-                    if (! isset($tRes[$e]))
+                    if (! isset($tRes[$e])){
                         $tRes[$e] = array();
+                        $tStruct  = &$struct[$e];
+                    }
                     $tRes = &$tRes[$e];
                 }
                 // Popolate leaf
                 $tRes = $v;
             } else {
+                if(str_contains($tStruct[$k],Model::DATETIME) && $v === '0000-00-00 00:00:00'){$v=null;}
                 $tRes[$k] = $v;
             }
         }
@@ -367,7 +377,7 @@ class CrudMySql implements CrudDriver
         if ($query == null) {
             $cond = '\'1\'=\'1\'';
             foreach ($cols as $name => $value) {
-                $cond = $cond . ' AND `' . $name . '`=\'' . $value . '\'';
+                $cond = $cond . ' AND `' . $name . '`= ' . $this->connection->quote($value);
             }
             return $cond;
         } else {
@@ -395,11 +405,11 @@ class CrudMySql implements CrudDriver
      */
     const TBL_CREATION_PTT = 'CREATE TABLE IF NOT EXISTS `<dbname>`.`<tableName>`( <fields> PRIMARY KEY(`id`) <uniqueIndexes> ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8;';
 
-    const DELETE_PTT = 'DELETE FROM `<dbname>`.`<tableName>` WHERE `id`=\'<id>\';';
+    const DELETE_PTT = 'DELETE FROM `<dbname>`.`<tableName>` WHERE `id`=<id>;';
 
     const SELECT_PTT = 'SELECT * FROM `<dbname>`.`<tableName>`  WHERE <cond> <limit> <offset>';
 
-    const UPDATE_PTT = 'UPDATE `<dbname>`.`<tableName>` SET <kv>  WHERE `id`=\'<id>\'';
+    const UPDATE_PTT = 'UPDATE `<dbname>`.`<tableName>` SET <kv>  WHERE `id`=<id>';
 
     const UNIQUE_PTT = 'UNIQUE INDEX `<field>_UNIQUE (`<field>`)';
 

@@ -36,21 +36,21 @@ class ModelCollection implements \Iterator, \Serializable
     // Iterator functions
     public function current(){
         $var = current($this->content);
-        echo "current: $var\n";
+        //echo "current: $var\n";
         return $var;
     }
 
     public function next()
     {
         $var = next($this->content);
-        echo "next: $var\n";
+        //echo "next: $var\n";
         return $var;
     }
 
     public function key()
     {
         $var = key($this->content);
-        echo "key: $var\n";
+        //echo "key: $var\n";
         return $var;
     }
 
@@ -58,13 +58,12 @@ class ModelCollection implements \Iterator, \Serializable
     {
         $key = key($this->content);
         $var = ($key !== NULL && $key !== FALSE);
-        echo "valid: $var\n";
         return $var;
     }
 
     public function rewind()
     {
-        echo "rewinding\n";
+       // echo "rewinding\n";
         reset($this->content);
     }
     public function onSend(){

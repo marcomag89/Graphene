@@ -1,6 +1,8 @@
 <?php
 namespace Graphene\models;
 
+use Graphene\db\CrudDriver;
+use Graphene\db\CrudStorage;
 use Graphene\Graphene;
 use Graphene\controllers\model\ModelController;
 use Graphene\controllers\model\ModelFactory;
@@ -17,6 +19,11 @@ abstract class Model implements \Serializable
         $this->modelController = new ModelController($this->getCustomCrudDriver(), $this->structs, $this, func_get_args());
     }
 
+    /**
+     * @param bool $lazyChecks
+     * @return Model | null
+     * @throws GraphException
+     */
     public static function getByRequest($lazyChecks = false)
     {
         $req = Graphene::getInstance()->getRequest();
@@ -24,7 +31,7 @@ abstract class Model implements \Serializable
         if (isset($requestModels[self::stcName()]))
             return $requestModels[self::stcName()];
         else
-            throw new Exception('Bad request', 400);
+            throw new GraphException('Sent model is not valid for'.self::stcName(), 400,400);
     }
 
     /*
@@ -32,11 +39,14 @@ abstract class Model implements \Serializable
      * Getters
      * -----
      */
-    public static function stcName()
-    {
-        return explode('\\', get_called_class())[1];
-    }
+    /**
+     * @return string
+     */
+    public static function stcName(){return explode('\\', get_called_class())[1];}
 
+    /**
+     * @return string
+     */
     public function getName()
     {
         if ($this->name == null) {
@@ -48,6 +58,9 @@ abstract class Model implements \Serializable
         return $this->name;
     }
 
+    /**
+     * @return string
+     */
     public function getDomain()
     {
         if ($this->domain == null) {
@@ -62,16 +75,28 @@ abstract class Model implements \Serializable
         $this->modelController->setLazy($boolean);
     }
 
+    /**
+     * @return array
+     */
     public function getContent()
     {
         return $this->content;
     }
 
+    /**
+     * @return ModelController
+     */
     public function getModelController()
     {
         return $this->modelController;
     }
 
+    /**
+     * @param bool $asString
+     * @param bool $prettyPrint
+     * @return array|string
+     * @throws GraphException
+     */
     final public function getStruct($asString = false, $prettyPrint = false)
     {
         $str = $this->modelController->getStruct();
@@ -83,16 +108,26 @@ abstract class Model implements \Serializable
             return $str;
     }
 
+    /**
+     * @param bool $lazyCheck
+     * @return bool
+     */
     final public function isValid($lazyCheck = false)
     {
         return $this->modelController->checkContent($this, $lazyCheck);
     }
 
+    /**
+     * @return bool
+     */
     public function isEmpty()
     {
         return count($this->content) == 0;
     }
 
+    /**
+     * @return string
+     */
     public function getLastTestErrors()
     {
         $errs = $this->modelController->getLastTestErrors();
@@ -128,11 +163,18 @@ abstract class Model implements \Serializable
      * CRUD Storage
      * -----------
      */
+    /**
+     * @return CrudStorage
+     */
     public function getStorage()
     {
         return $this->modelController->getStorage();
     }
 
+    /**
+     * @return Model | null
+     * @throws GraphException
+     */
     public function create()
     {
         if ($this->canCreate()){
@@ -141,6 +183,14 @@ abstract class Model implements \Serializable
         }else throw new GraphException('cannot CREATE '.$this->getName().' model',500,500);
     }
 
+    /**
+     * @param bool $multiple
+     * @param null $query
+     * @param null $page
+     * @param null $pageSize
+     * @return Model | ModelCollection | null
+     * @throws GraphException
+     */
     public function read($multiple=false,$query=null,$page=null,$pageSize=null)
     {
         if ($this->canRead()){
@@ -149,6 +199,10 @@ abstract class Model implements \Serializable
         }else throw new GraphException('cannot READ '.$this->getName().' model',500,500);
     }
 
+    /**
+     * @return Model | null
+     * @throws GraphException
+     */
     public function update()
     {
         if ($this->canUpdate()){
@@ -157,6 +211,10 @@ abstract class Model implements \Serializable
         }else throw new GraphException('cannot UPDATE '.$this->getName().' model',500,500);
     }
 
+    /**
+     * @return Model | null
+     * @throws GraphException
+     */
     public function delete()
     {
         if ($this->canDelete()){
@@ -165,6 +223,10 @@ abstract class Model implements \Serializable
         }else throw new GraphException('cannot DELETE '.$this->getName().' model',500,500);
     }
 
+    /**
+     * @return Model | null
+     * @throws GraphException
+     */
     public function patch()
     {
         if ($this->canPatch()){
@@ -178,19 +240,33 @@ abstract class Model implements \Serializable
      * Dynamic functions
      * -----------
      */
+    /**
+     * @param $funct
+     * @param $pars
+     * @return array|bool|null
+     */
     function __call($funct, $pars)
     {
         return $this->modelController->call($funct, $pars, $this);
     }
 
     /* Extensible functions */
+    /**
+     * @return array
+     */
     public abstract function defineStruct();
 
+    /**
+     * @return CrudDriver | null
+     */
     public function getCustomCrudDriver()
     {
         return null;
     }
 
+    /**
+     * @return bool
+     */
     public function canCreate()
     {
         return true;
@@ -199,6 +275,9 @@ abstract class Model implements \Serializable
     public function onCreate()
     {}
 
+    /**
+     * @return bool
+     */
     public function canRead()
     {
         return true;
@@ -207,6 +286,9 @@ abstract class Model implements \Serializable
     public function onRead()
     {}
 
+    /**
+     * @return bool
+     */
     public function canUpdate()
     {
         return true;
@@ -215,6 +297,9 @@ abstract class Model implements \Serializable
     public function onUpdate()
     {}
 
+    /**
+     * @return bool
+     */
     public function canDelete()
     {
         return true;
