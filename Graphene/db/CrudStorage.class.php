@@ -47,7 +47,7 @@ class CrudStorage
         if (! $model->isValid())
             throw new GraphException('Model, ' . $model->getName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         $model->setVersion(1);
-        $model->setId(uniqid(strtoupper(substr($model->getName(), 0, 4))));
+        $model->setId(uniqid($model->getIdPrefix()));
         $created = $this->driver->create($this->serializeForDb($model));
         if (($retb = ModelFactory::createByDbSerialization($created)) == null)
             throw new GraphException('Error when create, Stored ' . $model->getName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);

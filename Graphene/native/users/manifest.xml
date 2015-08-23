@@ -9,8 +9,9 @@
 		models-path	= "models"
 	/>
 	<action name="VALIDATE" handler="Validate@actions/Validate.php" 	method="post" 	query="validate" 	/>
-	<action name="ALL" 		handler="AllUsers@actions/UserGetAll.php" 	method="get" 	query="all/" 		/>
-	
+
 	<!-- CRUD ACTIONS INJECTION-->
-	<action name="$CRUD" pars="users\User" query-prefix="user/"/>
+	<action name="$CRUD"        pars="users\User" query-prefix="user/"/>
+    <action name="$COLLECTIONS" pars="users\User" />
+
 </module>

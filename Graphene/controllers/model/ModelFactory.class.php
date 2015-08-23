@@ -71,6 +71,7 @@ class ModelFactory
                 throw new GraphException(self::$LAST_BEAN->getLastTestErrors(), ExceptionsCodes::REQUEST_MALFORMED, 400);
             }
         }
+
         return $return;
     }
 
@@ -78,6 +79,7 @@ class ModelFactory
     {
         $expl = explode('.', $modelDomain);
         $modelName = $expl[1] . '\\' . $expl[2];
+
         if (class_exists($modelName))
             $model = new $modelName();
         else

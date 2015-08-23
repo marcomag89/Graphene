@@ -49,7 +49,7 @@ abstract class Model implements \Serializable
      */
     public function getName()
     {
-        if ($this->name === '') {
+        if ($this->name === null) {
             if (! is_object($this) && ! is_string($this)){ return false; }
             $class = explode('\\', get_class($this));
             /** @noinspection PhpUndefinedFieldInspection */
@@ -321,6 +321,7 @@ abstract class Model implements \Serializable
 
     public function onSerialize()
     {}
+    public function getIdPrefix(){return strtoupper(substr($this->getName(), 0, 4));}
 
     private $structs;
 
@@ -328,7 +329,7 @@ abstract class Model implements \Serializable
 
     private $domain;
 
-    private $name;
+    private $name = null;
 
     protected $content = array();
 

@@ -1,19 +1,21 @@
 <?php
 namespace auth;
 use Graphene\controllers\Action;
-use auth\Session;
+use Graphene\controllers\exceptions\GraphException;
 
 class Logout extends Action{
 
     public function run (){
-		$session=new Session();
-		$session->setLazy(true);
-		$session->setAccessToken($this->request->getPar('at'));
-		$readed = $session->read();
-		if(count($readed)==0){$this->sendError(400, 'Session not found' );return;}
-		if ($readed[0]->getEnabled() == false) {$this->sendError(400, 'Session already closed');return;}
-		$readed[0]->setEnabled('0');
-		$readed[0]->update();
-		$this->sendMessage('Logout successful');
+		$session =  new Session();
+		$session -> setLazy(true);
+		$session -> setAccessToken($this->request->getPar('at'));
+		$readed  = $session->read();
+
+		if ($readed !== null)                { throw new GraphException('Access token not valid',404); }
+		if ($readed->getEnabled() === false) { throw new GraphException('Session already closed',400); }
+
+		$readed -> setEnabled(false);
+		$readed -> update();
+		$this   -> sendMessage('Logout successful');
 	}
 }
