@@ -5,4 +5,5 @@
 
 modules
 cgi-bin
+/logs
 settings.json
