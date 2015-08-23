@@ -58,26 +58,72 @@ function fatal_handler()
     log_print();
 }
 
-function log_write($what)
-{
-    global $log;
-    global $stdout;
-    if ($stdout == null)
-        $stdout = fopen('php://stdout', 'w');
-    fputs($stdout, $what);
-    $log .= "\n\t" . $what;
-    // echo "\n".$what;
+
+class Log{
+
+    public static function setUp($logSettings){
+        Log::$err   = $logSettings ['errors'];
+        Log::$warn  = $logSettings ['warnings'];
+        Log::$all   = $logSettings ['all'];
+        Log::$debug = $logSettings ['debug'];
+        Log::$req   = $logSettings ['requests'];
+    }
+
+    public static function write($label, $object, $traceStr = ''){
+        if($traceStr === ''){$traceStr = Log::getTraceString(debug_backtrace());}
+        $record   = str_pad('['.$label.' | '.Log::getTimeStirng(). ' | '.$traceStr,60).'] '.$object."\n";
+        file_put_contents(Log::$all, $record, FILE_APPEND | LOCK_EX);
+    }
+
+    public static function debug($object){
+        $traceStr = Log::getTraceString(debug_backtrace());
+        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        file_put_contents(Log::$debug, $record, FILE_APPEND | LOCK_EX);
+        Log::write('DEBUG',$object,$traceStr);
+    }
+
+    public static function err ($object){
+        $traceStr = Log::getTraceString(debug_backtrace());
+        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        file_put_contents(Log::$err, $record, FILE_APPEND | LOCK_EX);
+        Log::write('ERROR',$object,$traceStr);
+    }
+
+    public static function warn ($object){
+        $traceStr = Log::getTraceString(debug_backtrace());
+        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        file_put_contents(Log::$warn, $record, FILE_APPEND | LOCK_EX);
+        Log::write('WARNING',$object,$traceStr);
+    }
+
+    public static function request ($object){
+        $traceStr = Log::getTraceString(debug_backtrace());
+        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        file_put_contents(Log::$req, $record, FILE_APPEND | LOCK_EX);
+        Log::write('REQUEST',$object,$traceStr);
+    }
+
+    public static function getTraceString($backtrace){
+        $exp = explode('/',$backtrace[0]['file']);
+        $filename = $exp[count($exp)-1];
+        return $filename.':'.$backtrace[0]['line'];
+    }
+
+    public static function getTimeStirng(){
+        $dt = new DateTime();
+        return $dt->format('Y-m-d H:i:s');
+    }
+
+    private static $err, $all, $debug, $req, $warn;
 }
 
-function log_print()
-{
-    global $log;
-    echo $log;
+function log_write($what){
+    $traceStr = Log::getTraceString(debug_backtrace());
+    Log::write('LEGACY',$what,$traceStr);
 }
 
-function init_platform()
-{
-    date_default_timezone_set('Europe/Rome');
-}
+
+function init_platform(){date_default_timezone_set('Europe/Rome');}
+
 $haveException = false;
 set_exception_handler("default_exception_handler");

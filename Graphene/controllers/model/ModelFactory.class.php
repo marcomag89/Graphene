@@ -1,14 +1,12 @@
 <?php
 namespace Graphene\controllers\model;
 
-use \Exception;
 use Graphene\controllers\ExceptionsCodes;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\models\Module;
 use Graphene\Graphene;
 use Graphene\models\Model;
 use Graphene\controllers\exceptions\GraphException;
-use Graphene\controllers\http\GraphResponse;
 
 class ModelFactory
 {
@@ -41,32 +39,16 @@ class ModelFactory
         return null;
     }
 
-    public static function createByResponse(GraphResponse $response, Module $mod = null)
-    {
-        if ($mod == null)
-            $mod = Graphene::getInstance()->getCurrentModule();
-        if (($decoded = json_decode($response->getBody(), true)) == null)
-            throw new GraphException('Malformed response check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED, 400);
-        $return = array();
-        foreach ($decoded as $ModelName => $modelContent) {
-            $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $ModelName;
-            if (($return[$ModelName] = self::createModel($modelContent, $domain)) == false) {
-                self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
-                throw new GraphException(self::$LAST_BEAN->getLastTestErrors(), ExceptionsCodes::REQUEST_MALFORMED, 400);
-            }
-        }
-    }
-
     public static function createByRequest(GraphRequest $request, Module $mod = null, $lazyChecks = false)
     {
         if ($mod == null)
             $mod = Graphene::getInstance()->getCurrentModule();
-        if (($decoded = json_decode($request->getBody(), true)) == null)
+        if (($decoded = json_decode($request->getBody(), true)) === null)
             throw new GraphException('Malformed request check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED, 400);
         $return = array();
         foreach ($decoded as $ModelName => $modelContent) {
             $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $ModelName;
-            if (($return[$ModelName] = self::createModel($modelContent, $domain, $lazyChecks)) == false) {
+            if (($return[$ModelName] = self::createModel($modelContent, $domain, $lazyChecks)) === false) {
                 self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
                 throw new GraphException(self::$LAST_BEAN->getLastTestErrors(), ExceptionsCodes::REQUEST_MALFORMED, 400);
             }

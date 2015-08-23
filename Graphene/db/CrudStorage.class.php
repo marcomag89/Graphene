@@ -7,6 +7,7 @@ use Graphene\controllers\model\ModelFactory;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\models\ModelCollection;
 use \Exception;
+use \Log;
 
 class CrudStorage
 {
@@ -42,7 +43,7 @@ class CrudStorage
      */
     public function create(Model $model)
     {
-        log_write(self::STORAGE_LOG_NAME . 'calling storage driver for create');
+        Log::debug('calling storage driver for create');
         $model->setLazy(false);
         if (! $model->isValid())
             throw new GraphException('Model, ' . $model->getName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
@@ -71,7 +72,7 @@ class CrudStorage
      */
     public function read(Model $model, $multiple = false, $query = null, $pageNo = null, $pageElements = null)
     {
-        log_write(self::STORAGE_LOG_NAME . 'calling storage driver for read');
+        Log::debug('calling storage driver for read');
         $readed = $this->driver->read($this->serializeForDb($model, $pageNo, $pageElements), $query);
         // echo "JSON Letto\n----\n";
         // echo ($readed);
@@ -106,7 +107,7 @@ class CrudStorage
      */
     public function update(Model $model)
     {
-        log_write(self::STORAGE_LOG_NAME . 'calling storage driver for update');
+        Log::debug('calling storage driver for update');
         $model->setLazy(false);
         if ($model->getId() == null)
             throw new GraphException('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE,400);
@@ -147,7 +148,7 @@ class CrudStorage
      */
     public function delete(Model $model)
     {
-        log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
+        Log::debug('calling storage driver for delete');
         if ($model->getId() == null)
             throw new GraphException('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE, 400);
         if ($model->getVersion() == null)
@@ -181,7 +182,7 @@ class CrudStorage
      */
     public function patch(Model $model)
     {
-        log_write(self::STORAGE_LOG_NAME . 'calling storage driver for delete');
+        Log::debug('calling storage driver for patch');
         if ($model->getId() == null)
             throw new GraphException('Unavailable ' . $model->getName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE,400);
         if ($model->getVersion() == null)

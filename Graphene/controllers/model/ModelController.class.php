@@ -75,7 +75,6 @@ class ModelController
      */
     public function call($funct, $pars, Model $model)
     {
-        log_write(self::LOG_NAME . 'called dyFunct: ' . $funct);
         $splitted = explode('_', substr($funct, 3));
         $splitted[0] = lcfirst($splitted[0]);
         if     (str_starts_with($funct, 'get')) return $this->serveGet($splitted, $model);
@@ -86,7 +85,6 @@ class ModelController
     /* Auto Generated getters */
     public function serveGet($funct, Model $model)
     {
-        log_write(self::LOG_NAME . 'Serving get on ' . strToLower(implode('.', $funct)));
         $content = $model->getContent();
         $struct = $this->getStruct();
         

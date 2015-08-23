@@ -7,6 +7,7 @@ use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\exceptions\ExceptionCodes;
 use Graphene\models\Model;
 use \PDO;
+use \Log;
 use \PDOStatement;
 
 class CrudMySql implements CrudDriver
@@ -14,12 +15,12 @@ class CrudMySql implements CrudDriver
 
     public function __construct($dbConfig)
     {
-        log_write(self::LOG_NAME . 'driver loaded: ' . self::INFO);
         $this->url      = $dbConfig['host'];
         $this->dbname   = $dbConfig['dbName'];
         $this->username = $dbConfig['username'];
         $this->prefix   = $dbConfig['prefix'];
         $this->password = $dbConfig['password'];
+        Log::debug('Crud MySql driver initialized');
     }
 
     /*
@@ -33,10 +34,10 @@ class CrudMySql implements CrudDriver
         if ($this->connection == null) {
             try {
                 $this->connection = new PDO('mysql:host=' . $this->url . ';dbname=' . $this->dbname, $this->username, $this->password);
-                log_write(self::LOG_NAME . 'mySql connection success');
+                Log::debug('mySql connection success');
                 return $this->connection;
             } catch (Exception $e) {
-                log_write(self::LOG_NAME . 'mySql connection fails: ' . $e->getMessage());
+                Log::debug('mySql connection fails: '.$e->getMessage());
                 $this->connection = null;
                 throw new GraphException('Error on mysql connection: ' . $e->getMessage(), ExceptionCodes::DRIVER_CONNECTION, 500);
             }

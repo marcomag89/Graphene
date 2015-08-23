@@ -1,8 +1,8 @@
 <?php
 namespace Graphene;
 
-/** @noinspection PhpIncludeInspection */
-include Graphene::path().'/autoload/autoloaders.php';
+include_once Graphene::path().'/autoload/utils.php';
+include_once Graphene::path().'/autoload/autoloaders.php';
 
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\http\GraphRequest;
@@ -11,6 +11,7 @@ use Graphene\controllers\GrapheneRouter;
 use Graphene\controllers\Filter;
 use Graphene\controllers\FilterManager;
 use Graphene\db\CrudStorage;
+use \Log;
 
 
 /**
@@ -31,8 +32,9 @@ class Graphene
         $this->startTime = round(microtime(true) * 1000);
         $jsonFile = file_get_contents('settings.json');
         $this->settings  = json_decode($jsonFile, true);
-        $this->debugMode = $this->settings['debug'] === true   || strcasecmp($this->settings['debug'], 'true') == 0;
-        $this->showLog   = $this->settings['showLog'] === true || strcasecmp($this->settings['showLog'], 'true') == 0;
+        Log::setUp($this->settings['log']);
+        $this->debugMode = $this->settings['debug']   === true   || strcasecmp($this->settings['debug'], 'true') == 0;
+        $this->showLog   = $this->settings['showLog'] === true   || strcasecmp($this->settings['showLog'], 'true') == 0;
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
             ini_set('opcache.enabled', 0);

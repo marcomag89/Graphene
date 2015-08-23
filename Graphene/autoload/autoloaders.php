@@ -1,8 +1,6 @@
 <?php
 use Graphene\Graphene;
 
-include 'utils.php';
-
 function autol_namespace($name)
 {
     $name = str_replace('\\', '/', $name);
