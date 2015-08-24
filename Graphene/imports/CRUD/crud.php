@@ -1,9 +1,7 @@
 <?php
-namespace injection;
+namespace imports;
 
 use Graphene\controllers\Action;
-use Graphene\controllers\model\ModelFactory;
-use Graphene\controllers\exceptions\GraphException;
 
 class Create extends Action
 {

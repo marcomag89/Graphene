@@ -13,8 +13,8 @@ function autol_namespace($name)
 function autol_models($name)
 {
     $expl = explode('\\', $name);
-    if (($mod = Graphene::getInstance()->getModule($expl[0])) == false) return;
-    if (($modelDir = $mod->getModelDirectory($expl[1])) == null) return;
+    if (($mod = Graphene::getInstance()->getModule($expl[0])) === false) return;
+    if (($modelDir = $mod->getModelDirectory($expl[1])) === null) return;
     if (! is_readable($modelDir)) return;
     require_once $modelDir;
 }

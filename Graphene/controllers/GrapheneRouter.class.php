@@ -27,7 +27,7 @@ class GrapheneRouter
     {
         $r = Graphene::getInstance();
         $this->modulesDir = $r->getSettings()['modulesUrl'];
-        $this->baseUrl = (string) $r->getSettings()['frameworkDir'] . 'Graphene';
+        $this->baseUrl = Graphene::path();
         $this->nativePath = $this->baseUrl . '/native';
         $this->injectionDir = $this->baseUrl . '/injections';
         $this->routeTable = array();
@@ -53,6 +53,9 @@ class GrapheneRouter
                 $this -> popModule();
                 if ($response != null)break;
             }
+        }
+        if($response === null){
+
         }
         return $this->getSafeResponse($response);
     }
@@ -93,14 +96,14 @@ class GrapheneRouter
      * Crea una risposta sicura (Modulo non trovato se non e pervenuta una
      * risposta)
      *
-     * @param  GraphResponse $response
+     * @param  GraphResponse | null $response
      * @return GraphResponse
      */
-    private function getSafeResponse(GraphResponse $response)
+    private function getSafeResponse($response)
     {
         $filterManager = Graphene::getInstance()->getFilterManager();
         
-        if ($response == null) {
+        if ($response === null) {
             $response = new GraphResponse();
             $response->setHeader('content-type', 'application/json');
             if ($filterManager->haveErrors()) {

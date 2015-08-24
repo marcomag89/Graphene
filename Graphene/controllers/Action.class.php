@@ -4,41 +4,36 @@ namespace Graphene\controllers;
 use Graphene\Graphene;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
-use Graphene\controllers\UrlProcessor;
 use Graphene\models\Module;
 use Graphene\models\Model;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
-use Graphene\models\ModelCollection;
+use \Log;
 
 abstract class Action
 {
 
-    final public function setUp(Module $ownerModule, $actionSettings, GraphRequest $request, $pars, $queryPrefix = '')
+    final public function setUp(Module $ownerModule, $actionSettings, GraphRequest $request)
     {
-        // SETTING request query
-        if (isset($actionSettings['query']))
-            $this->urlProcessor = new UrlProcessor($queryPrefix . $actionSettings['query']);
-        else
-            $this->urlProcessor = new UrlProcessor($queryPrefix . '');
-            
-            // SETTING handling method
-        if (isset($actionSettings['method']))
-            $this->handlingMethod = strtoupper($actionSettings['method']);
-        else
-            $this->handlingMethod = 'GET';
-            
-            // SETTING other infos
-        $this->actionSettings=$actionSettings;
-        $this->pars = $pars;
-        $this->request = $request;
-        $this->actionName = self::getStandardActionName($actionSettings['name']);
-        $this->ownerModule = $ownerModule;
+        $this->actionSettings = $actionSettings;
+        $this->urlProcessor   = new UrlProcessor($actionSettings['query']);
+        $this->handlingMethod = $this->actionSettings['method'];
+        $this->actionName     = self::getStandardActionName($this->actionSettings['name']);
+        $this->pars           = $this->actionSettings['pars'];
+        $this->request        = $request;
+        $this->ownerModule    = $ownerModule;
     }
 
     final public function isHandled()
     {
-        return strcasecmp($this->request->getMethod(), $this->handlingMethod) == 0 && $this->checkQuery() && $this->checkFilters() && $this->checkHandled();
+        $tests=array();
+        Log::debug('Method: '.$this->request->getMethod().' = '.$this->handlingMethod);
+        $tests['method']   = strcasecmp($this->request->getMethod(), $this->handlingMethod) === 0;
+        $tests['query']    = $this->checkQuery();
+        $tests['filters']  = $this->checkFilters();
+        $tests['handling'] = $this->checkHandled();
+        Log::debug('test results for '.$this->actionName.': '.json_encode($tests));
+        return $tests['method'] && $tests['query'] && $tests['filters'] && $tests['handling'];
     }
 
     final private function checkFilters()
@@ -98,8 +93,10 @@ abstract class Action
     }
 
     public function getActionUrl(){
-        if(isset ($this->actionSettings['query'])){ $q='/'.$this->actionSettings['query'];}
-        else{ $q='';}
+        $q='';
+        if(array_key_exists('query',$this->actionSettings)){
+            $q='/'.$this->actionSettings['query'];
+        }
         return strtolower($this->ownerModule->getNamespace().$q);
     }
 

@@ -1,5 +1,5 @@
 <?php
-namespace injection;
+namespace imports;
 
 use Graphene\controllers\Action;
 

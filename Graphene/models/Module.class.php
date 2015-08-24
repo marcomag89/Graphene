@@ -2,10 +2,9 @@
 namespace Graphene\models;
 
 use \Exception;
-use Graphene\controllers\Action;
-use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
+use Graphene\controllers\ModuleManifest;
 use Graphene\Graphene;
 use \Log;
 
@@ -15,8 +14,10 @@ class Module
     public function __construct($modulePath)
     {
         $this->module_dir = $modulePath;
+        $this->manifestManager = new ModuleManifest();
         try{
-            $this->manifest = $this->loadManifest($modulePath);
+            $this->manifestManager->read($modulePath);
+            $this->manifest = $this->manifestManager->getManifest();
 
             $this->version    = $this->manifest['info']['version'];
             $this->namespace  = $this->manifest['info']['namespace'];
@@ -31,104 +32,9 @@ class Module
         }
     }
 
-    private function loadManifest($modulePath){
-        $manifest = array();
-        $rManifest = $this->loadJson($modulePath);
-        if($rManifest === null){ $rManifest = $this->loadXml($modulePath); }
-
-        //Exceptions
-        if($rManifest === null)                                throw new GraphException('module manifest not valid in: '.$modulePath,     500);
-        if(!array_key_exists('info',      $rManifest        )) throw new GraphException('module info node not found in: '.$modulePath,    500);
-        if(!array_key_exists('namespace', $rManifest['info'])) throw new GraphException('module namespace is undefined in: '.$modulePath, 500);
-        if(!array_key_exists('name',      $rManifest['info'])) throw new GraphException('module name is undefined in: '.$modulePath,      500);
-        if(!array_key_exists('version',   $rManifest['info'])) throw new GraphException('module version is undefined in: '.$modulePath,   500);
-
-        //Defaults
-        if(!array_key_exists('support',      $rManifest['info'])) $rManifest['info']['support']      = Graphene::host().'/doc/'.$rManifest['info']['namespace'];
-        if(!array_key_exists('domain',       $rManifest['info'])) $rManifest['info']['domain']       = $rManifest['info']['namespace'];
-        if(!array_key_exists('models-path',  $rManifest['info'])) $rManifest['info']['models-path']  = 'models';
-        if(!array_key_exists('actions-path', $rManifest['info'])) $rManifest['info']['actions-path'] = 'actions';
-        if(!array_key_exists('actions',      $rManifest        )) $rManifest['actions']              = array();
-        if(!array_key_exists('filters',      $rManifest        )) $rManifest['filters']              = array();
-
-
-        $manifest['info']    = array();
-        $manifest['actions'] = array();
-        $manifest['filters'] = array();
-
-        //Informations
-        $manifest['info']['version']        = $rManifest['info']['version'];
-        $manifest['info']['name']           = $rManifest['info']['name'];
-        $manifest['info']['namespace']      = $rManifest['info']['namespace'];
-        $manifest['info']['support']        = $rManifest['info']['support'];
-        $manifest['info']['domain']         = $rManifest['info']['domain'];
-        $manifest['info']['models-path']    = $rManifest['info']['models-path'];
-        $manifest['info']['actions-path']   = $rManifest['info']['actions-path'];
-        $manifest['info']['author']         = $rManifest['info']['author'];
-
-        //Actions
-        foreach($rManifest['actions'] as $k=>$action){
-            if(array_key_exists('name', $action)){
-                $rManifest['actions'][$k]['name'] = strtoupper($rManifest['actions'][$k]['name']);
-                if(!array_key_exists('handler', $action)){
-                    $rManifest['actions'][$k]['handler'] = $this->actionNameToCamel($action['name']).'@'.$rManifest['info']['actions-path'].'/'.$rManifest['info']['namespace'].'.'.$action['name'].'.php';
-                }
-                if(!array_key_exists('method', $action)) $rManifest['actions'][$k]['method']='get';
-                if(!array_key_exists('query', $action))  $rManifest['actions'][$k]['query']='';
-
-                $manifest['actions'][$k]=array();
-                $manifest['actions'][$k]['name']    = $rManifest['actions'][$k]['name'];
-                $manifest['actions'][$k]['handler'] = $rManifest['actions'][$k]['handler'];
-                $manifest['actions'][$k]['method']  = $rManifest['actions'][$k]['method'];
-                $manifest['actions'][$k]['query']   = $rManifest['actions'][$k]['query'];
-            }else{
-                Log::err('action '.$k.' name is not defined in: '.$modulePath);
-            }
-        }
-
-        //Filters
-        $manifest['filters'] = $rManifest['filters'];
-
-        return $manifest;
-    }
-
-    private function loadJson($modulePath){
-        $manifestDir = $modulePath . '/manifest.json';
-        if (! file_exists($manifestDir)){return null;}
-        $jsonStr = file_get_contents($manifestDir);
-        $json = json_decode($jsonStr,true);
-        return $json;
-    }
-
-    private function loadXml($modulePath){
-        if (! file_exists($modulePath . "/manifest.xml")) return null;
-
-        $xml = json_decode(json_encode(simplexml_load_file($modulePath . "/manifest.xml")), true);
-        $xml['v']    = $xml['@attributes']['v'];
-        $xml['info'] = $xml['info']['@attributes'];
-        $xml['actions'] = array();
-
-        foreach($xml['action'] as $action){
-            if(array_key_exists ('@attributes',$action)){
-                $xml['actions'][] = $action['@attributes'];
-            }
-        }
-        unset ($xml['action']);
-        unset ($xml['info']['@attributes']);
-        unset ($xml['@attributes']);
-
-        return $xml;
-    }
-    private function actionNameToCamel($actionName){
-        $expl = explode('_',strtolower($actionName));
-        $ret='';
-        foreach($expl as $lit){$ret.=ucfirst($lit);}
-        return $ret;
-    }
-
     public function getModelDirectory($modelClass)
     {
-        return $this->getModuleDir() . '/' . $this->modelsPath . '/' . $modelClass . '.php';
+        return $this->getModuleDir() . '/' . $this->manifest['info']['models-path'] . '/' . $modelClass . '.php';
     }
 
     private function loadFilters($filtersXml)
@@ -161,7 +67,6 @@ class Module
         Log::debug('exec ');
 
         $this->instantiateActions($this->manifest['actions'], $request);
-        $rUrl = $this->getActionUrl($request);
 
         foreach ($this->actions as $action) {
             $this->currentAction = $action;
@@ -198,41 +103,34 @@ class Module
     public function getAction($action)
     {
         $this->actions = array();
-        //foreach ($actions->action as $action) {}
     }
 
     private function instantiateActions($actions, $request)
     {
         $this->actions = array();
         foreach ($actions as $action) {
-            if (str_starts_with($action['name'], '$'))
-                $this->injectActions($action, $request);
-            else
-                $this->loadAction($action, $request);
+            $this->loadAction($action, $request);
         }
     }
 
-    private function loadAction($action, $request, $dir = null, $namespace = null, $pars = null, $queryPrefix = '')
+    private function loadAction($action, $request)
     {
-        if ($dir === null) $dir = $this->getModuleDir();
-        if ($namespace === null) $namespace = $this->getNamespace();
-        if ($pars === null && array_key_exists('handler',$action))
-            $pars = explode(',', $action['handler']);
-        elseif($pars === null && !array_key_exists('handler',$action))
-            $pars = array();
-        
-        $expl = explode('@', $action['handler']);
-        $file = $expl[1];
-        $class = $expl[0];
-        if (file_exists($dir . '/' . $file)) {
-            require_once $dir . '/' . $file;
-            $handlerClass = $namespace . '\\' . $class;
-            $actionClass = new $handlerClass();
-            $actionClass->setUp($this, $action, $request, $pars, $queryPrefix);
+        if($action['imported']==='true')$namespace = 'imports';
+        else $namespace = $this->getNamespace();
+
+        $file        = $action['file'];
+        $class       = $action['class'];
+
+        if (file_exists($file)) {
+            /** @noinspection PhpIncludeInspection */
+            require_once $file;
+            $handlerClass =  $namespace . '\\' . $class;
+            $actionClass  =  new $handlerClass();
+            $actionClass  -> setUp($this, $action, $request);
             $this->actions[] = $actionClass;
             Log::debug('loading action \''.$action['name'].'\' Completed');
         }else{
-            Log::err('loading action \''.$action['name'].'\' Fails');
+            Log::err('loading action \''.$action['name'].'\' Fails, file '.$file.' not found');
         }
     }
 
@@ -264,7 +162,7 @@ class Module
                 }
             }
         } else {
-            echo 'no injection for: ' . $injectionDir . '/' . $injectionName . '/manifest.xml';
+            //echo 'no injection for: ' . $injectionDir . '/' . $injectionName . '/manifest.xml';
         }
     }
 

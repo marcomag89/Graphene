@@ -5,15 +5,10 @@
 			name		= "com.graphene.system"
 			namespace	= "system"
 			author		= "Marco Magnetti [marcomagnetti@gmail.com]"
-			support		= "{{host.addr}}/doc/system"
 		/>
-		
-		<handle event="install" handler="Install@handlers/install.php"   				 />
-		<handle event="remove"  handler="Install@handlers/remove.php"    				 />
-		<handle event="backup"  handler="Install@handlers/uninstall.php" overload="true" />
 
-		<action method="get" query="status"  name="STATUS"  handler="GetStatus@actions/GetStatus.STATUS.php" />	
-		<action method="get" query="modules" name="MODULES" handler="GetModules@actions/GetModules.MODULES.php" />
+		<action method="get" query="status"         name="STATUS"        handler="GetStatus@actions/GetStatus.STATUS.php" />
+		<action method="get" query="modules"        name="MODULES"       handler="GetModules@actions/GetModules.MODULES.php" />
         <action method="get" query="modules/create" name="CREATE_MODULE" handler="CreateModule@actions/CreateModule.CREATE_MODULE.php" />
 
 

@@ -34,7 +34,7 @@ class Graphene
         $this->settings  = json_decode($jsonFile, true);
         Log::setUp($this->settings['log']);
         $this->debugMode = $this->settings['debug']   === true   || strcasecmp($this->settings['debug'], 'true') == 0;
-        $this->showLog   = $this->settings['showLog'] === true   || strcasecmp($this->settings['showLog'], 'true') == 0;
+        $this->showLog   = $this->settings['showLog'] = false;
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
             ini_set('opcache.enabled', 0);
@@ -233,6 +233,10 @@ class Graphene
         return $ret;
     }
 
+    /**
+     * @param $namespace
+     * @return Module | Bool
+     */
     public function getModule($namespace)
     {
         if ($this->router != null) {

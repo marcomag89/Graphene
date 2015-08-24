@@ -67,6 +67,12 @@ class Log{
         Log::$all   = $logSettings ['all'];
         Log::$debug = $logSettings ['debug'];
         Log::$req   = $logSettings ['requests'];
+        //removing old files
+        if(file_exists(Log::$err)) unlink(Log::$err);
+        if(file_exists(Log::$warn)) unlink(Log::$warn);
+        if(file_exists(Log::$all)) unlink(Log::$all);
+        if(file_exists(Log::$debug)) unlink(Log::$debug);
+        if(file_exists(Log::$req)) unlink(Log::$req);
     }
 
     public static function write($label, $object, $traceStr = ''){

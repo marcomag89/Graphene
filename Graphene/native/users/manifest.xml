@@ -5,10 +5,9 @@
 		name		= "com.graphene.users"
 		namespace	= "users"
 		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
-		support		= "{{host.addr}}/doc/user"
 		models-path	= "models"
 	/>
-	<action name="VALIDATE" handler="Validate@actions/Validate.php" 	method="post" 	query="validate" 	/>
+	<action name="VALIDATE" handler="Validate@actions/Validate.php" method="post" query="validate" 	/>
 
 	<!-- CRUD ACTIONS INJECTION-->
 	<action name="$CRUD"        pars="users\User" query-prefix="user/"/>
