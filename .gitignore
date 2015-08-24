@@ -1,9 +1,9 @@
 /.project
-/settings.xml
 /.settings/
 .DS_Store
 
 modules
 cgi-bin
+.idea
 /logs
 settings.json
