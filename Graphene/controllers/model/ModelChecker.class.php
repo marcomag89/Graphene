@@ -68,7 +68,7 @@ class ModelChecker
                     return false;
                 else 
                     if (! isset($struct[$ck])) {
-                        $this->addError($ck, '(undefinied)', '(undefinied)', 'Undefinied field \'' . $ck . '\' into a ' . $model->getName() . ' struct');
+                        $this->addError($ck, '(undefinied)', '(undefinied)', 'Undefinied field \'' . $ck . '\' into a ' . $model->getModelName() . ' struct');
                         return false;
                     }
         }

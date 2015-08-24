@@ -49,6 +49,6 @@ class Delete extends Action
         $model = new $this->pars[0]();
         $model = $model::getByRequest();
         $uModel = $model->delete();
-        $this->sendMessage($model->getName() . ' ' . $model->getId() . ', successfully deleted');
+        $this->sendMessage($model->getModelName() . ' ' . $model->getId() . ', successfully deleted');
     }
 }

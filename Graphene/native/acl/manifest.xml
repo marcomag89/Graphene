@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module v="0.0.1.0">
+	<info
+		version		 = "0.1.0.1"
+		name		 = "com.graphene.acl"
+		namespace	 = "acl"
+		author		 = "Marco Magnetti [marcomagnetti@gmail.com]"
+	/>
+
+    <action name="CREATE_GROUP" method="post"   query="group"/>
+    <action name="UPDATE_GROUP" method="put"    query="group"/>
+    <action name="DELETE_GROUP" method="delete" query="group"/>
+
+    <action name="ADD_PERMISSION"    method="post"   query="permission"/>
+    <action name="REMOVE_PERMISSION" method="delete" query="permission"/>
+    <action name="READ_PERMISSIONS"  method="get"    query="permission/:group"/>
+</module>

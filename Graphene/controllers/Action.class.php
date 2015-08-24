@@ -5,7 +5,6 @@ use Graphene\Graphene;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\models\Module;
-use Graphene\models\Model;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
 use \Log;
@@ -152,35 +151,6 @@ abstract class Action
         }else{
             throw new GraphException("Invalid model instance on sendModel", 500, 500);
         }
-    }
-    
-    function sendModel_old($model)
-    {
-        if (is_array($model)) {
-            if (count($model) == 0) {
-                $this->sendError(404, 'resource not found');
-            } else 
-                if (count($model) == 1 && $model[0] instanceof Model) {
-                    $model[0]->onSend();
-                    $this->response->setBody(json_encode(json_decode($model[0]->serialize()), JSON_PRETTY_PRINT));
-                } else 
-                    if (count($model) > 1) {
-                        $bodyArr = array(
-                            'array' => array()
-                        );
-                        foreach ($model as $elem) {
-                            if ($elem instanceof Model) {
-                                $elem->onSend();
-                                $bodyArr['array'][] = json_decode($elem->serialize());
-                            }
-                        }
-                        $this->response->setBody(json_encode($bodyArr, JSON_PRETTY_PRINT));
-                    }
-        } else 
-            if ($model instanceof Model) {
-                $model->onSend();
-                $this->response->setBody(json_encode(json_decode($model->serialize()), JSON_PRETTY_PRINT));
-            }
     }
 
     function getFramework()

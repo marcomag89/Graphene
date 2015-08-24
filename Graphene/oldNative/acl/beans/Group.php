@@ -1,5 +1,5 @@
 <?php
-namespace acl;
+namespace aclo;
 use Graphene\models\Model;
 
 class Group extends Model{

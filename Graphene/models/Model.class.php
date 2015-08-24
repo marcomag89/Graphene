@@ -47,7 +47,7 @@ abstract class Model implements \Serializable
     /**
      * @return string
      */
-    public function getName()
+    public function getModelName()
     {
         if ($this->name === null) {
             if (! is_object($this) && ! is_string($this)){ return false; }
@@ -65,7 +65,7 @@ abstract class Model implements \Serializable
     {
         if ($this->domain == null) {
             $fw = Graphene::getInstance();
-            $this->domain = $fw->getApplicationName() . "." . $fw->getCurrentModule()->getNamespace() . "." . $this->getName();
+            $this->domain = $fw->getApplicationName() . "." . $fw->getCurrentModule()->getNamespace() . "." . $this->getModelName();
         }
         return $this->domain;
     }
@@ -180,7 +180,7 @@ abstract class Model implements \Serializable
         if ($this->canCreate()){
             $this->onCreate();
             return $this->modelController->create($this);
-        }else throw new GraphException('cannot CREATE '.$this->getName().' model',500,500);
+        }else throw new GraphException('cannot CREATE '.$this->getModelName().' model',500,500);
     }
 
     /**
@@ -196,7 +196,7 @@ abstract class Model implements \Serializable
         if ($this->canRead()){
             $this->onRead();
             return $this->modelController->read($this,$multiple,$query,$page,$pageSize);
-        }else throw new GraphException('cannot READ '.$this->getName().' model',500,500);
+        }else throw new GraphException('cannot READ '.$this->getModelName().' model',500,500);
     }
 
     /**
@@ -208,7 +208,7 @@ abstract class Model implements \Serializable
         if ($this->canUpdate()){
             $this->onUpdate();
             return $this->modelController->update($this);
-        }else throw new GraphException('cannot UPDATE '.$this->getName().' model',500,500);
+        }else throw new GraphException('cannot UPDATE '.$this->getModelName().' model',500,500);
     }
 
     /**
@@ -220,7 +220,7 @@ abstract class Model implements \Serializable
         if ($this->canDelete()){
             $this->onDelete();
             return $this->modelController->delete($this);
-        }else throw new GraphException('cannot DELETE '.$this->getName().' model',500,500);
+        }else throw new GraphException('cannot DELETE '.$this->getModelName().' model',500,500);
     }
 
     /**
@@ -232,7 +232,7 @@ abstract class Model implements \Serializable
         if ($this->canPatch()){
             $this->onPatch();
             return $this->modelController->patch($this);
-        }else throw new GraphException('cannot PATCH '.$this->getName().' model',500,500);
+        }else throw new GraphException('cannot PATCH '.$this->getModelName().' model',500,500);
     }
 
     /*
@@ -321,7 +321,7 @@ abstract class Model implements \Serializable
 
     public function onSerialize()
     {}
-    public function getIdPrefix(){return strtoupper(substr($this->getName(), 0, 4));}
+    public function getIdPrefix(){return strtoupper(substr($this->getModelName(), 0, 4));}
 
     private $structs;
 

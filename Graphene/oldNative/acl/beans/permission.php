@@ -1,5 +1,5 @@
 <?php
-namespace acl;
+namespace aclo;
 use Graphene\models\Model;
 
 class Permission extends Model{

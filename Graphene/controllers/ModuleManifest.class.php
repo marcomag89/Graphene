@@ -173,13 +173,17 @@ class ModuleManifest{
         $xml['v']    = $xml['@attributes']['v'];
         $xml['info'] = $xml['info']['@attributes'];
         $xml['actions'] = array();
-        foreach($xml['action'] as $action) {
-            if (array_key_exists('@attributes', $action)) {
-                $xml['actions'][] = $action['@attributes'];
+        if(array_key_exists('@attributes',$xml['action'])){
+            $xml['actions'][] = $xml['action']['@attributes'];
+        }else{
+            foreach($xml['action'] as $action) {
+                if (array_key_exists('@attributes', $action)) {
+                    $xml['actions'][] = $action['@attributes'];
+                }
             }
         }
-        $ret=array('actions'=>$xml['actions'],'info'=>$xml['info']);
-        //Log::debug("\n--------\nXML\n-------\n".json_encode($ret,JSON_PRETTY_PRINT));
+        $ret=array('info'=>$xml['info'],'actions'=>$xml['actions']);
+        Log::debug("\n--------\nXML\n-------\n".json_encode($ret,JSON_PRETTY_PRINT));
         return $ret;
     }
 

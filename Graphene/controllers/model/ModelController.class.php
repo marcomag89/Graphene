@@ -172,7 +172,7 @@ class ModelController
     public function serialize(Model $model)
     {
         $ret = array(
-            $model->getName() => $model->getContent()
+            $model->getModelName() => $model->getContent()
         );
         return json_encode($ret,JSON_PRETTY_PRINT);
     }

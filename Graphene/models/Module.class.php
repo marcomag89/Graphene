@@ -64,8 +64,8 @@ class Module
 
     public function exec(GraphRequest $request)
     {
-        Log::debug('exec ');
-
+        Log::debug('searching for action in: '.$this->getName());
+        Log::debug(json_encode($this->manifest,JSON_PRETTY_PRINT));
         $this->instantiateActions($this->manifest['actions'], $request);
 
         foreach ($this->actions as $action) {
@@ -115,6 +115,7 @@ class Module
 
     private function loadAction($action, $request)
     {
+        Log::debug('loading action \''.$action['name']);
         if($action['imported']==='true')$namespace = 'imports';
         else $namespace = $this->getNamespace();
 

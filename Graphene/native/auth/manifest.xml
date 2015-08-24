@@ -7,16 +7,6 @@
 		author		 = "Marco Magnetti [marcomagnetti@gmail.com]"
 	/>
 
-    <!-- DEFAULTS:
-        actions-path : 'actions'
-        support      : '{{host.addr}}/doc/user'
-        models-path  : 'models'
-        handler      : 'ActionName@{{actions-path}}/{{namespace}}.ACTION_NAME.php'
-        method       : 'get'
-        query        : ''
-    -->
-
-    <!-- auto handler:   -->
 	<action name="LOGIN"    method="post" query="login" 	   />
 	<action name="VALIDATE" method="get"  query="validate/:at" />
 	<action name="LOGOUT"   method="get"  query="logout/:at"   />
