@@ -244,7 +244,9 @@ class Graphene
         } else
             return false;
     }
-
+    public static function host(){
+        return $_SERVER['SERVER_NAME'];
+    }
     public function addFilter(Filter $filter)
     {
         $this->filterManager->addFilter($filter);
