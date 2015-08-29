@@ -37,35 +37,24 @@ class Module
         return $this->getModuleDir() . '/' . $this->manifest['info']['models-path'] . '/' . $modelClass . '.php';
     }
 
-    private function loadFilters($filtersXml)
-    {
-        // print_r(($filtersXml->filter));
-        $framework = Graphene::getInstance();
-        // Non array defeat
-        if (isset($filtersXml['@attributes']))
-            $filtersXml = array(
-                $filtersXml
-            );
-        $filters = $filtersXml;
+    private function loadFilters($filters){
         foreach ($filters as $filter) {
-            $expl = explode('@', $filter['@attributes']['handler']);
-            $file = $expl[1];
-            $class = $expl[0];
-            if (file_exists($this->module_dir . '/' . $file)) {
-                /** @noinspection PhpIncludeInspection */
-                require_once $this->module_dir . '/' . $file;
-                $filterClass = $this->namespace . '\\' . $class;
+            if (file_exists($filter['file'])) {
+                require_once $filter['file'];
+                $filterClass = $this->namespace . '\\' . $filter['class'];
                 $filterClass = new $filterClass();
-                $filterClass->setUp($this, $filter['@attributes']);
-                $framework->addFilter($filterClass);
+                $filterClass -> setUp($this, $filter);
+                Graphene::getInstance() -> addFilter($filterClass);
+            }else{
+                Log::err('filter file: '.$filter['file'].' not found');
             }
         }
     }
 
     public function exec(GraphRequest $request)
     {
-        Log::debug('searching for action in: '.$this->getName());
-        Log::debug(json_encode($this->manifest,JSON_PRETTY_PRINT));
+        //Log::debug('searching for action in: '.$this->getName());
+        //Log::debug(json_encode($this->manifest,JSON_PRETTY_PRINT));
         $this->instantiateActions($this->manifest['actions'], $request);
 
         foreach ($this->actions as $action) {
@@ -247,6 +236,10 @@ class Module
             );
         }
         return $ret;
+    }
+
+    public function getDipendences(){
+        return $this->manifest['info']['depends'];
     }
 
     private $modelsPath;

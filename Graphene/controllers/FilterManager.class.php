@@ -30,8 +30,8 @@ class FilterManager
             if (! $filter->exec($req, $module, $action)) {
                 $errs[] = array(
                     'ignored' => '0',
-                    'name' => $filter->getName(),
-                    'status' => $filter->getStatus(),
+                    'name'    => $filter->getName(),
+                    'status'  => $filter->getStatus(),
                     'message' => $filter->getMessage()
                 );
             }

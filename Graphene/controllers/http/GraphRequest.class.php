@@ -9,9 +9,10 @@ class GraphRequest
 
     public function __construct()
     {
-        $this->url = null;
-        $this->pars = array();
+        $this->url     = null;
+        $this->pars    = array();
         $this->headers = array();
+        $this->env     = array();
     }
     
     // Setters
@@ -149,6 +150,13 @@ class GraphRequest
             $this->headers = array();
         $this->headers = $headers;
     }
+    public function setEnvironmentVar($key,$value){
+        $this->env[$key]=$value;
+    }
+    public function getEnvironmentVar($key){
+        if(array_key_exists($key,$this->env))return $this->env[$key];
+        else return null;
+    }
 
-    private $ip, $method, $url, $pars, $headers, $body, $userAgent;
+    private $ip, $method, $url, $pars, $headers, $body, $userAgent, $env;
 }

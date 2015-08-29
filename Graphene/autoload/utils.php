@@ -43,9 +43,6 @@ function default_exception_handler(Exception $e)
     foreach ($st as $entry) {
         echo "\t" . 'funct ' . $entry['function'] . '() in ' . $entry['file'] . "\n";
     }
-    
-    echo "\n----\nLog\n";
-    log_print();
 }
 
 function fatal_handler()

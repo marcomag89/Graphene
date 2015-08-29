@@ -7,47 +7,20 @@ use Graphene\controllers\http\GraphRequest;
 class Filter
 {
 
-    public function setUp($ownerModule, $attributes)
+    public function setUp($ownerModule, $settings)
     {
-        if (! isset($attributes['scope']) == null || strcasecmp($attributes['scope'], 'local') == 0)
-            $this->$scope = 'local';
-        else 
-            if (strcasecmp($attributes['scope'], 'global') == 0)
-                $this->$scope = 'global';
-        
-        $this->actions = array();
-        $this->modules = array();
-        
-        if (isset($attributes['actions'])) {
-            $this->actions = explode(',', str_replace(' ', '', $attributes['actions']));
-        }
-        if (isset($attributes['modules'])) {
-            $this->actions = explode(',', str_replace(' ', '', $attributes['modules']));
-        }
+        $this->scope       = $settings['scope'];
+        $this->ownerModule = $ownerModule;
+        $this->settings= $settings;
     }
 
     public function isHandled(Module $mod, Action $action)
     {
-        
-        // Gestione Azioni
-        if (strcasecmp($this->scope, 'local') == 0) { // Scope locale
-            if ($this->actions == null && $this->modules == null && $this->ownerModule->haveAction($action->getUniqueActionName()))
-                return true; // tutte le azioni del modulo corrente
-            foreach ($this->actions as $hAction) {
-                if (strcasecmp($hAction, $action->getUniqueActionName()) && $this->ownerModule->haveAction($action->getUniqueActionName()))
-                    return true;
-            }
+        if ($this->scope === 'MODULE' && $this->ownerModule->haveAction($action->getUniqueActionName())) { // Scope locale
+            return true; // tutte le azioni del modulo corrente
         } else {
-            if (strcasecmp($this->scope, 'global') == 0) {
-                if ($this->actions == null && $this->modules == null)
-                    return true; // tutte le azioni di tutti i moduli
-                foreach ($this->actions as $hAction) {
-                    if (strcasecmp($hAction, $action->getUniqueActionName()) == 0)
-                        return true;
-                }
-            }
+            if ($this->scope === 'GLOBAL')  return true;
         }
-        
         return false;
     }
 
@@ -69,14 +42,12 @@ class Filter
     public function exec(GraphRequest $req, Module $mod, Action $action)
     {
         $this->message = self::DEFAULT_MESSAGE;
-        $this->status = self::DEFAULT_STATUS;
+        $this->status  = self::DEFAULT_STATUS;
         $this->request = $req;
-        $this->module = $mod;
-        $this->action = $action;
+        $this->module  = $mod;
+        $this->action  = $action;
         
-        if ($this->isHandled($mod, $action)) {
-            $this->run();
-        }
+        if ($this->isHandled($mod, $action)) { $this->run(); }
         return $this->isOk();
     }
 
@@ -85,30 +56,31 @@ class Filter
         return get_called_class();
     }
 
-    public function run()
-    {
-        $this->isOk();
-    }
+    public function run(){}
 
-    protected $message;
-
-    protected $status;
-
+    /**
+     * @var GraphRequest
+     */
     protected $request;
 
+    /**
+     * @var Module
+     */
     protected $module;
 
+    /**
+     * @var Action
+     */
     protected $action;
 
+    protected $message;
+    protected $status;
     protected $scope;
-
     protected $actions;
-
     protected $modules;
-
     protected $ownerModule;
+    protected $settings;
 
     const DEFAULT_MESSAGE = 'ok';
-
-    const DEFAULT_STATUS = 200;
+    const DEFAULT_STATUS  = 200;
 }

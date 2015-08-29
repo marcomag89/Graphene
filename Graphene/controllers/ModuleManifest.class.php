@@ -8,7 +8,9 @@ use \Log;
 
 class ModuleManifest{
     public function __construct($modulePath=null){
-        if($modulePath !== null){$this->read($modulePath);}
+        if($modulePath !== null){
+            $this->read($modulePath);
+        }
     }
 
     public function read($modulePath){
@@ -29,6 +31,9 @@ class ModuleManifest{
         if(!array_key_exists('domain',       $rManifest['info'])) $rManifest['info']['domain']       = $rManifest['info']['namespace'];
         if(!array_key_exists('models-path',  $rManifest['info'])) $rManifest['info']['models-path']  = 'models';
         if(!array_key_exists('actions-path', $rManifest['info'])) $rManifest['info']['actions-path'] = 'actions';
+        if(!array_key_exists('filters-path', $rManifest['info'])) $rManifest['info']['filters-path'] = 'filters';
+
+        if(!array_key_exists('depends',      $rManifest['info'])) $rManifest['info']['depends']      = '';
         if(!array_key_exists('actions',      $rManifest        )) $rManifest['actions']              = array();
         if(!array_key_exists('filters',      $rManifest        )) $rManifest['filters']              = array();
 
@@ -39,11 +44,13 @@ class ModuleManifest{
         //Informations
         $manifest['info']['version']        = $rManifest['info']['version'];
         $manifest['info']['name']           = $rManifest['info']['name'];
+        $manifest['info']['depends']        = $this->parseCommas($rManifest['info']['depends']);
         $manifest['info']['namespace']      = $rManifest['info']['namespace'];
         $manifest['info']['support']        = $rManifest['info']['support'];
         $manifest['info']['domain']         = $rManifest['info']['domain'];
         $manifest['info']['models-path']    = $rManifest['info']['models-path'];
         $manifest['info']['actions-path']   = $rManifest['info']['actions-path'];
+        $manifest['info']['filters-path']   = $rManifest['info']['filters-path'];
         $manifest['info']['author']         = $rManifest['info']['author'];
 
         //Resolving imports
@@ -68,18 +75,16 @@ class ModuleManifest{
                 $class = $expl[0];
                 $file  = $expl[1];
                 if(!str_starts_with($file,'/')){ $file = $modulePath.'/'.$expl[1];}
-                $rManifest['actions'][$k]['handler']     = $class.'@'.$file;
-
 
                 $manifest['actions'][$k] = array();
-                $manifest['actions'][$k]['name']         = $rManifest['actions'][$k]['name'];
-                $manifest['actions'][$k]['method']       = strtoupper($rManifest['actions'][$k]['method']);
-                $manifest['actions'][$k]['imported']     = $rManifest['actions'][$k]['imported'];
-                $manifest['actions'][$k]['query']        = $rManifest['actions'][$k]['query-prefix'].$rManifest['actions'][$k]['query'];
-                $manifest['actions'][$k]['handler']      = $rManifest['actions'][$k]['handler'];
-                $manifest['actions'][$k]['file']         = $file;
-                $manifest['actions'][$k]['class']        = $class;
-                $manifest['actions'][$k]['pars']         = $this->parsePars($rManifest['actions'][$k]['pars']);
+                $manifest['actions'][$k]['name']     = $rManifest['actions'][$k]['name'];
+                $manifest['actions'][$k]['method']   = strtoupper($rManifest['actions'][$k]['method']);
+                $manifest['actions'][$k]['imported'] = $rManifest['actions'][$k]['imported'];
+                $manifest['actions'][$k]['query']    = $rManifest['actions'][$k]['query-prefix'].$rManifest['actions'][$k]['query'];
+                $manifest['actions'][$k]['handler']  = $rManifest['actions'][$k]['handler'];
+                $manifest['actions'][$k]['file']     = $file;
+                $manifest['actions'][$k]['class']    = $class;
+                $manifest['actions'][$k]['pars']     = $this->parseCommas($rManifest['actions'][$k]['pars']);
 
 
             } else {
@@ -89,11 +94,34 @@ class ModuleManifest{
 
         //Filters
         $manifest['filters'] = $rManifest['filters'];
-        //Log::debug("\n-------\nLOADED MANIFEST\n--------\n".json_encode($manifest,JSON_PRETTY_PRINT));
+
+        foreach ($rManifest['filters'] as $k=>$filter){
+            if(array_key_exists('name',$filter)){
+                $rManifest['filters'][$k]['name']=strtoupper($filter['name']);
+                if(!array_key_exists('handler',$filter)){
+                    $rManifest['filters'][$k]['handler'] = $this->filterNameToCamel($filter['name']).'@'.$rManifest['info']['filters-path'].'/'.$rManifest['info']['namespace'].'.'.$filter['name'].'.php';
+                }
+                if(!array_key_exists('scope',$filter)) $rManifest['filters'][$k]['scope']='MODULE';
+                $expl = explode('@',$rManifest['filters'][$k]['handler']);
+                $class = $expl[0];
+                $file  = $expl[1];
+                if(!str_starts_with($file,'/')){ $file = $modulePath.'/'.$expl[1];}
+
+                $manifest['filters'][$k]['file']    = $file;
+                $manifest['filters'][$k]['class']   = $class;
+                $manifest['filters'][$k]['handler'] = $rManifest['filters'][$k]['handler'];
+                $manifest['filters'][$k]['scope']   = strtoupper($rManifest['filters'][$k]['scope']);
+
+            }else{
+                Log::err('filter '.$k.' name is not defined in: '.$modulePath);
+            }
+        }
+        Log::debug("\n-------\nLOADED MANIFEST\n--------\n".json_encode($manifest,JSON_PRETTY_PRINT));
         $this->manifest = $manifest;
     }
 
-    private function parsePars($parsString){
+    private function parseCommas($parsString){
+        if($parsString === '') return array();
         $p = explode(',',$parsString);
         foreach($p as $k=>$par){
             $p[$k] = trim($par);
@@ -150,7 +178,7 @@ class ModuleManifest{
                             $stdActions[$k]['query-prefix']  = $action['query-prefix'];
                     }
                 }
-                $retActions=array_merge($retActions,$this->resolveImports($stdActions));
+                $retActions = array_merge($retActions,$this->resolveImports($stdActions));
             }else{
                 $retActions[] = $actions[$ak];
             }
@@ -173,20 +201,40 @@ class ModuleManifest{
         $xml['v']    = $xml['@attributes']['v'];
         $xml['info'] = $xml['info']['@attributes'];
         $xml['actions'] = array();
-        if(array_key_exists('@attributes',$xml['action'])){
-            $xml['actions'][] = $xml['action']['@attributes'];
-        }else{
-            foreach($xml['action'] as $action) {
-                if (array_key_exists('@attributes', $action)) {
-                    $xml['actions'][] = $action['@attributes'];
+        $xml['filters'] = array();
+        if(array_key_exists('action',$xml)){
+            if(array_key_exists('@attributes',$xml['action'])){
+                $xml['actions'][] = $xml['action']['@attributes'];
+            }else{
+                foreach($xml['action'] as $action) {
+                    if (array_key_exists('@attributes', $action)) {
+                        $xml['actions'][] = $action['@attributes'];
+                    }
                 }
             }
         }
-        $ret=array('info'=>$xml['info'],'actions'=>$xml['actions']);
-        Log::debug("\n--------\nXML\n-------\n".json_encode($ret,JSON_PRETTY_PRINT));
+        if(array_key_exists('filter',$xml)){
+            if(array_key_exists('@attributes',$xml['filter'])){
+                $xml['filters'][] = $xml['filter']['@attributes'];
+            }else{
+                foreach($xml['filter'] as $filter) {
+                    if (array_key_exists('@attributes', $filter)) {
+                        $xml['filters'][] = $filter['@attributes'];
+                    }
+                }
+            }
+        }
+        $ret = array(
+            'info'    => $xml['info'],
+            'actions' => $xml['actions'],
+            'filters' => $xml['filters']
+        );
+        //Log::debug("\n--------\nXML\n-------\n".json_encode($ret,JSON_PRETTY_PRINT));
         return $ret;
     }
-
+    private function filterNameToCamel($filterName){
+        return $this->actionNameToCamel($filterName);
+    }
     private function actionNameToCamel($actionName){
         $expl = explode('_',strtolower($actionName));
         $ret='';
