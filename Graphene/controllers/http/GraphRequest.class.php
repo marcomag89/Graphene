@@ -150,13 +150,13 @@ class GraphRequest
             $this->headers = array();
         $this->headers = $headers;
     }
-    public function setEnvironmentVar($key,$value){
-        $this->env[$key]=$value;
+    public function setContextPar($key,$value){
+        $this->contextPars[$key]=$value;
     }
-    public function getEnvironmentVar($key){
-        if(array_key_exists($key,$this->env))return $this->env[$key];
+    public function getContextPar($key){
+        if(array_key_exists($key,$this->contextPars))return $this->contextPars[$key];
         else return null;
     }
 
-    private $ip, $method, $url, $pars, $headers, $body, $userAgent, $env;
+    private $ip, $method, $url, $pars, $headers, $body, $userAgent, $contextPars;
 }

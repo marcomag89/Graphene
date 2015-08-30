@@ -11,9 +11,13 @@ class Group extends Model{
         );
     }
     public function standardize(){
-        $this->content['name']   = strtoupper($this->content['name']);
+        $this->content['name']=self::standardizeGroupName($this->content['name'] );
         if($this->content['parent'] === null || $this->content['parent'] === ''){$this->content['parent'] = self::$everyoneGroupName;}
-        else{$this->content['parent'] = strtoupper($this->content['parent']);}
+        else{$this->content['parent'] = self::standardizeGroupName($this->content['parent']);}
+    }
+
+    public static function standardizeGroupName($groupName){
+        return strtoupper(str_replace(' ','_',$groupName));
     }
 
     public static $superUserGroupName = 'SUPER_USER';

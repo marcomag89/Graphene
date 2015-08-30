@@ -5,6 +5,7 @@ use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\models\Module;
 use Graphene\Graphene;
+use \Log;
 
 /**
  * Router di Graphene:
@@ -67,17 +68,17 @@ class GrapheneRouter
      */
     private function loadModules()
     {
+        $modules = array();
         try {
             $mods = scandir($this->modulesDir);
         } catch (\Exception $e) {
             $mods = array();
         }
-        $this->modules = array();
         foreach ($mods as $key => $moduleDir) {
             if (is_dir($this->modulesDir . "/" . $moduleDir) && ! str_starts_with($moduleDir, '.')) {
                 $module = new Module($this->modulesDir . "/" . $moduleDir);
                 if ($module != null) {
-                    $this->modules[$moduleDir] = $module;
+                    $modules[$module->getName()] = $module;
                 }
             }
         }
@@ -86,10 +87,40 @@ class GrapheneRouter
             if (is_dir($this->nativePath . '/' . $moduleDir) && ! str_starts_with($moduleDir, '.')) {
                 $module = new Module($this->nativePath . "/" . $moduleDir);
                 if ($module != null) {
-                    $this->modules[$moduleDir] = $module;
+                    $modules[$module->getName()] = $module;
                 }
             }
         }
+        $this->modules=$this->checkModulesDipendences($modules);
+    }
+    /**
+     * @param $modules
+     * @return array
+     */
+    private function checkModulesDipendences($modules){
+        $available = array();
+        $ret       = array();
+        foreach($modules as $name => $module){$available[$name] = $module->getDipendences();}
+        do{
+            $completed = true;
+            foreach($available as $name => $dips){
+                foreach($dips as $dip){
+                    if(!array_key_exists($dip,$available)){
+                        $completed = false;
+                        Log::err('unable to load '.$name. ' module because dipendency '.$dip.' is not installed');
+                    }
+                }
+                if(!$completed){
+                    unset ($available[$name]);
+                    break;
+                }
+            }
+        }while(!$completed);
+
+        foreach($available as $name=>$dp){
+            $ret[$name] = $modules[$name];
+        }
+        return $ret;
     }
 
     /**

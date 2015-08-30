@@ -27,12 +27,12 @@ abstract class Action
     {
         $tests=array();
         Log::debug('Method: '.$this->request->getMethod().' = '.$this->handlingMethod);
-        $tests['method']   = strcasecmp($this->request->getMethod(), $this->handlingMethod) === 0;
-        $tests['query']    = $this->checkQuery();
-        $tests['filters']  = $this->checkFilters();
-        $tests['handling'] = $this->checkHandled();
+        $ret = ($tests['method']   = strcasecmp($this->request->getMethod(), $this->handlingMethod) === 0) &&
+               ($tests['query']    = $this->checkQuery())   &&
+               ($tests['handling'] = $this->checkHandled()) &&
+               ($tests['filters']  = $this->checkFilters());
         Log::debug('test results for '.$this->actionName.': '.json_encode($tests));
-        return $tests['method'] && $tests['query'] && $tests['filters'] && $tests['handling'];
+        return $ret;
     }
 
     final private function checkFilters()

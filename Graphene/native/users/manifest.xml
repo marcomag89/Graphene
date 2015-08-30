@@ -6,7 +6,8 @@
 		namespace	= "users"
 		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
 		models-path	= "models"
-	/>
+        depends     = "com.graphene.acl" />
+
 	<action name="VALIDATE" handler="Validate@actions/Validate.php" method="post" query="validate" 	/>
 
 	<!-- CRUD ACTIONS INJECTION-->

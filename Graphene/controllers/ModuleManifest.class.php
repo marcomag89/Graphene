@@ -77,14 +77,15 @@ class ModuleManifest{
                 if(!str_starts_with($file,'/')){ $file = $modulePath.'/'.$expl[1];}
 
                 $manifest['actions'][$k] = array();
-                $manifest['actions'][$k]['name']     = $rManifest['actions'][$k]['name'];
-                $manifest['actions'][$k]['method']   = strtoupper($rManifest['actions'][$k]['method']);
-                $manifest['actions'][$k]['imported'] = $rManifest['actions'][$k]['imported'];
-                $manifest['actions'][$k]['query']    = $rManifest['actions'][$k]['query-prefix'].$rManifest['actions'][$k]['query'];
-                $manifest['actions'][$k]['handler']  = $rManifest['actions'][$k]['handler'];
-                $manifest['actions'][$k]['file']     = $file;
-                $manifest['actions'][$k]['class']    = $class;
-                $manifest['actions'][$k]['pars']     = $this->parseCommas($rManifest['actions'][$k]['pars']);
+                $manifest['actions'][$k]['name']        = $rManifest['actions'][$k]['name'];
+                $manifest['actions'][$k]['unique-name'] = $manifest['info']['name'].'.'.$rManifest['actions'][$k]['name'];
+                $manifest['actions'][$k]['method']      = strtoupper($rManifest['actions'][$k]['method']);
+                $manifest['actions'][$k]['imported']    = $rManifest['actions'][$k]['imported'];
+                $manifest['actions'][$k]['query']       = $rManifest['actions'][$k]['query-prefix'].$rManifest['actions'][$k]['query'];
+                $manifest['actions'][$k]['handler']     = $rManifest['actions'][$k]['handler'];
+                $manifest['actions'][$k]['file']        = $file;
+                $manifest['actions'][$k]['class']       = $class;
+                $manifest['actions'][$k]['pars']        = $this->parseCommas($rManifest['actions'][$k]['pars']);
 
 
             } else {
@@ -102,21 +103,25 @@ class ModuleManifest{
                     $rManifest['filters'][$k]['handler'] = $this->filterNameToCamel($filter['name']).'@'.$rManifest['info']['filters-path'].'/'.$rManifest['info']['namespace'].'.'.$filter['name'].'.php';
                 }
                 if(!array_key_exists('scope',$filter)) $rManifest['filters'][$k]['scope']='MODULE';
+                if(!array_key_exists('after',$filter)) $rManifest['filters'][$k]['after']='';
                 $expl = explode('@',$rManifest['filters'][$k]['handler']);
                 $class = $expl[0];
                 $file  = $expl[1];
                 if(!str_starts_with($file,'/')){ $file = $modulePath.'/'.$expl[1];}
 
-                $manifest['filters'][$k]['file']    = $file;
-                $manifest['filters'][$k]['class']   = $class;
-                $manifest['filters'][$k]['handler'] = $rManifest['filters'][$k]['handler'];
-                $manifest['filters'][$k]['scope']   = strtoupper($rManifest['filters'][$k]['scope']);
+                $manifest['filters'][$k]['name']        = $rManifest['filters'][$k]['name'];
+                $manifest['filters'][$k]['unique-name'] = $manifest['info']['name'].'.'.$rManifest['filters'][$k]['name'];
+                $manifest['filters'][$k]['file']        = $file;
+                $manifest['filters'][$k]['class']       = $class;
+                $manifest['filters'][$k]['handler']     = $rManifest['filters'][$k]['handler'];
+                $manifest['filters'][$k]['scope']       = strtoupper($rManifest['filters'][$k]['scope']);
+                $manifest['filters'][$k]['after']       = $this->parseCommas($rManifest['filters'][$k]['after']);
 
             }else{
                 Log::err('filter '.$k.' name is not defined in: '.$modulePath);
             }
         }
-        Log::debug("\n-------\nLOADED MANIFEST\n--------\n".json_encode($manifest,JSON_PRETTY_PRINT));
+        //Log::debug("\n-------\nLOADED MANIFEST\n--------\n".json_encode($manifest,JSON_PRETTY_PRINT));
         $this->manifest = $manifest;
     }
 

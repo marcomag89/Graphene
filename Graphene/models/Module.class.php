@@ -2,6 +2,7 @@
 namespace Graphene\models;
 
 use \Exception;
+use Graphene\controllers\Action;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\controllers\ModuleManifest;
@@ -104,23 +105,30 @@ class Module
 
     private function loadAction($action, $request)
     {
-        Log::debug('loading action \''.$action['name']);
+        Log::debug('loading action \''.$action['unique-name']);
         if($action['imported']==='true')$namespace = 'imports';
         else $namespace = $this->getNamespace();
 
         $file        = $action['file'];
-        $class       = $action['class'];
+        $class       = $namespace . '\\' .$action['class'];
 
         if (file_exists($file)) {
             /** @noinspection PhpIncludeInspection */
             require_once $file;
-            $handlerClass =  $namespace . '\\' . $class;
-            $actionClass  =  new $handlerClass();
-            $actionClass  -> setUp($this, $action, $request);
-            $this->actions[] = $actionClass;
-            Log::debug('loading action \''.$action['name'].'\' Completed');
+            if(class_exists($class)){
+                $actionClass  =  new $class();
+                if($actionClass instanceof Action){
+                    $actionClass  -> setUp($this, $action, $request);
+                    $this->actions[] = $actionClass;
+                    Log::debug('Action '.$action['unique-name'].'\' loaded');
+                }else{
+                    Log::err('Action '.$action['unique-name'].'\' NOT loaded, handler class '.$class.' is not an instance of Action in '.$file);
+                }
+            }else{
+                Log::err('Action '.$action['unique-name'].'\' NOT loaded, handler class '.$class.' not found in '.$file);
+            }
         }else{
-            Log::err('loading action \''.$action['name'].'\' Fails, file '.$file.' not found');
+            Log::err('Action '.$action['unique-name'].' NOT loaded, handler file '.$file.' not found');
         }
     }
 

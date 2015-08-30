@@ -6,8 +6,6 @@ use \Exception;
 
 class GetModules extends Action {
 	public function run() {
-        //var_dump(Graphene::getInstance ()->getInstalledModulesInfos());
-        var_dump($this->request->getEnvironmentVar('acl'));
         $this->response->setBody ( json_encode (
             array ('InstalledModules' => Graphene::getInstance ()->getInstalledModulesInfos()
             ), JSON_PRETTY_PRINT ) );

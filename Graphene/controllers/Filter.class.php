@@ -50,10 +50,29 @@ class Filter
         if ($this->isHandled($mod, $action)) { $this->run(); }
         return $this->isOk();
     }
+    public function getSettings(){
+        return $this->settings;
+    }
 
     public function getName()
     {
-        return get_called_class();
+        return $this->settings['unique-name'];
+    }
+    public function getModuleName(){
+        return $this->ownerModule->getName();
+    }
+    public function getAfter(){
+        return $this->settings['after'];
+    }
+
+    public function getBefore(){
+        return $this->settings['before'];
+    }
+    /**
+     * @return Module
+     */
+    public function getOwnerModule(){
+        return $this->ownerModule;
     }
 
     public function run(){}
@@ -78,6 +97,10 @@ class Filter
     protected $scope;
     protected $actions;
     protected $modules;
+
+    /**
+     * @var Module
+     */
     protected $ownerModule;
     protected $settings;
 
