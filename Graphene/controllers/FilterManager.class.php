@@ -44,7 +44,7 @@ class FilterManager
 
         if(count($executed) !== count($this->filters)){
             Log::err('Some filter was not executed');
-            //TODO elenco filtri non eseguiti e dioendenze richieste
+            //TODO elenco filtri non eseguiti e dipendenze richieste
         }
 
         $this->filterErrors[self::$ids++] = $errs;
@@ -62,7 +62,7 @@ class FilterManager
     private function checkAfter($executed, $filter){
         $after = $filter->getAfter();
         foreach($after as $afterEl){
-            Log::debug('checking after: '.$afterEl.' for '.$filter->getName()."\n". json_encode($executed,JSON_PRETTY_PRINT));
+            //Log::debug('checking after: '.$afterEl.' for '.$filter->getName()."\n". json_encode($executed,JSON_PRETTY_PRINT));
             if(array_search($afterEl, $executed, true) === false){
                 return false;
             }

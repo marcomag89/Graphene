@@ -65,43 +65,44 @@ class Log{
         Log::$debug = $logSettings ['debug'];
         Log::$req   = $logSettings ['requests'];
         //removing old files
-        if(file_exists(Log::$err)) unlink(Log::$err);
-        if(file_exists(Log::$warn)) unlink(Log::$warn);
-        if(file_exists(Log::$all)) unlink(Log::$all);
+        if(file_exists(Log::$err))   unlink(Log::$err);
+        if(file_exists(Log::$warn))  unlink(Log::$warn);
+        if(file_exists(Log::$all))   unlink(Log::$all);
         if(file_exists(Log::$debug)) unlink(Log::$debug);
-        if(file_exists(Log::$req)) unlink(Log::$req);
+        if(file_exists(Log::$req))   unlink(Log::$req);
     }
 
     public static function write($label, $object, $traceStr = ''){
         if($traceStr === ''){$traceStr = Log::getTraceString(debug_backtrace());}
-        $record   = str_pad('['.$label.' | '.Log::getTimeStirng(). ' | '.$traceStr,60).'] '.$object."\n";
+        $record   = '['.str_pad($label,5).']   '.str_pad($object,256).' # '.Log::getTimeStirng().' | '.$traceStr."\n";
+        //$record   = str_pad('['.$label.' | '.Log::getTimeStirng(). ' | '.$traceStr,60).'] '.$object."\n";
         file_put_contents(Log::$all, $record, FILE_APPEND | LOCK_EX);
     }
 
     public static function debug($object){
         $traceStr = Log::getTraceString(debug_backtrace());
-        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        $record   = str_pad($object,256).' # '.Log::getTimeStirng().' | '.$traceStr."\n";
         file_put_contents(Log::$debug, $record, FILE_APPEND | LOCK_EX);
         Log::write('DEBUG',$object,$traceStr);
     }
 
     public static function err ($object){
         $traceStr = Log::getTraceString(debug_backtrace());
-        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        $record   = str_pad($object,256).' # '.Log::getTimeStirng().' | '.$traceStr."\n";
         file_put_contents(Log::$err, $record, FILE_APPEND | LOCK_EX);
         Log::write('ERROR',$object,$traceStr);
     }
 
     public static function warn ($object){
         $traceStr = Log::getTraceString(debug_backtrace());
-        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        $record   = str_pad($object,256).' # '.Log::getTimeStirng().' | '.$traceStr."\n";
         file_put_contents(Log::$warn, $record, FILE_APPEND | LOCK_EX);
         Log::write('WARNING',$object,$traceStr);
     }
 
     public static function request ($object){
         $traceStr = Log::getTraceString(debug_backtrace());
-        $record   = str_pad('['.Log::getTimeStirng().' | '.$traceStr,50).'] '.$object."\n";
+        $record   = str_pad($object,256).' # '.Log::getTimeStirng().' | '.$traceStr."\n";
         file_put_contents(Log::$req, $record, FILE_APPEND | LOCK_EX);
         Log::write('REQUEST',$object,$traceStr);
     }

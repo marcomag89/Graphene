@@ -5,6 +5,6 @@ use Graphene\controllers\Filter;
 
 class AclCheck extends Filter{
     public function run (){
-        $this->request->setEnvironmentVar('acl','ok');
+        $this->request->setContextPar('acl','ok');
     }
 }

@@ -105,7 +105,7 @@ class Module
 
     private function loadAction($action, $request)
     {
-        Log::debug('loading action \''.$action['unique-name']);
+        //Log::debug('loading action \''.$action['unique-name']);
         if($action['imported']==='true')$namespace = 'imports';
         else $namespace = $this->getNamespace();
 
@@ -120,15 +120,15 @@ class Module
                 if($actionClass instanceof Action){
                     $actionClass  -> setUp($this, $action, $request);
                     $this->actions[] = $actionClass;
-                    Log::debug('Action '.$action['unique-name'].'\' loaded');
+                    Log::debug('Action '.str_pad($action['unique-name'],50).' loaded');
                 }else{
-                    Log::err('Action '.$action['unique-name'].'\' NOT loaded, handler class '.$class.' is not an instance of Action in '.$file);
+                    Log::err('Action '.str_pad($action['unique-name'],50).' not loaded'.str_pad('',10).'handler class '.$class.' is not an instance of Action in '.$file);
                 }
             }else{
-                Log::err('Action '.$action['unique-name'].'\' NOT loaded, handler class '.$class.' not found in '.$file);
+                Log::err('Action '.str_pad($action['unique-name'],50).' not loaded'.str_pad('',10).' handler class '.$class.' not found in '.$file);
             }
         }else{
-            Log::err('Action '.$action['unique-name'].' NOT loaded, handler file '.$file.' not found');
+            Log::err('Action '.str_pad($action['unique-name'],50).' not loaded'.str_pad('',10).' handler file '.$file.' not found');
         }
     }
 

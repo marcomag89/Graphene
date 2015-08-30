@@ -26,12 +26,11 @@ abstract class Action
     final public function isHandled()
     {
         $tests=array();
-        Log::debug('Method: '.$this->request->getMethod().' = '.$this->handlingMethod);
         $ret = ($tests['method']   = strcasecmp($this->request->getMethod(), $this->handlingMethod) === 0) &&
                ($tests['query']    = $this->checkQuery())   &&
                ($tests['handling'] = $this->checkHandled()) &&
                ($tests['filters']  = $this->checkFilters());
-        Log::debug('test results for '.$this->actionName.': '.json_encode($tests));
+        Log::debug('test results for '.$this->getUniqueActionName().': '.json_encode($tests));
         return $ret;
     }
 
