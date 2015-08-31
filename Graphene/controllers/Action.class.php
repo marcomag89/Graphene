@@ -36,6 +36,7 @@ abstract class Action
 
     final private function checkFilters()
     {
+
         $filterManager = Graphene::getInstance()->getFilterManager();
         if (! $filterManager->execFilters($this->request, $this->ownerModule, $this)) {
             $this->onFilterFails($filterManager);

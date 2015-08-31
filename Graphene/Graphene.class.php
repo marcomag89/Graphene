@@ -30,6 +30,7 @@ class Graphene
     private function __construct()
     {
         $this->startTime = round(microtime(true) * 1000);
+        $this->systemToken = uniqid('SYS_').$this->startTime;
         $jsonFile = file_get_contents('settings.json');
         $this->settings  = json_decode($jsonFile, true);
         Log::setUp($this->settings['log']);
@@ -115,6 +116,7 @@ class Graphene
         if (! str_starts_with($request->getUrl(), "http://")) {
             $this->pushRequest($request);
             $resp = $this->router->dispatch($request);
+            $this->popRequest();
             return $resp;
         } else {
             if (! extension_loaded('curl')){ throw new GraphException('request forwarding exception: cUrl extension is not installed',5000,500); }
@@ -154,7 +156,6 @@ class Graphene
      */
     private function createRequest()
     {
-        $req = new GraphRequest();
         $req = new GraphRequest();
         $req->setUrl($_SERVER["REQUEST_URI"]);
         $req->setMethod($_SERVER['REQUEST_METHOD']);
@@ -278,7 +279,7 @@ class Graphene
 
     private function popRequest()
     {
-        $pop = array_pop($this->requests);
+        array_pop($this->requests);
     }
 
     public function getRequest()
@@ -290,6 +291,9 @@ class Graphene
     public function getRouter()
     {
         return $this->router;
+    }
+    public function getSystemToken(){
+        return $this->systemToken;
     }
 
     const INFO = 'Graphene 0.1b developed by Marco Magnetti <marcomagnetti@gmail.com>';
@@ -313,6 +317,8 @@ class Graphene
     private $settings;
 
     private $definedRoutes;
+
+    private $systemToken;
 
     private static $instance = null;
 }

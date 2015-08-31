@@ -44,7 +44,7 @@ class ModelFactory
         if ($mod == null)
             $mod = Graphene::getInstance()->getCurrentModule();
         if (($decoded = json_decode($request->getBody(), true)) === null)
-            throw new GraphException('Malformed request check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED, 400);
+            throw new GraphException('Malformed request, check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED, 400);
         $return = array();
         foreach ($decoded as $ModelName => $modelContent) {
             $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $ModelName;

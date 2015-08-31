@@ -12,7 +12,8 @@ class GraphRequest
         $this->url     = null;
         $this->pars    = array();
         $this->headers = array();
-        $this->env     = array();
+        $this->contextPars = array();
+
     }
     
     // Setters

@@ -1,6 +1,8 @@
 <?php
 namespace Graphene\controllers;
 
+use Graphene\controllers\http\GraphResponse;
+use Graphene\Graphene;
 use Graphene\models\Module;
 use Graphene\controllers\http\GraphRequest;
 
@@ -24,6 +26,42 @@ class Filter
         return false;
     }
 
+    /**
+     * @param $url
+     * @param null $body
+     * @param null $method
+     * @return GraphResponse
+     */
+    protected function forward($url, $body = null, $method = null)
+    {
+        $req = new GraphRequest(true);
+        $req->setUrl($url);
+        /* Creazione metodo */
+        if ($body == null && $method == null)
+            $req->setMethod('GET');
+        else
+            if ($body != null && $method == null)
+                $req->setMethod('POST');
+            else
+                if ($method != null)
+                    $req->setMethod($method);
+        /* Creazione body */
+        if ($body != null)
+            $req->setBody($body);
+        else
+            $req->setBody('');
+        $headers = $this->request->getHeaders();
+        foreach ($headers as $hk => $hv) {
+            $req->setHeader($hk, $hv);
+        }
+        $req->setUserAgent($this->request->getUserAgent());
+        $req->setHeader('forwarded-by', $this->getName());
+        //$req->appendForward($this);
+        /* Forwarding */
+        $fw = Graphene::getInstance();
+        $req->setHeader('system-token',Graphene::getInstance()->getSystemToken());
+        return $fw->forward($req);
+    }
     public function getMessage()
     {
         return $this->message;

@@ -4,9 +4,12 @@ namespace acl;
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
 
-class SetUserGroup extends Action{
+class UserGroupSet extends Action{
     public function run(){
         $userGroup =  UserGroup::getByRequest();
+        $res       = $this->forward('/users/user/'.$userGroup->getUserId());
+        if($res->getStatusCode() !== 200) throw new GraphException('user id is not valid',400);
+        /*
         $userGroup -> standardize();
         $res = $this->forward('/users/user/'.$userGroup->getUserId());
         $group = new Group();
@@ -24,6 +27,8 @@ class SetUserGroup extends Action{
         }
 
         if($userGroup->read() !== null)   throw new GraphException('user already associated in '.$userGroup->getGroup(),400);
+        */
+
         $this->sendModel($userGroup->create());
     }
 }

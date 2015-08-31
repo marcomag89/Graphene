@@ -112,8 +112,7 @@ abstract class Model implements \Serializable
      * @param bool $lazyCheck
      * @return bool
      */
-    final public function isValid($lazyCheck = false)
-    {
+    public function isValid($lazyCheck = false){
         return $this->modelController->checkContent($this, $lazyCheck);
     }
 
@@ -325,6 +324,9 @@ abstract class Model implements \Serializable
 
     private $structs;
 
+    /**
+     * @var ModelController
+     */
     private $modelController;
 
     private $domain;

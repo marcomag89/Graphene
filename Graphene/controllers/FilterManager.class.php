@@ -2,6 +2,7 @@
 namespace Graphene\controllers;
 
 use Graphene\controllers\http\GraphRequest;
+use Graphene\Graphene;
 use Graphene\models\Module;
 use Graphene\controllers\Filter;
 use \Log;
@@ -21,6 +22,12 @@ class FilterManager
 
     public function execFilters(GraphRequest $req, Module $module, Action $action)
     {
+        if(
+            $req->getHeader('system-token') !== null &&
+            $req->getHeader('system-token') === Graphene::getInstance()->getSystemToken()
+        ){
+            return true;
+        }
         $executed = array();
         self::$ids ++;
         $errs = array();
@@ -48,6 +55,7 @@ class FilterManager
         }
 
         $this->filterErrors[self::$ids++] = $errs;
+
         return ! $this->haveErrors();
     }
 

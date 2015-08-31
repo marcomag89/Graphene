@@ -8,19 +8,22 @@
         depends      = "com.graphene.users, com.graphene.auth"
 	/>
 
-    <action name="CREATE_GROUP"         method="post"   query="group"/>
-    <action name="UPDATE_GROUP"         method="put"    query="group"/>
-    <action name="DELETE_GROUP"         method="delete" query="group"/>
+    <action name = "GROUP_CREATE"          method = "post"    query = "group"                     />
+    <action name = "GROUP_READ_ALL"        method = "get"     query = "groups/all"                 />
+    <action name = "GROUP_READ"            method = "get"     query = "group/:group"              />
+    <action name = "GROUP_UPDATE"          method = "put"     query = "group/:group"              />
+    <action name = "GROUP_DELETE"          method = "delete"  query = "group/:group"              />
 
-    <action name="ADD_PERMISSION"       method="post"   query="permission"/>
-    <action name="REMOVE_PERMISSION"    method="delete" query="permission"/>
-    <action name="READ_PERMISSIONS"     method="get"    query="permission/:group"/>
+    <action name = "PERMISSION_ADD"        method = "post"    query = "permission"                />
+    <action name = "PERMISSION_REMOVE"     method = "delete"  query = "permission"                />
+    <action name = "PERMISSION_GROUP_READ" method = "get"     query = "permission/:group"         />
 
-    <action name="SET_USER_GROUP"       method="post"   query="userGroup"/>
+    <action name = "USER_GROUP_SET"        method = "post"    query = "userGroup"                 />
 
-    <action name="READ_GROUPS_BY_USER"  method="get"    query="userGroup/byUser/:userId"/>
-    <action name="READ_USERS_BY_GROUP"  method="get"    query="userGroup/byGroup/:group"/>
+    <action name = "PERMISSION_BY_USER"    method = "get"     query = "permission/byUser/:userId" />
+    <action name = "USER_GROUP_BY_USER"    method = "get"     query = "userGroup/byUser/:userId"  />
+    <action name = "USERS_BY_GROUP"        method = "get"     query = "userGroup/byGroup/:group"  />
 
     <!-- Filters -->
-    <filter name = "ACL_CHECK"         scope="global"  after = "com.graphene.auth.AUTH_CHECK"/>
+    <filter name = "ACL_CHECK" scope = "global" after = "com.graphene.auth.AUTH_CHECK, com.graphene.users.USER_CHECK"/>
 </module>
