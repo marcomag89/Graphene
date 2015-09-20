@@ -7,6 +7,7 @@ use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\controllers\ModuleManifest;
 use Graphene\Graphene;
+use \Settings;
 use \Log;
 
 class Module
@@ -235,11 +236,12 @@ class Module
     public function getActionDocs()
     {
         $this->instantiateActions($this->manifest['actions'], new GraphRequest());
+        $baseUrl= $_SERVER['SERVER_NAME'].Settings::getInstance()->getPar('baseUrl');
+        $ret=array();
         foreach ($this->actions as $action) {
-          //  print_r($action);
             $ret[] = array(
                 "name"   => $action->getUniqueActionName(),
-                "url"    => $_SERVER['SERVER_NAME'].'/'.$action->getActionUrl(),
+                "url"    => $baseUrl.'/'.$action->getActionUrl(),
                 "method" => $action->getHandlingMethod(),
             );
         }

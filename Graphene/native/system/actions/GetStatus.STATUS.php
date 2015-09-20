@@ -9,19 +9,27 @@ class GetStatus extends Action
 	public function run ()
 	{
 		$this->status = array();
-		$fw = Graphene::getInstance();
+		$fw   = Graphene::getInstance();
+		$mods = $fw->getInstalledModulesInfos();
 		$this->status['framework-infos'] = Graphene::INFO;
 		$this->status['framework-version'] = Graphene::VERSION;
+		$this->status['php-version'] = 'PHP v.'.phpversion();
 		$this->status['app-name'] = $fw->getApplicationName();
-		$this->status['installed-modules'] = count(
-				$fw->getInstalledModulesInfos());
 		if ($fw->getStorage()->checkConnection())
 			$this->status['db']['connectionStatus'] = 'ok';
 		else
 			$this->status['db']['connectionStatus'] = 'connection fails';
 		$this->status['db']['driver'] = $fw->getStorage()->getDriverInfos();
+
 		// Sending response
 		$this->status['server']['time']=date('Y-m-d H:i:s');
+		$this->status['server']['software']=$_SERVER['SERVER_SOFTWARE'];
+
+		$this->status['installed-modules'] = array();
+		foreach($mods as $mod){
+			$this->status['installed-modules'][] = str_pad($mod['name'],20).' ['.count($mod['actions']).']';
+		}
+
 		$this->response->setBody($this->getStatusBody());
 	}
 
