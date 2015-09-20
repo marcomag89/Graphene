@@ -12,10 +12,12 @@ class UsersByGroup extends Action
         $userGroup -> setGroup($group);
         $userGroups = $userGroup->read(true);
         $ret = array();
-        foreach($userGroups as $uGroup){
-            $res = $this->forward('/users/user/'.$uGroup->getUserId());
-            if($res->getStatusCode() !== 200) Log::err('user: '.$uGroup->getUserId().' not found');
-            else $ret[] = json_decode($res->getBody(),true)['User']['email'];
+        if($userGroups !== null){
+            foreach($userGroups as $uGroup){
+                $res = $this->forward('/users/user/'.$uGroup->getUserId());
+                if($res->getStatusCode() !== 200) Log::err('user: '.$uGroup->getUserId().' not found');
+                else $ret[] = json_decode($res->getBody(),true)['User']['email'];
+            }
         }
         $this->response->setBody(
             json_encode(array(

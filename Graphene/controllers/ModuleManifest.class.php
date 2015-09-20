@@ -42,16 +42,16 @@ class ModuleManifest{
         $manifest['filters'] = array();
 
         //Informations
-        $manifest['info']['version']        = $rManifest['info']['version'];
-        $manifest['info']['name']           = $rManifest['info']['name'];
-        $manifest['info']['depends']        = $this->parseCommas($rManifest['info']['depends']);
-        $manifest['info']['namespace']      = $rManifest['info']['namespace'];
-        $manifest['info']['support']        = $rManifest['info']['support'];
-        $manifest['info']['domain']         = $rManifest['info']['domain'];
-        $manifest['info']['models-path']    = $rManifest['info']['models-path'];
-        $manifest['info']['actions-path']   = $rManifest['info']['actions-path'];
-        $manifest['info']['filters-path']   = $rManifest['info']['filters-path'];
-        $manifest['info']['author']         = $rManifest['info']['author'];
+        $manifest['info']['version']      = $rManifest['info']['version'];
+        $manifest['info']['name']         = $rManifest['info']['name'];
+        $manifest['info']['depends']      = $this->parseCommas($rManifest['info']['depends']);
+        $manifest['info']['namespace']    = $rManifest['info']['namespace'];
+        $manifest['info']['support']      = $rManifest['info']['support'];
+        $manifest['info']['domain']       = $rManifest['info']['domain'];
+        $manifest['info']['models-path']  = $rManifest['info']['models-path'];
+        $manifest['info']['actions-path'] = $rManifest['info']['actions-path'];
+        $manifest['info']['filters-path'] = $rManifest['info']['filters-path'];
+        $manifest['info']['author']       = $rManifest['info']['author'];
 
         //Resolving imports
         $rManifest['actions'] = $this->resolveImports($rManifest['actions']);
@@ -64,7 +64,7 @@ class ModuleManifest{
                 if(!array_key_exists('pars', $action))         $rManifest['actions'][$k]['pars']='';
                 if(!array_key_exists('query-prefix', $action)) $rManifest['actions'][$k]['query-prefix']='';
                 if(!array_key_exists('handler', $action)){
-                    $rManifest['actions'][$k]['handler'] = $this->actionNameToCamel($action['name']).'@'.$rManifest['info']['actions-path'].'/'.$rManifest['info']['namespace'].'.'.$action['name'].'.php';
+                    $rManifest['actions'][$k]['handler'] = $this->actionNameToCamel($action['name']).'@'.$rManifest['info']['actions-path'].DIRECTORY_SEPARATOR.$rManifest['info']['namespace'].'.'.$action['name'].'.php';
                 }
                 if(!array_key_exists('method', $action))         $rManifest['actions'][$k]['method'] = 'GET';
                 if(!array_key_exists('query', $action))          $rManifest['actions'][$k]['query']  = '';
@@ -74,7 +74,9 @@ class ModuleManifest{
                 $expl = explode('@',$rManifest['actions'][$k]['handler']);
                 $class = $expl[0];
                 $file  = $expl[1];
-                if(!str_starts_with($file,'/')){ $file = $modulePath.'/'.$expl[1];}
+                if(!is_absolute_path($expl[1])){
+                    $file = $modulePath.'/'.$expl[1];
+                }
 
                 $manifest['actions'][$k] = array();
                 $manifest['actions'][$k]['name']        = $rManifest['actions'][$k]['name'];
@@ -107,8 +109,9 @@ class ModuleManifest{
                 $expl = explode('@',$rManifest['filters'][$k]['handler']);
                 $class = $expl[0];
                 $file  = $expl[1];
-                if(!str_starts_with($file,'/')){ $file = $modulePath.'/'.$expl[1];}
-
+                if(!is_absolute_path($expl[1])){
+                    $file = $modulePath.'/'.$expl[1];
+                }
                 $manifest['filters'][$k]['name']        = $rManifest['filters'][$k]['name'];
                 $manifest['filters'][$k]['unique-name'] = $manifest['info']['name'].'.'.$rManifest['filters'][$k]['name'];
                 $manifest['filters'][$k]['file']        = $file;
@@ -136,12 +139,11 @@ class ModuleManifest{
 
     private function resolveImports($actions){
         $retActions = array();
-        $importsDir  = Graphene::path().'/imports';
         foreach($actions as $ak=>$action){
             if(!array_key_exists('imported',$action)){$actions[$ak]['imported']='false';}
             if(str_starts_with($action['name'],'$')){
                 $injectionPath = strtoupper(substr($action['name'], 1));
-                if(!str_contains($injectionPath,'/')){$injectionPath = $importsDir . '/' . $injectionPath;}
+                if(!str_contains($injectionPath,'/')){$injectionPath = G_path('imports/'.$injectionPath);}
 
                 Log::debug('resolving import: '.$injectionPath);
                 $stdActions = array();
@@ -174,7 +176,7 @@ class ModuleManifest{
                 //Finalizing import
                 foreach($stdActions as $k=>$v){
                     if(!str_starts_with($v['name'],'$')){
-                        $expl=explode('@',$v['handler']);
+                        $expl = explode('@',$v['handler']);
                         $stdActions[$k]['handler']       = $expl[0].'@'.$injectionPath.'/'.$expl[1];
                         $stdActions[$k]['imported']      = 'true';
                         if(array_key_exists('pars',$action))

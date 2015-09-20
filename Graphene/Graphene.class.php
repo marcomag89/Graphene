@@ -1,9 +1,17 @@
 <?php
 namespace Graphene;
+//Header function
 
-include_once Graphene::path().'/autoload/utils.php';
-include_once Graphene::path().'/autoload/autoloaders.php';
+error_reporting(E_ALL);
+ini_set('opcache.enabled', 0);
+ini_set('display_errors', 'on');
+ini_set('display_startup_errors', 'on');
 
+$utilsIncl = join(DIRECTORY_SEPARATOR, array(dirname(__FILE__),'utils','utils.php'));
+
+include_once $utilsIncl;
+
+use \Settings;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
@@ -30,17 +38,17 @@ class Graphene
     private function __construct()
     {
         $this->startTime = round(microtime(true) * 1000);
+        date_default_timezone_set('Europe/Rome');
         $this->systemToken = uniqid('SYS_').$this->startTime;
-        $jsonFile = file_get_contents('settings.json');
-        $this->settings  = json_decode($jsonFile, true);
-        Log::setUp($this->settings['log']);
-        $this->debugMode = $this->settings['debug']   === true   || strcasecmp($this->settings['debug'], 'true') == 0;
-        $this->showLog   = $this->settings['showLog'] = false;
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
             ini_set('opcache.enabled', 0);
+            ini_set('display_errors', 'on');
+            ini_set('display_startup_errors', 'on');
         } else {
-            error_reporting(0);
+            ini_set('opcache.enabled', 1);
+            ini_set('display_errors', 'off');
+            ini_set('display_startup_errors', 'off');
         }
     }
 
@@ -55,13 +63,14 @@ class Graphene
         $this->createRequest();
         $this->filterManager = new FilterManager();
         $this->router = new GrapheneRouter($this->getRequest());
-        $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->settings['storageConfig']['driver'];
-        $this->storage = new CrudStorage(new $crudDriver($this->settings['storageConfig']));
+        $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->getSettings()['storageConfig']['driver'];
+        $this->storage = new CrudStorage(new $crudDriver($this->getSettings()['storageConfig']));
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
     }
-    public static function path(){ return str_replace('/Graphene.class.php','',__FILE__);}
-
+    public static function path($path=null){
+        return G_path($path);
+    }
     /**
      * Recupera l'istanza del framework, o ne crea una nel caso non esista
      *
@@ -90,12 +99,12 @@ class Graphene
 
     public function getSettings()
     {
-        return $this->settings;
+        return Settings::getInstance()->getSettingsArray();
     }
 
     public function getApplicationName()
     {
-        return (string) $this->settings['appName'];
+        return (string) $this->getSettings()['appName'];
     }
 
     public function getStorage()
@@ -157,7 +166,7 @@ class Graphene
     private function createRequest()
     {
         $req = new GraphRequest();
-        $req->setUrl($_SERVER["REQUEST_URI"]);
+        $req->setUrl(G_requestUrl());
         $req->setMethod($_SERVER['REQUEST_METHOD']);
         $req->setBody(file_get_contents("php://input"));
         $req->setIp($_SERVER['REMOTE_ADDR']);
@@ -181,12 +190,9 @@ class Graphene
             header($khdr . ': ' . $hdr);
         }
         $this->supportCors();
-        header('elabTime:' . (round(microtime(true) * 1000) - $this->startTime) . ' ms');
+        header('graphene-time:' . (round(microtime(true) * 1000) - $this->startTime) . ' ms');
+        header('server-info: Graphene '.self::VERSION.' on PHP '.phpversion());
         print($response->getBody());
-        if ($this->isDebugMode() && $this->showLog()) {
-            print("\n---\nLOG");
-            log_print();
-        }
     }
 
     public function supportCors()
@@ -249,9 +255,11 @@ class Graphene
         } else
             return false;
     }
+
     public static function host(){
         return $_SERVER['SERVER_NAME'];
     }
+
     public function addFilter(Filter $filter)
     {
         $this->filterManager->addFilter($filter);
@@ -264,12 +272,7 @@ class Graphene
 
     public function isDebugMode()
     {
-        return $this->debugMode;
-    }
-
-    public function showLog()
-    {
-        return $this->showLog;
+        return Settings::getInstance()->getPar('debug') === true;
     }
 
     private function pushRequest(GraphRequest $request)
@@ -296,15 +299,11 @@ class Graphene
         return $this->systemToken;
     }
 
-    const INFO = 'Graphene 0.1b developed by Marco Magnetti <marcomagnetti@gmail.com>';
+    const INFO = 'Graphene 0.1b developed by Marco Magnetti [marcomagnetti@gmail.com]';
 
     const VERSION = '0.1b';
 
     private $startTime, $endTime;
-
-    private $showLog;
-
-    private $debugMode;
 
     private $filterManager;
 
@@ -313,10 +312,6 @@ class Graphene
     private $router;
 
     private $storage;
-
-    private $settings;
-
-    private $definedRoutes;
 
     private $systemToken;
 

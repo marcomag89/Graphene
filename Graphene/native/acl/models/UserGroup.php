@@ -25,8 +25,9 @@ class UserGroup extends Model{
     }
 
     public function setGroup($group){
-        if( $group === null || $group === '') {$this->content['group'] = Group::$everyoneGroupName;}
-        else $this->content['group'] = Group::getGroupId($group);
+        if( $group === null || $group === '') {
+            $this->content['group']  = Group::$everyoneGroupName;
+        } else $this->content['group'] = Group::getGroupId($group);
     }
 
     public function getGroup(){

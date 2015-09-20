@@ -3,4 +3,4 @@ require 'Graphene/Graphene.class.php';
 
 use Graphene\Graphene;
 $gr = Graphene::getInstance();
-$gr->start();
+$gr->start('settings.json');

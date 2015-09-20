@@ -13,7 +13,7 @@ class Filter
     {
         $this->scope       = $settings['scope'];
         $this->ownerModule = $ownerModule;
-        $this->settings= $settings;
+        $this->settings    = $settings;
     }
 
     public function isHandled(Module $mod, Action $action)
@@ -74,13 +74,14 @@ class Filter
 
     public function isOk()
     {
-        return $this->status < 400;
+        return $this->status < 300;
     }
 
     public function exec(GraphRequest $req, Module $mod, Action $action)
     {
         $this->message = self::DEFAULT_MESSAGE;
         $this->status  = self::DEFAULT_STATUS;
+        $this->ignored = 0;
         $this->request = $req;
         $this->module  = $mod;
         $this->action  = $action;
@@ -91,7 +92,9 @@ class Filter
     public function getSettings(){
         return $this->settings;
     }
-
+    public function errorIgnored(){
+        return $this->ignored;
+    }
     public function getName()
     {
         return $this->settings['unique-name'];
@@ -101,10 +104,6 @@ class Filter
     }
     public function getAfter(){
         return $this->settings['after'];
-    }
-
-    public function getBefore(){
-        return $this->settings['before'];
     }
     /**
      * @return Module
@@ -132,6 +131,7 @@ class Filter
 
     protected $message;
     protected $status;
+    protected $ignored;
     protected $scope;
     protected $actions;
     protected $modules;

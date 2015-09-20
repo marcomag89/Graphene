@@ -40,6 +40,7 @@ class FilterManager
                     Log::debug('executing filter: '.$filter->getName());
                     if (! $filter->exec($req, $module, $action)) {
                         $errs[] = array(
+                            'ignored' => $filter->errorIgnored(),
                             'name'    => $filter->getName(),
                             'status'  => $filter->getStatus(),
                             'message' => $filter->getMessage()
@@ -54,7 +55,7 @@ class FilterManager
             //TODO elenco filtri non eseguiti e dipendenze richieste
         }
 
-        $this->filterErrors[self::$ids++] = $errs;
+        $this->filterErrors[self::$ids] = $errs;
 
         return ! $this->haveErrors();
     }
