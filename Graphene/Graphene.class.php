@@ -1,12 +1,6 @@
 <?php
 namespace Graphene;
 //Header function
-
-error_reporting(E_ALL);
-ini_set('opcache.enabled', 0);
-ini_set('display_errors', 'on');
-ini_set('display_startup_errors', 'on');
-
 $utilsIncl = join(DIRECTORY_SEPARATOR, array(dirname(__FILE__),'utils','utils.php'));
 
 include_once $utilsIncl;
@@ -46,6 +40,7 @@ class Graphene
             ini_set('display_errors', 'on');
             ini_set('display_startup_errors', 'on');
         } else {
+            error_reporting(E_STRICT);
             ini_set('opcache.enabled', 1);
             ini_set('display_errors', 'off');
             ini_set('display_startup_errors', 'off');
@@ -61,6 +56,8 @@ class Graphene
     {
         $this->requests = array();
         $this->createRequest();
+        $request=$this->getRequest();
+        Log::request($request->getMethod().' '.$request->getUrl().' from '.$_SERVER['REMOTE_ADDR']);
         $this->filterManager = new FilterManager();
         $this->router = new GrapheneRouter($this->getRequest());
         $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->getSettings()['storageConfig']['driver'];
@@ -94,7 +91,6 @@ class Graphene
         spl_autoload_register("autol_namespace");
         spl_autoload_register("autol_moduleContent");
         spl_autoload_register("autol_models");
-        init_platform();
     }
 
     public function getSettings()

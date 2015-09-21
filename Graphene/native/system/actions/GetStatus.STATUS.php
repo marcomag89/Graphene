@@ -29,17 +29,11 @@ class GetStatus extends Action
 		foreach($mods as $mod){
 			$this->status['installed-modules'][] = str_pad($mod['name'],20).' ['.count($mod['actions']).']';
 		}
-
-		$this->response->setBody($this->getStatusBody());
+        $this->response->setBody($this->getStatusBody());
 	}
 
-	private function getStatusBody ()
-	{
-		return json_encode(
-				array(
-					'GrapheneStatus' => $this->status
-				), JSON_PRETTY_PRINT);
+	private function getStatusBody (){
+		return json_encode(array('GrapheneStatus' => $this->status), JSON_PRETTY_PRINT);
 	}
-
 	private $status;
 }

@@ -7,6 +7,9 @@ require_once G_path('utils/Log.php');
 
 G_Require('utils/autoloaders.php');
 
+Settings::getInstance();
+Log::setUp();
+
 function G_path($path){
     if(is_absolute_path($path) && is_readable($path))return $path;
     else{
@@ -69,6 +72,17 @@ function url_trimAndClean($url)
     return $url;
 }
 
+function absolute_from_script($path){
+    if(is_absolute_path($path)) return $path;
+    else{
+        $mainScript = $_SERVER['SCRIPT_FILENAME'];
+        $mainScriptExpl=explode(DIRECTORY_SEPARATOR,$mainScript);
+        array_pop($mainScriptExpl);
+        $mainScriptRoot=join(DIRECTORY_SEPARATOR,$mainScriptExpl);
+        $ret=$mainScriptRoot.DIRECTORY_SEPARATOR.$path;
+        return $ret;
+    }
+}
 function default_exception_handler(Exception $e)
 {
     global $haveException;
@@ -84,21 +98,25 @@ function default_exception_handler(Exception $e)
     }
 }
 
-function fatal_handler()
+function error_handler($errno, $errstr, $errfile, $errline)
 {
     global $haveException;
-    if ($haveException)
-        return;
-    echo "OhMio dio!\n";
-    echo "Qui abbiamo un problema!\n";
+    $haveException = true;
+    Log::err('error no.'.$errno.' '.$errstr.' at '.$errfile.':'.$errline);
 }
-
-function log_write($what){
-    $traceStr = Log::getTraceString(debug_backtrace());
-    Log::write('LEGACY',$what,$traceStr);
+function fatalErrorShutdownHandler(){
+    $last_error = error_get_last();
+    if ($last_error['type'] === E_ERROR) {
+        // fatal error
+        header('Content-Type: application/json');
+        http_response_code(500);
+        print(json_encode(array("fatal"=>array('message'=>'sorry, we have an unknown problem. Check the Graphene errors log','code'=>'500')),JSON_PRETTY_PRINT));;
+        error_handler(E_ERROR, $last_error['message'], $last_error['file'], $last_error['line']);
+    }
 }
-
-function init_platform(){date_default_timezone_set('Europe/Rome');}
-
 $haveException = false;
+
 set_exception_handler("default_exception_handler");
+register_shutdown_function('fatalErrorShutdownHandler');
+set_error_handler("error_handler",E_ALL);
+
