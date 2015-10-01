@@ -24,6 +24,16 @@
     <action name = "USER_GROUP_BY_USER"    method = "get"     query = "userGroup/byUser/:userId"  />
     <action name = "USERS_BY_GROUP"        method = "get"     query = "userGroup/byGroup/:group"  />
 
+    <!-- apps acl -->
+    <action name="APP_CREATE"   method="post" query="app"/>
+    <action name="APP_VALIDATE" method="get"  query="app/validate/:apikey" />
+
+    <action name = "APP_PERMISSION_ADD"     method = "post"    query = "app/permission"           />
+    <action name = "APP_PERMISSION_REMOVE"  method = "delete"  query = "app/permission"           />
+    <action name = "APP_PERMISSIONS_SET"    method = "put"     query = "app/permission/"          />
+    <action name = "APP_PERMISSIONS_BY_APP" method = "get"     query = "app/permission/:appId"    />
+
+
     <!-- Filters -->
     <filter name = "ACL_CHECK" scope = "global" after = "com.graphene.auth.AUTH_CHECK, com.graphene.users.USER_CHECK"/>
 </module>

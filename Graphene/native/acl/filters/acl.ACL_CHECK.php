@@ -1,16 +1,16 @@
 <?php
 namespace acl;
 use Graphene\controllers\Filter;
-use Graphene\Graphene;
 use \Log;
 
 class AclCheck extends Filter{
     public function run (){
-        $actionName  = $this->action->getUniqueActionName();
-        $user        = $this->request->getContextPar('user');
-        $permissions = $this->loadPermissions($user);
-        $groups      = $this->loadGroups($user);
-        $filterEnabled = false;
+        $actionName      = $this->action->getUniqueActionName();
+        $user            = $this->request->getContextPar('user');
+        $appPermissions  = $this->loadAppPermissions($this->request->getHeader('apiKey'));
+        $permissions     = $this->loadPermissions($user);
+        $groups          = $this->loadGroups($user);
+        $filterEnabled   = false;
 
         $res=$this->forward('/acl/userGroup/byGroup/'.Group::$superUserGroupName);
         if($res->getStatusCode() === 200){
@@ -21,7 +21,11 @@ class AclCheck extends Filter{
         if(
             $filterEnabled                                             && //Filtro abilitato
             array_search(Group::$superUserGroupName,$groups) === false && //Utente non super_user
-            array_search($actionName,$permissions)           === false    //Permesso azione non trovato
+            (
+            array_search($actionName,$permissions)           === false    //Permesso utente non trovato
+            ||                                                            //         oppure
+            array_search($actionName,$appPermissions)        === false    //Permesso applicazione non trovato
+            )
         ){
             $this->status=300;
             $this->message='Access denied to action: '.$this->action->getUniqueActionName();
@@ -31,10 +35,18 @@ class AclCheck extends Filter{
         $this->request->setContextPar('acl-groups',$groups);
 
     }
+
+    private function loadAppPermissions($apiKey){
+        if($apiKey === null)return [];
+        $res = $this->forward('/acl/app/validate/'.$apiKey);
+        if($res->getStatusCode() !== 200) return [];
+        return json_decode(json_decode($res->getBody(),true)['App']['permissions']);
+    }
+
     private function loadPermissions($user){
         $permissions = array();
 
-        if($user !==null){
+        if($user !== null){
             $res= $this->forward('/acl/permission/byUser/'.$user['id']);
             if($res->getStatusCode() === 200){
                 $permissions = json_decode($res->getBody(),true)['PermissionSet'];
