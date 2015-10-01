@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module v="0.0.1.0">
+	<info
+		version		 = "0.1.0.1"
+		name		 = "com.graphene.auth"
+		namespace	 = "auth"
+		author		 = "Marco Magnetti [marcomagnetti@gmail.com]"
+        depends      = "com.graphene.users"
+	/>
+
+	<action name="LOGIN"    method="post" query="login" 	   />
+	<action name="VALIDATE" method="get"  query="validate/:at" />
+	<action name="LOGOUT"   method="get"  query="logout/:at"   />
+
+	<filter name = "AUTH_CHECK" scope="global" />
+</module>

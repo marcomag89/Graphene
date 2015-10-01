@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module v="0.0.1.0">
+	<info
+		version		 = "0.1.0.1"
+		name		 = "com.graphene.acl"
+		namespace	 = "acl"
+		author		 = "Marco Magnetti [marcomagnetti@gmail.com]"
+        depends      = "com.graphene.users, com.graphene.auth"
+	/>
+
+    <action name = "GROUP_CREATE"          method = "post"    query = "group"                     />
+    <action name = "GROUP_READ_ALL"        method = "get"     query = "groups/all"                 />
+    <action name = "GROUP_READ"            method = "get"     query = "group/:group"              />
+    <action name = "GROUP_UPDATE"          method = "put"     query = "group/:group"              />
+    <action name = "GROUP_DELETE"          method = "delete"  query = "group/:group"              />
+
+    <action name = "PERMISSION_ADD"        method = "post"    query = "permission"                />
+    <action name = "PERMISSION_REMOVE"     method = "delete"  query = "permission"                />
+    <action name = "PERMISSION_GROUP_READ" method = "get"     query = "permission/:group"         />
+
+    <action name = "USER_GROUP_SET"        method = "post"    query = "userGroup"                 />
+
+    <action name = "PERMISSION_BY_USER"    method = "get"     query = "permission/byUser/:userId" />
+    <action name = "USER_GROUP_BY_USER"    method = "get"     query = "userGroup/byUser/:userId"  />
+    <action name = "USERS_BY_GROUP"        method = "get"     query = "userGroup/byGroup/:group"  />
+
+    <!-- Filters -->
+    <filter name = "ACL_CHECK" scope = "global" after = "com.graphene.auth.AUTH_CHECK, com.graphene.users.USER_CHECK"/>
+</module>

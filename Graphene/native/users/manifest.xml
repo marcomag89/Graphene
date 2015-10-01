@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module v="0.0.1.0">
+	<info
+		version		= "0.1.0.1"
+		name		= "com.graphene.users"
+		namespace	= "users"
+		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
+		models-path	= "models"
+        depends     = "com.graphene.acl" />
+
+	<action name="VALIDATE" handler="Validate@actions/Validate.php" method="post" query="validate" 	/>
+
+	<!-- CRUD ACTIONS INJECTION-->
+	<action name="$CRUD"        pars="users\User" query-prefix="user/"/>
+    <action name="$COLLECTIONS" pars="users\User" />
+
+    <filter name = "USER_CHECK" scope = "global" after = "com.graphene.auth.AUTH_CHECK"/>
+</module>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<injection name="CRUD">
+	<action name="CREATE" handler = "Create@Crud.php" method="post" />
+	<action name="READ"   handler = "Read@Crud.php"   method="get" query=":id" />
+    <action name="UPDATE" handler = "Update@Crud.php" method="put" />
+	<action name="DELETE" handler = "Delete@Crud.php" method="delete" />
+
+</injection>
