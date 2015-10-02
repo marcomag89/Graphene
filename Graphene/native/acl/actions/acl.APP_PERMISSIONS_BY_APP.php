@@ -7,9 +7,12 @@ use Graphene\controllers\exceptions\GraphException;
 class AppPermissionsByApp extends Action
 {
     public function run(){
-        $appId = $this->request->getPar('appId');
+        $apiKey = $this->request->getPar('apiKey');
+        $res = $this->forward('/apps/validate/'.$apiKey);
+        if($res->getStatusCode() !==200)throw new GraphException('Application not found');
+        $app = json_decode($res->getBody(),true)['App'];
         $appPerm=new AppPermission();
-        $appPerm->setAppId($appId);
+        $appPerm->setAppId($app['id']);
         $rdd=$appPerm->read(true);
         $ret=[];
         foreach($rdd as $appPermission){

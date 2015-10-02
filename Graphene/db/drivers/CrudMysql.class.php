@@ -258,6 +258,10 @@ class CrudMySql implements CrudDriver
                 $tRes = $v;
             } else {
                 if(str_contains($tStruct[$k],Model::DATETIME) && $v === '0000-00-00 00:00:00'){$v=null;}
+                else if(str_contains($tStruct[$k],Model::BOOLEAN)){if($v === 1 || $v === '1') $v = true; else $v=false;}
+                else if(str_contains($tStruct[$k],Model::INTEGER) && ($v !==null || $v!=='')){$v=intval($v);}
+                else if(str_contains($tStruct[$k],Model::DECIMAL) && ($v !==null || $v!=='')){$v=floatval($v);}
+
                 $tRes[$k] = $v;
             }
         }
@@ -364,6 +368,11 @@ class CrudMySql implements CrudDriver
                         $ret = $ret . ' NOT NULL';
                         break;
                     }
+                case Model::UID:
+                {
+                    $ret = $ret . ' VARCHAR(11)';
+                    break;
+                }
                 default:
                     {}
             }

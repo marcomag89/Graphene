@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module v="0.0.1.0">
+	<info
+		version		 = "0.1.0.1"
+		name		 = "com.graphene.apps"
+		namespace	 = "apps"
+		author		 = "Marco Magnetti [marcomagnetti@gmail.com]"
+	/>
+
+
+    <!-- apps acl -->
+    <action name="CREATE"   method="post" query=""/>
+    <action name="VALIDATE" method="get"  query="validate/:apikey" />
+</module>

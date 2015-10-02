@@ -18,7 +18,7 @@ class AppPermission extends Model{
         $this->stdAction();
     }
     private function stdAction(){
-        if($this->content['action'] !== null){
+        if(array_key_exists('action',$this->content) && $this->content['action'] !== null){
             $this->content['action']=strtoupper($this->content['action']);
         }
     }

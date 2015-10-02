@@ -1,5 +1,5 @@
 <?php
-namespace acl;
+namespace apps;
 use Graphene\models\Model;
 
 class App extends Model{

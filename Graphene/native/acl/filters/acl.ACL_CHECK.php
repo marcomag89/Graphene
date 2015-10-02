@@ -7,11 +7,11 @@ class AclCheck extends Filter{
     public function run (){
         $actionName      = $this->action->getUniqueActionName();
         $user            = $this->request->getContextPar('user');
-        $appPermissions  = $this->loadAppPermissions($this->request->getHeader('apiKey'));
+        $apiKey          = $this->request->getHeader('apiKey');
+        $appPermissions  = $this->loadAppPermissions($apiKey);
         $permissions     = $this->loadPermissions($user);
         $groups          = $this->loadGroups($user);
         $filterEnabled   = false;
-
         $res=$this->forward('/acl/userGroup/byGroup/'.Group::$superUserGroupName);
         if($res->getStatusCode() === 200){
             $users  = json_decode($res->getBody(),true)['GroupUsers']['users'];
@@ -22,25 +22,41 @@ class AclCheck extends Filter{
             $filterEnabled                                             && //Filtro abilitato
             array_search(Group::$superUserGroupName,$groups) === false && //Utente non super_user
             (
-            array_search($actionName,$permissions)           === false    //Permesso utente non trovato
-            ||                                                            //         oppure
-            array_search($actionName,$appPermissions)        === false    //Permesso applicazione non trovato
+            !$this->enabledTo($actionName,$permissions)    //Permesso utente non trovato
+            ||                                             //oppure
+            !$this->enabledTo($actionName,$appPermissions) //Permesso applicazione non trovato
             )
         ){
             $this->status=300;
             $this->message='Access denied to action: '.$this->action->getUniqueActionName();
         }
-
+        $this->request->setContextPar('acl-apiKey',$apiKey);
         $this->request->setContextPar('acl-permissions',$permissions);
         $this->request->setContextPar('acl-groups',$groups);
+    }
 
+    private function enabledTo($actionName, $permissionList){
+        foreach($permissionList as $prm){
+            if($this->matches($prm,$actionName)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function matches($needle,$action){
+        $needle = strtoupper($needle);
+        $action = strtoupper($action);
+        if(str_ends_with($needle,'.*') && str_starts_with($action, substr($needle,0,strlen($needle-1))))return true;
+        else if($needle === $action) return true;
+        else return false;
     }
 
     private function loadAppPermissions($apiKey){
         if($apiKey === null)return [];
-        $res = $this->forward('/acl/app/validate/'.$apiKey);
+        $res = $this->forward('/acl/app/withPermission/'.$apiKey);
         if($res->getStatusCode() !== 200) return [];
-        return json_decode(json_decode($res->getBody(),true)['App']['permissions']);
+        return json_decode($res->getBody(),true)['App']['permissions'];
     }
 
     private function loadPermissions($user){
@@ -54,7 +70,7 @@ class AclCheck extends Filter{
             }else{
                 Log::err('error when loading user permissions');
             }
-        }else{
+        } else {
             $res = $this->forward('/acl/permission/'.Group::$everyoneGroupName);
             if($res->getStatusCode() === 200){
                 $permissions = json_decode($res->getBody(),true)['PermissionSet']['permissions'];

@@ -13,13 +13,12 @@ class Login extends Action
 
     public function run()
     {
-        $auth = AuthRequest::getByRequest();
-        // TODO Controllo con Request forwarding api_key e api_secret.
-        // IF APIKEY/SECRET
-        $apiKey = $auth->getApiKey ();
-        $user   = $auth->getUser   ();
-        $res    = $this->forward   ('/users/validate', $user->serialize());
-
+        $apiKey = $this->request->getContextPar('acl-apiKey');
+        $userData = json_decode($this->request->getBody(),true)['User'];
+        $user = new User();
+        $user->setEmail($userData['email']);
+        $user->setPassword($userData['password']);
+        $res  = $this->forward   ('/users/validate', $user->serialize());
         if ($res->getStatusCode() !== 200) throw new GraphException('email or password invalid',403);
 
         // Creazione della sessione
@@ -29,7 +28,7 @@ class Login extends Action
         $session -> setHostAgent($this->request->getUserAgent());
         $session -> setApiKey($apiKey);
         $session -> setEnabled(true);
-        $session -> createTimestamp();
+        $session -> createDatetime();
         $session -> createAccessToken();
         $session -> setUser($user['id']);
         $created = $session->create();
