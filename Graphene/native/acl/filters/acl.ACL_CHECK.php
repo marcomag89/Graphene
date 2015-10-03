@@ -7,7 +7,7 @@ class AclCheck extends Filter{
     public function run (){
         $actionName      = $this->action->getUniqueActionName();
         $user            = $this->request->getContextPar('user');
-        $apiKey          = $this->request->getHeader('apiKey');
+        $apiKey          = $this->request->getHeader('api-key');
         $appPermissions  = $this->loadAppPermissions($apiKey);
         $permissions     = $this->loadPermissions($user);
         $groups          = $this->loadGroups($user);
@@ -19,12 +19,13 @@ class AclCheck extends Filter{
         }
 
         if(
-            $filterEnabled                                             && //Filtro abilitato
-            array_search(Group::$superUserGroupName,$groups) === false && //Utente non super_user
+            $filterEnabled  && //Filtro abilitato
             (
-            !$this->enabledTo($actionName,$permissions)    //Permesso utente non trovato
-            ||                                             //oppure
-            !$this->enabledTo($actionName,$appPermissions) //Permesso applicazione non trovato
+                !$this->enabledTo($actionName,$appPermissions)|| //Permesso applicazione non trovato
+                (
+                    array_search(Group::$superUserGroupName,$groups) === false && //Utente non super_user
+                    !$this->enabledTo($actionName,$permissions)                   //Permesso utente non trovato
+                )
             )
         ){
             $this->status=300;
@@ -39,6 +40,7 @@ class AclCheck extends Filter{
         foreach($permissionList as $prm){
             if($this->matches($prm,$actionName)){
                 return true;
+
             }
         }
         return false;
