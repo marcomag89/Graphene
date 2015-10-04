@@ -14,11 +14,16 @@ class Config extends Action {
         if($res->getStatusCode() !== 200){throw new GraphException($res->getBody(),$res->getStatusCode());}
         $userId = json_decode($res->getBody(),true)['User']['id'];
 
-        //Enabling public to basic permissions
-        foreach($this->basicPermissions as $permission){
-            $pRes = $this->forward('/acl/permission',json_encode(["Permission"=>["action"=>$permission,"group"=>Group::$everyoneGroupName]]));
-            if($pRes->getStatusCode()!==200){throw new GraphException($pRes->getBody(),$pRes->getStatusCode());}
-        }
+        //Set basic user permissions
+        $everyonePermissionRes = $this->forward('/acl/permission/',json_encode([
+            "Permission"=>[
+                "group"       => Group::$everyoneGroupName,
+                "permissions" => $this->basicPermissions
+            ]
+        ]),'PUT');
+        if($everyonePermissionRes->getStatusCode() !== 200)throw new GraphException('Error when creating default user permissions');
+        $groupInfo = json_decode($everyonePermissionRes->getBody(),true)['PermissionSet'];
+
         //Create admin application
         $appCreateRes = $this->forward('/apps',json_encode(["App"=>["appName"=>'GrapheneAdmin',"appAuthor"=>'Graphene team']]));
         if($appCreateRes->getStatusCode() !== 200)throw new GraphException('Error when creating management app');
@@ -34,36 +39,22 @@ class Config extends Action {
         if($appPermissionsRes->getStatusCode() !== 200)throw new GraphException('Error when creating management app permissions');
         $appInfo=json_decode($appPermissionsRes->getBody(),true)['App'];
 
-        foreach($this->adminAppPermission as $admPermission){
-            $pRes = $this->forward('/acl/permission',json_encode(["Permission"=>["action"=>$permission,"group"=>Group::$everyoneGroupName]]));
-            //if($pRes->getStatusCode()!==200){throw new GraphException($pRes->getBody(),$pRes->getStatusCode());}
-        }
-
         //Adding user to SUPER_ADMIN group [Enabling ACL]
         $groupRes = $this->forward('/acl/userGroup',json_encode(["UserGroup"=>["userId"=>$userId,"group"=>Group::$superUserGroupName]]));
         if($groupRes->getStatusCode() !== 200){throw new GraphException($groupRes->getBody(),$groupRes->getStatusCode());}
 
         $baseConfig=["Configuration"=>[
-            "administrator" =>$req['admin'],
-            "adminApp"      =>$appInfo
+            "administrator"     => $req['admin'],
+            "defaultUserGroup"  => $groupInfo,
+            "adminApp"          => $appInfo
         ]];
         $this->response->setBody(json_encode($baseConfig,JSON_PRETTY_PRINT));
     }
     private $basicPermissions =[
-        'AUTH.LOGIN',
-        'AUTH.VALIDATE"',
-        'AUTH.LOGOUT',
+        'AUTH.LOGIN', 'AUTH.VALIDATE', 'AUTH.LOGOUT',
         'USERS.VALIDATE',
-        'ACL.PERMISSION_BY_USER',
-        'ACL.PERMISSION_GROUP_READ',
-        'ACL.GROUP_READ'
+        'ACL.PERMISSION_BY_USER', 'ACL.PERMISSION_GROUP_READ', 'ACL.GROUP_READ'
     ];
 
-    private $adminAppPermission =[
-        "SYSTEM.*",
-        "USERS.*",
-        "AUTH.*",
-        "APPS.*",
-        "ACL.*"
-    ];
+    private $adminAppPermission =['SYSTEM.*', 'USERS.*', 'AUTH.*', 'APPS.*', 'ACL.*'];
 }

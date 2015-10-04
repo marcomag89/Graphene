@@ -15,6 +15,7 @@ class Group extends Model{
         $this->content = array();
         if(array_key_exists ('name',    $content)) $this->setName ($content['name'] );
         if(array_key_exists ('parent',  $content)) $this->setParent ($content['parent'] );
+        else $this->setParent(Group::$everyoneGroupName);
         if(array_key_exists ('id',      $content)) $this->content['id']      = $content['id'];
         if(array_key_exists ('version', $content)) $this->content['version'] = $content['version'];
     }

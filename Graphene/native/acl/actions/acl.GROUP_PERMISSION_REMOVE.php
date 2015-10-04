@@ -3,7 +3,7 @@ namespace acl;
 
 use Graphene\controllers\Action;
 
-class PermissionRemove extends Action
+class GroupPermissionRemove extends Action
 {
     public function run(){
         $permission = Permission::getByRequest();

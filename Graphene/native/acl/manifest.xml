@@ -14,9 +14,10 @@
     <action name = "GROUP_UPDATE"          method = "put"     query = "group/:group"              />
     <action name = "GROUP_DELETE"          method = "delete"  query = "group/:group"              />
 
-    <action name = "PERMISSION_ADD"        method = "post"    query = "permission"                />
-    <action name = "PERMISSION_REMOVE"     method = "delete"  query = "permission"                />
-    <action name = "PERMISSION_GROUP_READ" method = "get"     query = "permission/:group"         />
+    <action name = "GROUP_PERMISSION_ADD"    method = "post"    query = "permission"                />
+    <action name = "GROUP_PERMISSION_SET"    method = "put"    query = "permission"                />
+    <action name = "GROUP_PERMISSION_REMOVE" method = "delete"  query = "permission"                />
+    <action name = "GROUP_PERMISSION_READ"   method = "get"     query = "permission/:group"         />
 
     <action name = "USER_GROUP_SET"        method = "post"    query = "userGroup"                 />
 

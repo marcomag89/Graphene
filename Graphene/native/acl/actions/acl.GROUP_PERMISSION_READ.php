@@ -4,7 +4,7 @@ namespace acl;
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
 
-class PermissionGroupRead extends Action
+class GroupPermissionRead extends Action
 {
     /**
      * @throws GraphException
