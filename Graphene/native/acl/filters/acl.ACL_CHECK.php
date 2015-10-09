@@ -8,7 +8,8 @@ class AclCheck extends Filter{
         $actionName      = $this->action->getUniqueActionName();
         $user            = $this->request->getContextPar('user');
         $apiKey          = $this->request->getHeader('api-key');
-        $appPermissions  = $this->loadAppPermissions($apiKey);
+        $appInfo         = $this->loadAppInfo($apiKey);
+        $appPermissions  = $appInfo['permissions'];
         $permissions     = $this->loadPermissions($user);
         $groups          = $this->loadGroups($user);
         $filterEnabled   = false;
@@ -31,16 +32,21 @@ class AclCheck extends Filter{
             $this->status=300;
             $this->message='Access denied to action: '.$this->action->getUniqueActionName();
         }
-        $this->request->setContextPar('acl-apiKey',$apiKey);
+        $this->request->setContextPar('acl-enabled'    ,$filterEnabled);
+        $this->request->setContextPar('acl-app-info'   ,$appInfo);
         $this->request->setContextPar('acl-permissions',$permissions);
-        $this->request->setContextPar('acl-groups',$groups);
+        $this->request->setContextPar('acl-groups'     ,$groups);
     }
 
     private function enabledTo($actionName, $permissionList){
+        foreach($this->aclExceptions as $exc){
+            if($this->matches($exc,$actionName)){
+                return true;
+            }
+        }
         foreach($permissionList as $prm){
             if($this->matches($prm,$actionName)){
                 return true;
-
             }
         }
         return false;
@@ -54,11 +60,11 @@ class AclCheck extends Filter{
         else return false;
     }
 
-    private function loadAppPermissions($apiKey){
+    private function loadAppInfo($apiKey){
         if($apiKey === null)return [];
         $res = $this->forward('/acl/app/withPermission/'.$apiKey);
         if($res->getStatusCode() !== 200) return [];
-        return json_decode($res->getBody(),true)['App']['permissions'];
+        return json_decode($res->getBody(),true)['App'];
     }
 
     private function loadPermissions($user){
@@ -98,4 +104,7 @@ class AclCheck extends Filter{
         }
         return $groups;
     }
+    private $aclExceptions=[
+        'SYSTEM.GET_CLIENT_STATUS'
+    ];
 }

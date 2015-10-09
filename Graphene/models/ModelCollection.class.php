@@ -73,24 +73,23 @@ class ModelCollection implements \Iterator, \Serializable
     }
     public function serialize()
     {
-        $ret='{"Collection":[';
+        $ret=['Collection'=>[]];
         foreach ($this->content as $cnt){
-            $ret=$ret."\n    ".$cnt->serialize().",";
+            $ret['Collection'][] = $cnt->getContent();
         }
-        $ret=rtrim($ret, ",");
-        $ret=$ret."\n]\n}";
-        $ret=json_decode($ret);
+        if($this->prvUrl !== null) $ret['cursor']['prv']=$this->prvUrl;
+        if($this->curUrl !== null) $ret['cursor']['cur']=$this->curUrl;
+        if($this->nxtUrl !== null) $ret['cursor']['nxt']=$this->nxtUrl;
+
         return json_encode($ret,JSON_PRETTY_PRINT);
     }
-    public function serializedSend(){
-        foreach ($this->content as $cnt){
-        
-        }
-    }
-    public function unserialize($serialized)
-    {}
+
+    public function unserialize($str){}
+    public function setNextPageUrl     ($url) {$this->nxtUrl = $url;}
+    public function setPreviousPageUrl ($url) {$this->prvUrl = $url;}
+    public function setCurrentPageUrl  ($url) {$this->curUrl = $url;}
 
     private $content;
-
+    private $nxtUrl,$prvUrl,$curUrl;
     private $acceptedClass;
 }

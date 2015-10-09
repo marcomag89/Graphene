@@ -13,7 +13,7 @@ class Login extends Action
 
     public function run()
     {
-        $apiKey = $this->request->getContextPar('acl-apiKey');
+        $apiKey = $this->request->getContextPar('acl-app-info')['apiKey'];
         $userData = json_decode($this->request->getBody(),true)['User'];
         $user = new User();
         $user->setEmail($userData['email']);
