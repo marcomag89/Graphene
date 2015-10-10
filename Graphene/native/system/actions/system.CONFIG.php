@@ -49,6 +49,7 @@ class Config extends Action {
             "adminApp"          => $appInfo
         ]];
         $this->response->setBody(json_encode($baseConfig,JSON_PRETTY_PRINT));
+
     }
     private $basicPermissions =[
         'AUTH.LOGIN', 'AUTH.VALIDATE', 'AUTH.LOGOUT',

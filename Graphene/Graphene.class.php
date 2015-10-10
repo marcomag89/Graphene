@@ -183,12 +183,16 @@ class Graphene
     {
         http_response_code($response->getStatusCode());
         $h = $response->getHeaders();
+        $h['Access-Control-Allow-Origin']      = '*';
+        $h['Access-Control-Allow-Credentials'] = 'true';
+        $h['Access-Control-Allow-Methods']     = 'GET, POST, OPTIONS, PUT, DELETE, PATCH';
+        $h['Access-Control-Allow-Headers']     = $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'];
+        $h['graphene-time']                    = (round(microtime(true) * 1000) - $this->startTime) . ' ms';
+        $h['server-info']                      = self::VERSION.' on PHP '.phpversion();
         foreach ($h as $khdr => $hdr) {
             header($khdr . ': ' . $hdr);
         }
-        $this->supportCors();
-        header('graphene-time:' . (round(microtime(true) * 1000) - $this->startTime) . ' ms');
-        header('server-info: Graphene '.self::VERSION.' on PHP '.phpversion());
+        //$this->supportCors();
         print($response->getBody());
     }
 
