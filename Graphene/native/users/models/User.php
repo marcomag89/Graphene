@@ -11,7 +11,7 @@ class User extends Model
     public function defineStruct()
     {
         return array(
-            'email' => Model::MATCH . "/^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/" . Model::NOT_NULL . Model::UNIQUE . Model::MAX_LEN . '130',
+            'email' => Model::MATCH . "/^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/" . Model::NOT_NULL . Model::UNIQUE . Model::MAX_LEN . '130'. Model::SEARCHABLE,
             'password' => Model::STRING . Model::NOT_NULL
         );
     }

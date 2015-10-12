@@ -5,7 +5,7 @@ use \Log;
 
 class AuthCheck extends Filter{
     public function run (){
-        $accessToken=$this->request->getHeader('access-token');
+        $accessToken = $this->request->getHeader('access-token');
         if($accessToken != null){
             $res = $this->forward('/auth/validate/'.$accessToken);
             if($res->getStatusCode() !== 200) Log::err('access token is not valid');

@@ -13,7 +13,6 @@ class GraphRequest
         $this->pars    = array();
         $this->headers = array();
         $this->contextPars = array();
-
     }
     
     // Setters
@@ -117,7 +116,10 @@ class GraphRequest
     public function getPar($parName)
     {
         $parName = strtolower($parName);
-        if (isset($this->pars[$parName])) {
+        foreach($_GET as $gKey=>$gVal){
+            if($parName === strtolower($gKey)){return $gVal;}
+        }
+        if (array_key_exists($parName,$this->pars)) {
             return $this->pars[$parName];
         } else return null;
     }

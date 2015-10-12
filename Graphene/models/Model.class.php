@@ -390,9 +390,10 @@ abstract class Model implements \Serializable
 
     // CHECKS
 
-    const NOT_NULL  = '--c_not_null';   // vero se il contenuto non e' null
-    const UNIQUE    = '--c_unique';     // controllo su DB se l'elemento risulta univoco
-    const NOT_EMPTY = '--c_not_empty';  // controllo stringa non vuota
-    const MIN_LEN   = '--c_min_len::';  // lunghezza minima del campo
-    const MAX_LEN   = '--c_max_len::';  // lunghezza massima del campo
+    const NOT_NULL   = '--c_not_null';     // vero se il contenuto non e' null
+    const UNIQUE     = '--c_unique';       // controllo su DB se l'elemento risulta univoco
+    const NOT_EMPTY  = '--c_not_empty';    // controllo stringa non vuota
+    const MIN_LEN    = '--c_min_len::';    // lunghezza minima del campo
+    const MAX_LEN    = '--c_max_len::';    // lunghezza massima del campo
+    const SEARCHABLE = '--c_searchable::'; // campo rilevante per le ricerche
 }

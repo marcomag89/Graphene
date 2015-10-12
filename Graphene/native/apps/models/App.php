@@ -9,8 +9,8 @@ class App extends Model{
         return array(
             'apiKey'      => Model::STRING. Model::NOT_EMPTY. Model::NOT_NULL,
             'apiSecret'   => Model::STRING. Model::NOT_EMPTY. Model::NOT_NULL,
-            'appName'     => Model::STRING. Model::NOT_EMPTY. Model::NOT_NULL. Model::UNIQUE,
-            'appAuthor'   => Model::STRING. Model::NOT_EMPTY. Model::NOT_NULL
+            'appName'     => Model::STRING. Model::NOT_EMPTY. Model::NOT_NULL. Model::UNIQUE.    Model::SEARCHABLE,
+            'appAuthor'   => Model::STRING. Model::NOT_EMPTY. Model::NOT_NULL. Model::SEARCHABLE
         );
     }
     public function onCreate(){

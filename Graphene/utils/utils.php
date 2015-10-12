@@ -66,6 +66,7 @@ function G_requestUrl(){
 function url_trimAndClean($url)
 {
     $url = trim($url);
+    if (str_contains($url,'?'))$url=explode('?',$url)[0];
     if (str_starts_with($url, '/')) $url = substr($url, 1);
     if (str_ends_with($url, '/'))   $url = substr($url, 0, strlen($url) - 1);
     $url = strtolower($url);

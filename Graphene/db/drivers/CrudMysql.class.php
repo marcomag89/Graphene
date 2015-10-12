@@ -384,16 +384,39 @@ class CrudMySql implements CrudDriver
 
     private function getCondition($query, $cols)
     {
-        if ($query == null) {
-            $cond = '\'1\'=\'1\'';
+        /*  {
+          *   order       : {by : field_name, mode:asc/dsc},
+          *   ?comparsion : {lt:[field1,field2,fieldN], gt:[field1,field2,field3]}
+          *   search      : {by:[field1,field2,fieldN], query:'query string'}
+          *   where       : 'a specific query string'
+          *  }
+          */
+        if(is_string($query)){$query = ['where'=>$query];}
+        if(is_null($query))  {$query=[];}
+
+        $cond = '\'1\'=\'1\'';
+        if(!array_key_exists('like',$query) && !array_key_exists('where',$query)){
             foreach ($cols as $name => $value) {
                 $cond = $cond . ' AND `' . $name . '`= ' . $this->connection->quote($value);
             }
-            return $cond;
-        } else {
-            $cond = $query;
-            return $cond;
         }
+
+        if(array_key_exists('search',$query)){
+            $likes='';
+            foreach($query['by'] as $field){
+                $likes.=' '.$field. 'LIKE'. '\'%'.$query['query'].'%\' OR ';
+            }
+            $likes=rtrim($likes,'OR ');
+            echo $likes;
+        }
+
+        if(array_key_exists('order',$query)){
+            $cond = $cond.'ORDER BY `'.$query['order']['by'].'`';
+            if(array_key_exists('mode',$query['order'])){$cond = $cond.'ASC';}
+            else{$cond = $cond.'DESC';}
+        }
+
+        return $cond;
     }
 
     public function getSettings()
