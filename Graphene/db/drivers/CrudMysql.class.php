@@ -126,7 +126,9 @@ class CrudMySql implements CrudDriver
         $retJson = $decoded;
         unset($retJson['content']);
         $retJson['collection'] = $return;
-        return json_encode($retJson, JSON_PRETTY_PRINT);
+        $ret = json_encode($retJson, JSON_PRETTY_PRINT);
+        var_dump($ret);
+        return $ret;
     }
 
     /* TAG Update */
@@ -168,7 +170,6 @@ class CrudMySql implements CrudDriver
         $q = str_replace('<dbname>', $this->dbname, $q);
         $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
         $q = str_replace('<id>', $this->connection->quote($decoded['content']['id']), $q);
-        $res = $this->connection->query($q);
         $res = $this->connection->query($q);
         $err = $this->connection->errorInfo();
         if (strcasecmp($err[0], '00000') != 0)

@@ -9,9 +9,12 @@ class AclCheck extends Filter{
         $user            = $this->request->getContextPar('user');
         $apiKey          = $this->request->getHeader('api-key');
         $appInfo         = $this->loadAppInfo($apiKey);
-        $appPermissions  = $appInfo['permissions'];
         $permissions     = $this->loadPermissions($user);
         $groups          = $this->loadGroups($user);
+        if(array_key_exists('permissions',$appInfo))
+            $appPermissions  = $appInfo['permissions'];
+        else $appPermissions = [];
+
         $filterEnabled   = false;
         $res=$this->forward('/acl/userGroup/byGroup/'.Group::$superUserGroupName);
         if($res->getStatusCode() === 200){

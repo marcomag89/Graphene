@@ -89,6 +89,7 @@ class Graphene
      */
     public static function registerAutoloaders()
     {
+        spl_autoload_register("autol_db_drivers");
         spl_autoload_register("autol_namespace");
         spl_autoload_register("autol_moduleContent");
         spl_autoload_register("autol_models");
@@ -300,9 +301,9 @@ class Graphene
         return $this->systemToken;
     }
 
-    const INFO = 'Graphene 0.1b developed by Marco Magnetti [marcomagnetti@gmail.com]';
+    const INFO = 'Graphene 0.2b developed by Marco Magnetti [marcomagnetti@gmail.com]';
 
-    const VERSION = '0.1b';
+    const VERSION = '0.2b';
 
     private $startTime, $endTime;
 

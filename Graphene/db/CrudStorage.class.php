@@ -70,22 +70,30 @@ class CrudStorage
      * @throws GraphException
      * @internal param $ <b>Model</b> modello parzialmente compilato*            <b>Model</b> modello parzialmente compilato
      */
-    public function read(Model $model, $multiple = false, $query = null, $pageNo = null, $pageElements = null)
+    public function read(Model $model, $multiple = false, $query = null, $page = null, $pageSize = null)
     {
         Log::debug('calling storage driver for read');
-        $readed = $this->driver->read($this->serializeForDb($model, $pageNo, $pageElements), $query);
+        if(!$multiple) {
+            $page     = 1;
+            $pageSize = 2;}
+        else{
+            if($page === null)     $page     = 1;
+            if($pageSize === null) $pageSize = self::DEFAULT_PAGE_SIZE;
+        }
+
+        $readed = $this->driver->read($this->serializeForDb($model, $page, $pageSize), $query);
         // echo "JSON Letto\n----\n";
         // echo ($readed);
         $result = ModelFactory::createByDbSerialization($readed);
         if (is_null($result)) {
             throw new GraphException('Error when read, Stored ' . $model->getModelName() . ' is corrupt' . ModelFactory::getModelParsingErrs(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         } else {
-            if (count($result) == 0) {
-                return null;
-            } else 
+            if (count($result) == 0) {return null;} else
                 if ($multiple) {
                     $ret = new ModelCollection($model);
                     $ret->add($result);
+                    $ret->setPage($page);
+                    $ret->setPageSize($pageSize);
                     return $ret;
                 } else {
                     if (count($result) == 1) {
@@ -218,8 +226,6 @@ class CrudStorage
 
     private function serializeForDb(Model $model,$page=null,$pageSize=null)
     {
-        if($page === null) $page=$this->page;
-        if($pageSize === null) $pageSize=$this->pageSize;
         $ret = array(
             'domain'       => $model->getDomain(),
             'type'         => 'model',
@@ -256,4 +262,6 @@ class CrudStorage
     private $driver;
 
     private $pageElements;
+
+    const DEFAULT_PAGE_SIZE = 20;
 }

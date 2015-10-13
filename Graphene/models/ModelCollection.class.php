@@ -9,6 +9,15 @@ class ModelCollection implements \Iterator, \Serializable
         $this->acceptedClass = get_class($model);
         $this->content = [];
     }
+    public function setPage($page){
+        $this->pageNo=$page;
+    }
+    public function setPageSize($pageSize){
+        $this->pageSize=$pageSize;
+    }
+
+    public function getPage()      {return $this->pageNo;  }
+    public function getPageSize()  {return $this->pageSize;}
 
     public function add($model)
     {
@@ -91,5 +100,6 @@ class ModelCollection implements \Iterator, \Serializable
 
     private $content;
     private $nxtUrl,$prvUrl,$curUrl;
+    private $pageNo,$pageSize;
     private $acceptedClass;
 }

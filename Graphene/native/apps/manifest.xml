@@ -11,4 +11,7 @@
     <!-- apps acl -->
     <action name="CREATE"   method="post" query=""/>
     <action name="VALIDATE" method="get"  query="validate/:apikey" />
+
+    <action name="$COLLECTIONS" pars="apps\App" />
+
 </module>

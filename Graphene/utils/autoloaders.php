@@ -1,6 +1,24 @@
 <?php
 use Graphene\Graphene;
 
+function autol_db_drivers($name){
+    $driversPath = 'Graphene\\db\\drivers\\';
+
+    if(str_starts_with($name,$driversPath)){
+        $expl=explode('\\',$name);
+        if($expl[0]==='Graphene'){
+            array_shift($expl);
+        }
+        $name = join(DIRECTORY_SEPARATOR,$expl);
+
+        if(is_dir(G_path($name))){
+            G_Require($name.DIRECTORY_SEPARATOR.'impl.php');
+        }else{
+            G_Require($name . ".php");
+        }
+    }
+}
+
 function autol_namespace($name)
 {
     $expl=explode('\\',$name);
