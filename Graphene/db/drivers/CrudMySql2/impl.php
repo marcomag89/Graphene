@@ -14,4 +14,4 @@ require_once __DIR__.DIRECTORY_SEPARATOR.'utils/MySqlQuery.php';
 require_once __DIR__.DIRECTORY_SEPARATOR.'utils/MySqlTypes.php';
 
 //Interface implementation
-require_once __DIR__.DIRECTORY_SEPARATOR.'masql.php';
+require_once __DIR__.DIRECTORY_SEPARATOR.'CrudMySql2.php';
