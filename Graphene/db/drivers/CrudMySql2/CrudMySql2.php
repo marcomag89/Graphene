@@ -8,7 +8,7 @@ use Graphene\db\drivers\mysql\ModelManager;
 use Graphene\db\drivers\mysql\StorageRequest;
 use Graphene\db\CrudDriver;
 
-class masql implements CrudDriver{
+class CrudMySql2 implements CrudDriver{
 
     public function __construct($dbConfig){
         $this->configManager     = new ConfigManager($dbConfig);
