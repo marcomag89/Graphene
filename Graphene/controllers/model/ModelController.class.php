@@ -48,7 +48,7 @@ class ModelController
     private function getBasicStruct()
     {
         return array(
-            'id' => Model::STRING . Model::NOT_EMPTY,
+            'id'      => Model::UID . Model::NOT_EMPTY,
             'version' => Model::INTEGER . Model::NOT_EMPTY
         );
     }

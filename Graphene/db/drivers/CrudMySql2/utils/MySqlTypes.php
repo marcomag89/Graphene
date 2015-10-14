@@ -14,6 +14,7 @@ class MySqlTypes
 
     public static function convertTypes($types){
         $texpl = explode(Model::CHECK_SEP, $types);
+        var_dump($types);
         unset($texpl[0]);
         array_values($texpl);
         $ret = '';

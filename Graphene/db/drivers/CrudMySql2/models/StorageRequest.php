@@ -110,8 +110,8 @@ class StorageRequest
         $tempId = $nJson['content']['id'];
         unset ($nJson['content']);
         $nJson['content']['id'] = $tempId;
-        $nJson['page']     = self::DEFAULT_PAGE;
-        $nJson['pageSize'] = self::DEFAULT_PAGE_SIZE;
+        //$nJson['page']     = self::DEFAULT_PAGE;
+        //$nJson['pageSize'] = self::DEFAULT_PAGE_SIZE;
         return $nJson;
     }
 
