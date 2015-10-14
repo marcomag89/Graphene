@@ -26,15 +26,12 @@ class MySqlTypes
                 case Model::DECIMAL:  {$ret = ' DOUBLE';      break; }
                 case Model::INTEGER:  {$ret = ' INT(11)';     break; }
                 case Model::STRING:   {$ret = ' VARCHAR(45)'; break; }
-                case Model::UID:      {$ret = ' VARCHAR(32)'; break; }
+                case Model::UID:      {$ret = ' VARCHAR(11)'; break; }
                 case Model::DATE:     {$ret = ' DATE';        break; }
                 case Model::DATETIME: {$ret = ' DATETIME';    break; }
                 case Model::MATCH:    {$ret = ' VARCHAR(45)'; break; }
                 case Model::MAX_LEN:  {$ret = ' VARCHAR(' . explode(Model::CHECK_PAR, $t)[1] . ')';        break; }
                 case Model::MIN_LEN:  {$ret = ' VARCHAR(' . (45 + explode(Model::CHECK_PAR, $t)[1]) . ')'; break; }
-                case Model::NOT_NULL: {$ret = $ret . ' NOT NULL';                                          break; }
-                case Model::UID:      {$ret = $ret . ' VARCHAR(11)';                                       break; }
-
                 case Model::ENUM:     {
                     $elems = explode(',', explode(Model::CHECK_PAR, $t)[1]);
                     $tp = ' ENUM(';
@@ -46,7 +43,7 @@ class MySqlTypes
                     $ret = $tp;
                     break;
                 }
-
+                case Model::NOT_NULL: {$ret = $ret . ' NOT NULL';                                          break; }
                 /* Content checkers */
                 default: {}
             }
