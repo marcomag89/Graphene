@@ -321,10 +321,10 @@ abstract class Model implements \Serializable
     public function onSerialize()
     {}
     public function getCustomPrefix(){
-        return substr($this->getModelName(), 0, 7);
+        return substr($this->getModelName(), 0, self::PREFIX_UID_LENGTH);
     }
     public function getIdPrefix(){
-        $prefix = strtoupper(str_pad($this->getCustomPrefix(),7,'0'));
+        $prefix = strtoupper(str_pad($this->getCustomPrefix(),self::PREFIX_UID_LENGTH,self::PREFIX_UID_FILLER));
         return $prefix;
     }
 
@@ -402,4 +402,15 @@ abstract class Model implements \Serializable
     const NOT_EMPTY  = '--c_not_empty';    // controllo stringa non vuota
     const MIN_LEN    = '--c_min_len::';    // lunghezza minima del campo
     const MAX_LEN    = '--c_max_len::';    // lunghezza massima del campo
+
+    /**
+     * lunghezza del prefisso degli UID
+    */
+    const PREFIX_UID_LENGTH = 7;
+
+    /**
+     * filler per uid inferiori a prefix_uid_length
+     */
+    const PREFIX_UID_FILLER = '0';
+
 }
