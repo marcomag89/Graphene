@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<injection name="COLLECTIONS">
+    <action name="READ_COLLECTION"      query="collection"                   handler="ReadCollection@Collections.php"     />
+    <action name="READ_ALL_COLLECTION"  query="collection/all"               handler="ReadAllCollection@Collections.php"  />
+    <action name="READ_COLLECTION"      query="collection/:page"             handler="ReadCollection@Collections.php"     />
+    <action name="READ_COLLECTION"      query="collection/:page/:page_size"  handler="ReadCollection@Collections.php"     />
+</injection>

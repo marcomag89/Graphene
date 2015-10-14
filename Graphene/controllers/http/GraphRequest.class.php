@@ -46,9 +46,10 @@ class GraphRequest
         $this->userAgent = $agent;
     }
 
-    public function setHeader($key, $value)
-    {
-        $this->headers[$key] = $value;
+    public function setHeader($key, $value){
+        if($key !== null && $value !== null){
+            $this->headers[strtolower($key)] = $value;
+        }
     }
     // Getters
     public function appendForward(Action $action)
@@ -136,10 +137,8 @@ class GraphRequest
 
     public function getHeader($key)
     {
-        if (! isset($this->headers[$key]))
-            return null;
-        else
-            return $this->headers[$key];
+        if(!array_key_exists(strtolower($key)))return null;
+        else{return $this->headers[strtolower($key)];}
     }
 
     public function getHeaders()
@@ -147,11 +146,13 @@ class GraphRequest
         return $this->headers;
     }
 
-    public function setHeaders($headers = null)
-    {
-        if ($headers === null)
-            $this->headers = array();
-        $this->headers = $headers;
+    public function setHeaders($headers = null){
+        if($headers !== null){
+            $this->headers=[];
+            foreach ($headers as $hk=>$hv){
+                $this->setHeader($hk,$hv);
+            }
+        }
     }
     public function setContextPar($key,$value){
         $this->contextPars[$key]=$value;
