@@ -137,7 +137,7 @@ class GraphRequest
 
     public function getHeader($key)
     {
-        if(!array_key_exists(strtolower($key)))return null;
+        if(!array_key_exists(strtolower($key),$this->headers))return null;
         else{return $this->headers[strtolower($key)];}
     }
 
