@@ -320,7 +320,13 @@ abstract class Model implements \Serializable
 
     public function onSerialize()
     {}
-    public function getIdPrefix(){return strtoupper(substr($this->getModelName(), 0, 4));}
+    public function getCustomPrefix(){
+        return substr($this->getModelName(), 0, 7);
+    }
+    public function getIdPrefix(){
+        $prefix = strtoupper(str_pad($this->getCustomPrefix(),7,'0'));
+        return $prefix;
+    }
 
     private $structs;
 

@@ -84,6 +84,7 @@ class CrudStorage
         $readed = $this->driver->read($this->serializeForDb($model, $page, $pageSize), $query);
         // echo "JSON Letto\n----\n";
         // echo ($readed);
+        var_dump($readed);
         $result = ModelFactory::createByDbSerialization($readed);
         if (is_null($result)) {
             throw new GraphException('Error when read, Stored ' . $model->getModelName() . ' is corrupt' . ModelFactory::getModelParsingErrs(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);

@@ -26,7 +26,7 @@ class MySqlTypes
                 case Model::DECIMAL:  {$ret = ' DOUBLE';      break; }
                 case Model::INTEGER:  {$ret = ' INT(11)';     break; }
                 case Model::STRING:   {$ret = ' VARCHAR(45)'; break; }
-                case Model::UID:      {$ret = ' VARCHAR(11)'; break; }
+                case Model::UID:      {$ret = ' VARCHAR(20)'; break; }
                 case Model::DATE:     {$ret = ' DATE';        break; }
                 case Model::DATETIME: {$ret = ' DATETIME';    break; }
                 case Model::MATCH:    {$ret = ' VARCHAR(45)'; break; }
