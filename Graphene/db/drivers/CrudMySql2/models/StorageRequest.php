@@ -1,6 +1,6 @@
 <?php
 namespace Graphene\db\drivers\mysql;
-
+use Graphene\models\Model;
 
 class StorageRequest
 {
@@ -96,11 +96,28 @@ class StorageRequest
         return $this->requestSettings;
     }
     public function serializeResponse($data){
+        $struct  = $this->getModel()->getFlatTypes();
+        $retData = array();
+        foreach($data as $item){
+            foreach($item as $k=>$val){
+                if(array_key_exists($k,$struct)){
+                    if(str_contains($struct[$k],Model::DATETIME) && $val === '0000-00-00 00:00:00'){$retItem[$k] = null;}
+                    else if(str_contains($struct[$k],Model::BOOLEAN)){
+                        if($val === 1 || $val === '1') $retItem[$k] = true;
+                        else $retItem[$k] = false;
+                    }
+                    else if(str_contains($struct[$k],Model::INTEGER) && ($val !==null || $val!=='')){$retItem[$k]=intval($val);}
+                    else if(str_contains($struct[$k],Model::DECIMAL) && ($val !==null || $val!=='')){$retItem[$k]=floatval($val);}
+                    else $retItem[$k] = $val;
+                }
+            }
+            $retData[]=$retItem;
+        }
         $res = json_decode(json_encode($this->json),true);
         unset ($res['content']);
         $res['collection']=[];
-        foreach($data as $item){
-            $res['collection'][] = $item;
+        foreach($retData as $item){
+            $res['collection'][]= RequestModel::treeFromFlat($item);
         }
         return json_encode($res,JSON_PRETTY_PRINT);
     }
@@ -110,8 +127,6 @@ class StorageRequest
         $tempId = $nJson['content']['id'];
         unset ($nJson['content']);
         $nJson['content']['id'] = $tempId;
-        //$nJson['page']     = self::DEFAULT_PAGE;
-        //$nJson['pageSize'] = self::DEFAULT_PAGE_SIZE;
         return $nJson;
     }
 

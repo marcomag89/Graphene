@@ -96,6 +96,56 @@ class RequestModel{
         return $schema;
     }
 
+    public static function treeFromFlat($rows){
+        $res=array();
+        foreach ($rows as $k => $v) {
+            $expl = explode('_', $k);
+            $tRes = &$res;
+            if (count($expl) > 1) {
+                // goto leaf
+                foreach ($expl as $e) {
+                    if (! isset($tRes[$e])){$tRes[$e] = array();}
+                    $tRes = &$tRes[$e];
+                }
+                // Popolate leaf
+                $tRes = $v;
+            } else $tRes[$k] = $v;
+        }
+        return $res;
+    }
+
+    private function colsToJsonArr($row,$json)
+    {
+        $res = array();
+        $struct = json_decode($json,true)['struct'];
+
+        foreach ($row as $k => $v) {
+            $expl = explode('_', $k);
+            $tRes = &$res;
+            $tStruct = &$struct;
+            if (count($expl) > 1) {
+                // goto leaf
+                foreach ($expl as $e) {
+                    if (! isset($tRes[$e])){
+                        $tRes[$e] = array();
+                        $tStruct  = &$struct[$e];
+                    }
+                    $tRes = &$tRes[$e];
+                }
+                // Popolate leaf
+                $tRes = $v;
+            } else {
+                if(str_contains($tStruct[$k],Model::DATETIME) && $v === '0000-00-00 00:00:00'){$v=null;}
+                else if(str_contains($tStruct[$k],Model::BOOLEAN)){if($v === 1 || $v === '1') $v = true; else $v=false;}
+                else if(str_contains($tStruct[$k],Model::INTEGER) && ($v !==null || $v!=='')){$v=intval($v);}
+                else if(str_contains($tStruct[$k],Model::DECIMAL) && ($v !==null || $v!=='')){$v=floatval($v);}
+
+                $tRes[$k] = $v;
+            }
+        }
+        return $res;
+    }
+
     private
         $flatValues,
         $flatTypes,
