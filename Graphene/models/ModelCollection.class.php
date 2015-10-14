@@ -84,7 +84,7 @@ class ModelCollection implements \Iterator, \Serializable
     {
         $ret=['Collection'=>[]];
         foreach ($this->content as $cnt){
-            $ret['Collection'][] = $cnt->getContent();
+            $ret['Collection'][] = [$cnt->getModelName()=>$cnt->getContent()];
         }
         if($this->prvUrl !== null) $ret['cursor']['prv']=$this->prvUrl;
         if($this->curUrl !== null) $ret['cursor']['cur']=$this->curUrl;

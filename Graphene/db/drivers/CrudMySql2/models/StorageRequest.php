@@ -97,6 +97,7 @@ class StorageRequest
     }
     public function serializeResponse($data){
         $struct  = $this->getModel()->getFlatTypes();
+        $modelName    = $this->getModel()->getName();
         $retData = array();
         foreach($data as $item){
             foreach($item as $k=>$val){
@@ -117,7 +118,7 @@ class StorageRequest
         unset ($res['content']);
         $res['collection']=[];
         foreach($retData as $item){
-            $res['collection'][]= RequestModel::treeFromFlat($item);
+            $res['collection'][]=RequestModel::treeFromFlat($item);
         }
         return json_encode($res,JSON_PRETTY_PRINT);
     }

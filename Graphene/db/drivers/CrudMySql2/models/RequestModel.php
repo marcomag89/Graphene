@@ -17,12 +17,22 @@ class RequestModel{
         $this -> structure          = $structure;
         $this -> content            = $content;
         $this -> domain             = $domain;
+        $this -> name               = $this->parseModelName($domain);
         $this -> flatValues         = $this->contentToFlatArray ($this->content);
         $this -> flatTypes          = $this->contentToFlatArray ($this->structure);
+
         $this -> convertedFlatTypes = MySqlTypes::convertFlatStructTypes($this->flatTypes);
         $this -> modelTableName     = strtolower(str_replace('.', '_', $domain) . '_model');
     }
-
+    private function parseModelName($domain){
+        $expl = explode('.',$domain);
+        $name=$expl[(count($expl)-1)];
+        //echo "\n".$domain.' : '.$name;
+        return $name;
+    }
+    public function getName(){
+        return $this->name;
+    }
     public function getStructure(){
         return $this->struct;
     }
