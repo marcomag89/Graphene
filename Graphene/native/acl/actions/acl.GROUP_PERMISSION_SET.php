@@ -2,6 +2,7 @@
 namespace acl;
 
 use Graphene\controllers\Action;
+use Graphene\controllers\exceptions\GraphException;
 
 class GroupPermissionSet extends Action
 {
