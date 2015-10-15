@@ -11,8 +11,9 @@ class AppPermissionsSet extends Action
         $apiKey = $appProto['apiKey'];
         $permissions = $appProto['permissions'];
         $res = $this->forward('/acl/app/withPermission/'.$apiKey);
-        if($res->getStatusCode() !==200) throw new GraphException('Application not found');
-        $app = json_decode($res->getBody(),true)['App'];
+        $pRes = json_decode($res->getBody(),true);
+        if($res->getStatusCode() !==200) throw new GraphException('App info error: '.$pRes['error']['message'],$pRes['error']['code'],400);
+        $app = $pRes['App'];
         $rPermissions = $app['permissions'];
         $doAdd   =[];
         $doRemove=[];
@@ -32,15 +33,22 @@ class AppPermissionsSet extends Action
         }
         foreach($doRemove as $prm){
             $req = ["AppPermission"=>["apiKey"=>$apiKey,"action"=>$prm]];
-            $this->forward('/acl/app/permission',json_encode($req),'DELETE');
+            $frwRes=$this->forward('/acl/app/permission',json_encode($req),'DELETE');
+            if($frwRes->getStatusCode() !== 200){
+                $errs[]=json_decode($frwRes->getBody(),true);
+            }
         }
 
         foreach($doAdd as $prm){
             $req=["AppPermission"=>["apiKey"=>$apiKey,"action"=>$prm]];
-            $res = $this->forward('/acl/app/permission',json_encode($req),'POST');
+            $frwRes = $this->forward('/acl/app/permission',json_encode($req),'POST');
+            if($frwRes->getStatusCode() !== 200){
+                $errs[]=json_decode($frwRes->getBody(),true);
+            }
         }
 
         $app = json_decode($this->forward('/acl/app/withPermission/'.$apiKey)->getBody(),true);
+        $app['errors']=$errs;
         $this->response->setBody(json_encode($app,JSON_PRETTY_PRINT));
     }
 }

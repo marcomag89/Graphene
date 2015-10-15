@@ -31,17 +31,25 @@ class GroupPermissionSet extends Action
                 $doRemove[]=$permission;
             }
         }
+
+        $errs=[];
         foreach($doRemove as $prm){
             $req = ["Permission"=>["group"=>$group,"action"=>$prm]];
-            $this->forward('/acl/permission',json_encode($req),'DELETE');
+            $frwRes=$this->forward('/acl/permission',json_encode($req),'DELETE');
+            if($frwRes->getStatusCode() !== 200){
+                $errs[]=json_decode($frwRes->getBody(),true);
+            }
         }
 
         foreach($doAdd as $prm){
             $req=["Permission"=>["group"=>$group,"action"=>$prm]];
-            $this->forward('/acl/permission',json_encode($req),'POST');
+            $frwRes=$this->forward('/acl/permission',json_encode($req),'POST');
+            if($frwRes->getStatusCode() !== 200){
+                $errs[]=json_decode($frwRes->getBody(),true);
+            }
         }
-
         $res = json_decode($this->forward('/acl/permission/'.$group)->getBody(),true);
+        $res['errors']=$errs;
         $this->response->setBody(json_encode($res,JSON_PRETTY_PRINT));
     }
 }
