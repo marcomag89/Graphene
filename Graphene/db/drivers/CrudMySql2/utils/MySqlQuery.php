@@ -5,6 +5,7 @@ namespace Graphene\db\drivers;
 use Graphene\db\drivers\mysql\ConfigManager;
 use Graphene\db\drivers\mysql\RequestModel;
 use Graphene\db\drivers\mysql\StorageRequest;
+use \Log;
 
 class MySqlQuery
 {
@@ -80,6 +81,7 @@ class MySqlQuery
         $q = str_replace('<cond>',       $condition, $q);
         $q = str_replace('<paging>',     $paging,    $q);
         //echo $q."\n\n";
+        Log::debug($q);
         return $q;
     }
 
@@ -161,7 +163,7 @@ class MySqlQuery
         $where = '\'1\'=\'1\'';
         // where custom
         if($request->hasWhere()){
-            $where.= $request->getRequestSettings()['where'];
+            $where.=' AND '. $request->getRequestSettings()['where'];
         }
 
         //where in AND per operatori definiti
