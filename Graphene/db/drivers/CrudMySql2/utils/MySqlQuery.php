@@ -163,7 +163,7 @@ class MySqlQuery
         $where = '\'1\'=\'1\'';
         // where custom
         if($request->hasWhere()){
-            $where.=' AND '. $request->getRequestSettings()['where'];
+            $where.=' AND ('. $request->getRequestSettings()['where'].')';
         }
 
         //where in AND per operatori definiti
