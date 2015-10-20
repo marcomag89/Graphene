@@ -45,6 +45,12 @@ Create `settings.json` file into your project root pairs to Graphene folder and 
 ```
 for more details visit [settings.json reference](https://github.com/marcomag89/Graphene/wiki/settings.json)
 
+##Action approach##
+Any http request to Graphene matches an "action". In graphene action mapping is quick and smart, ball actions are collected in separate modules.
+
+###Defining module###
+
+
 ##Wiki##
 we are very excited that you want to use Graphene therefore we are working so that you can use it to its full potential by writing up to date wiki.
 [Go to Graphene wiki](https://github.com/marcomag89/Graphene/wiki)
