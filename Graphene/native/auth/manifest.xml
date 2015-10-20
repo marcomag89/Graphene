@@ -10,7 +10,9 @@
 
 	<action name="LOGIN"    method="post" query="login" 	   />
 	<action name="VALIDATE" method="get"  query="validate/:at" />
+	<action name="LOGOUT"   method="get"  query="logout"       />
 	<action name="LOGOUT"   method="get"  query="logout/:at"   />
+
 
 	<filter name = "AUTH_CHECK" scope="global" />
 </module>

@@ -302,6 +302,18 @@ class Graphene
         return $this->systemToken;
     }
 
+    public function getDoc($actionName){
+        $mods = $this->router->getInstalledModules();
+        foreach($mods as $mod){
+            $modAct=$mod->getActionDocs(true);
+            foreach($modAct as $action){
+                if($action['name'] === $actionName){
+                    return $action;
+                }
+            }
+        }
+    }
+
     const INFO = 'Graphene 0.2b developed by Marco Magnetti [marcomagnetti@gmail.com]';
 
     const VERSION = '0.2b';

@@ -189,8 +189,8 @@ abstract class Action
         return $fw->forward($req);
     }
 
-    function encodeJson($array)
-    {
+
+    function encodeJson($array){
         return json_encode($array, JSON_PRETTY_PRINT);
     }
 
@@ -205,6 +205,7 @@ abstract class Action
     }
 
     public abstract function run();
+    public function getRequestStruct(){return null;}
 
 
     protected $pars;

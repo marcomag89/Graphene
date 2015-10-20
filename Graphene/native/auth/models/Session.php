@@ -12,7 +12,7 @@ class Session extends Model
         $lazy = array();
         $lazy['hostAddress'] = Model::STRING .   Model::NOT_EMPTY;
         $lazy['hostAgent']   = Model::STRING .   Model::MAX_LEN . '256' . Model::NOT_EMPTY;
-        $lazy['apiKey']      = Model::STRING.    Model::MAX_LEN.'256' . Model::NOT_EMPTY;
+        $lazy['apiKey']      = Model::STRING.    Model::MAX_LEN.'256';
         $lazy['enabled']     = Model::BOOLEAN .  Model::NOT_EMPTY;
         $lazy['time']        = Model::DATETIME.  Model::NOT_EMPTY;
         $lazy['user']        = Model::UID.       Model::NOT_EMPTY;

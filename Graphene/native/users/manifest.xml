@@ -11,7 +11,7 @@
 	<action name="VALIDATE" handler="Validate@actions/Validate.php" method="post" query="validate" 	/>
 
 	<!-- CRUD ACTIONS INJECTION-->
-	<action name="$CRUD"        pars="users\User" query-prefix="user/"/>
+	<action name-prefix="USERPFX_" name="$CRUD"        pars="users\User" query-prefix="user/"/>
     <action name="$COLLECTIONS" pars="users\User" />
 
     <filter name = "USER_CHECK" scope = "global" after = "com.graphene.auth.AUTH_CHECK"/>

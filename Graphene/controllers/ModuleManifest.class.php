@@ -59,7 +59,6 @@ class ModuleManifest{
         //Actions
         foreach($rManifest['actions'] as $k=>$action){
             if(array_key_exists('name', $action)){
-                $rManifest['actions'][$k]['name'] = strtoupper($rManifest['actions'][$k]['name']);
 
                 if(!array_key_exists('pars', $action))         $rManifest['actions'][$k]['pars']='';
                 if(!array_key_exists('query-prefix', $action)) $rManifest['actions'][$k]['query-prefix']='';
@@ -70,6 +69,10 @@ class ModuleManifest{
                 if(!array_key_exists('query', $action))          $rManifest['actions'][$k]['query']  = '';
                 if(!array_key_exists('pars', $action))           $rManifest['actions'][$k]['pars']   = '';
                 if(!array_key_exists('query-prefix', $action))   $rManifest['actions'][$k]['query-prefix']='';
+                if (!array_key_exists('name-prefix', $action))   $rManifest['actions']['name-prefix'] = '';
+                if (!array_key_exists('name-postfix', $action))  $rManifest['actions']['name-postfix'] = '';
+
+                $rManifest['actions'][$k]['name'] = strtoupper($rManifest['actions'][$k]['name-prefix'].$rManifest['actions'][$k]['name'].$rManifest['actions'][$k]['name-postfix']);
 
                 $expl = explode('@',$rManifest['actions'][$k]['handler']);
                 $class = $expl[0];
@@ -177,12 +180,13 @@ class ModuleManifest{
                 foreach($stdActions as $k=>$v){
                     if(!str_starts_with($v['name'],'$')){
                         $expl = explode('@',$v['handler']);
-                        $stdActions[$k]['handler']       = $expl[0].'@'.$injectionPath.'/'.$expl[1];
-                        $stdActions[$k]['imported']      = 'true';
-                        if(array_key_exists('pars',$action))
-                            $stdActions[$k]['pars'] = $action['pars'];
-                        if(array_key_exists('query-prefix',$action))
-                            $stdActions[$k]['query-prefix']  = $action['query-prefix'];
+                        $stdActions[$k]['handler']    = $expl[0].'@'.$injectionPath.'/'.$expl[1];
+                        $stdActions[$k]['imported']   = 'true';
+
+                        if(array_key_exists('pars',$action))         $stdActions[$k]['pars']          = $action['pars'];
+                        if(array_key_exists('query-prefix',$action)) $stdActions[$k]['query-prefix']  = $action['query-prefix'];
+                        if(array_key_exists('name-prefix',$action))  $stdActions[$k]['name-prefix']   = $action['name-prefix'];
+                        if(array_key_exists('name-postfix',$action)) $stdActions[$k]['name-postfix']  = $action['name-postfix'];
                     }
                 }
                 $retActions = array_merge($retActions,$this->resolveImports($stdActions));

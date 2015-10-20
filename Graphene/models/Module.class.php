@@ -33,7 +33,9 @@ class Module
             Log::err($e->getMessage());
         }
     }
-
+    public function getManifestManager(){
+        return $this->manifestManager;
+    }
     public function getModelDirectory($modelClass)
     {
         return $this->getModuleDir() . '/' . $this->manifest['info']['models-path'] . '/' . $modelClass . '.php';
@@ -233,17 +235,23 @@ class Module
         }
         return $ret;
     }
-    public function getActionDocs()
+    public function getActionDocs($advanced=false)
     {
         $this->instantiateActions($this->manifest['actions'], new GraphRequest());
         $baseUrl= $_SERVER['SERVER_NAME'].Settings::getInstance()->getPar('baseUrl');
         $ret=array();
         foreach ($this->actions as $action) {
-            $ret[] = array(
+            $index = count($ret);
+            $ret[$index] = [
                 "name"   => $action->getUniqueActionName(),
                 "url"    => $baseUrl.'/'.$action->getActionUrl(),
                 "method" => $action->getHandlingMethod(),
-            );
+            ];
+            if($advanced){
+                $ret[$index]['module']      = $action->getOwnerModule()->getName();
+                $ret[$index]['description'] = 'nd';
+                $ret[$index]['body']        = $action->getRequestStruct();
+            }
         }
         return $ret;
     }
