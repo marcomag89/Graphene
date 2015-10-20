@@ -1,0 +1,18 @@
+{
+  "v" :  "0.2.2",
+  "info": {
+    "version"   : "0.1.0",
+    "name"      : "com.graphene.profile",
+    "namespace" : "profiles",
+    "author"    : "Me [me@mail.com]",
+    "support"   : "meMod.com"
+  },
+  "actions": [
+    {
+      "name"          : "$CRUD",
+      "name-prefix"   : "PROFILE_",
+      "query-prefix"  : "profile/",
+      "pars"          : "profiles\\Profile"
+    }
+  ]
+}

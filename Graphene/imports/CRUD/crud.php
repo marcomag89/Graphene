@@ -13,9 +13,15 @@ class Create extends Action
         $sModel = $model->create();
         $this->sendModel($sModel);
     }
+
+    public function getResponseStruct(){
+        $model = new $this->pars[0]();
+        return [$model->getModelName() => $model->getReadActionStruct()];
+    }
+
     public function getRequestStruct(){
         $model = new $this->pars[0]();
-        return [$model->getModelName()=> $model->defineStruct()];
+        return [$model->getModelName()=> $model->getCreateActionStruct()];
     }
 }
 
@@ -28,6 +34,11 @@ class Read extends Action{
         $model->setId($id);
         $readed = $model->read();
         $this->sendModel($readed);
+    }
+
+    public function getResponseStruct(){
+        $model = new $this->pars[0]();
+        return [$model->getModelName() => $model->getReadActionStruct()];
     }
 }
 
@@ -42,9 +53,14 @@ class Update extends Action
         $this->sendModel($uModel);
     }
 
+    public function getResponseStruct(){
+        $model = new $this->pars[0]();
+        return [$model->getModelName() => $model->getReadActionStruct()];
+    }
+
     public function getRequestStruct(){
         $model = new $this->pars[0]();
-        return [$model->getModelName()=>$model->getStruct()];
+        return [$model->getModelName() => $model->getUpdateActionStruct()];
     }
 }
 
@@ -58,8 +74,14 @@ class Delete extends Action
         $uModel = $model->delete();
         $this->sendMessage($model->getModelName() . ' ' . $model->getId() . ', successfully deleted');
     }
+
+    public function getResponseStruct(){
+        $model = new $this->pars[0]();
+        return [$model->getModelName() => $model->getReadActionStruct()];
+    }
+
     public function getRequestStruct(){
         $model = new $this->pars[0]();
-        return [$model->getModelName()=>$model->getStruct()];
+        return [$model->getModelName()=>$model->getDeleteActionStruct()];
     }
 }

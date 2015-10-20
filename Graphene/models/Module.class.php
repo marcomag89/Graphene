@@ -248,9 +248,13 @@ class Module
                 "method" => $action->getHandlingMethod(),
             ];
             if($advanced){
-                $ret[$index]['module']      = $action->getOwnerModule()->getName();
-                $ret[$index]['description'] = 'nd';
-                $ret[$index]['body']        = $action->getRequestStruct();
+                $ret[$index]['module']        = $action->getOwnerModule()->getName();
+                $ret[$index]['description']   = 'nd';
+
+                $reqBody = $action->getRequestStruct();
+                $resBody = $action->getResponseStruct();
+                if($reqBody !== null) $ret[$index]['request-body']  = $reqBody;
+                if($resBody !== null) $ret[$index]['response-body'] = $resBody;
             }
         }
         return $ret;

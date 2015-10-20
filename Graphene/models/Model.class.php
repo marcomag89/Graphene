@@ -258,68 +258,45 @@ abstract class Model implements \Serializable
     /**
      * @return CrudDriver | null
      */
-    public function getCustomCrudDriver()
-    {
-        return null;
-    }
+    public function getCustomCrudDriver(){return null;}
 
     /**
      * @return bool
      */
-    public function canCreate()
-    {
-        return true;
-    }
-
-    public function onCreate()
-    {}
+    public function canCreate(){return true;}
+    public function onCreate(){}
 
     /**
      * @return bool
      */
-    public function canRead()
-    {
-        return true;
-    }
-
+    public function canRead(){return true;}
     public function onRead()
     {}
 
     /**
      * @return bool
      */
-    public function canUpdate()
-    {
-        return true;
-    }
-
-    public function onUpdate()
-    {}
+    public function canUpdate(){return true;}
+    public function onUpdate(){}
 
     /**
      * @return bool
      */
-    public function canDelete()
-    {
-        return true;
-    }
+    public function canDelete(){return true;}
+    public function onDelete() {}
 
-    public function onDelete()
-    {}
+    public function canPatch(){return true;}
+    public function onPatch(){}
 
-    public function canPatch()
-    {
-        return true;
-    }
+    public function onSend(){}
+    public function onSerialize(){}
 
-    public function onPatch()
-    {}
+    public function getCreateActionStruct()    {return $this->defineStruct();}
+    public function getReadActionStruct()      {return $this->getStruct();}
+    public function getUpdateActionStruct()    {return $this->getStruct();}
+    public function getDeleteActionStruct()    {return $this->getStruct();}
+    public function getCollectionActionStruct(){return $this->getStruct();}
 
-    public function onSend()
-    {}
-
-    public function onSerialize()
-    {}
     public function getCustomPrefix(){
         return substr($this->getModelName(), 0, self::PREFIX_UID_LENGTH);
     }

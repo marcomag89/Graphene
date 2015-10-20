@@ -8,6 +8,6 @@ class DocActionByName extends Action {
         $action = $this->request->getPar('action');
         $action = strtoupper(str_replace('__','.',$action));
         $doc = Graphene::getInstance()->getDoc($action);
-        $this->response->setBody(json_encode($doc,JSON_PRETTY_PRINT));
+        $this->response->setBody(json_encode(["DocAction"=>$doc],JSON_PRETTY_PRINT));
     }
 }

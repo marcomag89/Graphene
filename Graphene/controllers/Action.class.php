@@ -205,8 +205,8 @@ abstract class Action
     }
 
     public abstract function run();
-    public function getRequestStruct(){return null;}
-
+    public function getRequestStruct() {return null;}
+    public function getResponseStruct(){return null;}
 
     protected $pars;
 
