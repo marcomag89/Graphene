@@ -13,8 +13,11 @@ use \Log;
 class Module
 {
 
-    public function __construct($modulePath)
-    {
+    /**
+     * @param  $modulePath
+     * @throws \Graphene\controllers\GraphException
+     */
+    public function __construct($modulePath){
         $this->module_dir = $modulePath;
         $this->manifestManager = new ModuleManifest();
         try{
@@ -33,11 +36,12 @@ class Module
             Log::err($e->getMessage());
         }
     }
+
     public function getManifestManager(){
         return $this->manifestManager;
     }
-    public function getModelDirectory($modelClass)
-    {
+
+    public function getModelDirectory($modelClass){
         return $this->getModuleDir() . '/' . $this->manifest['info']['models-path'] . '/' . $modelClass . '.php';
     }
 
