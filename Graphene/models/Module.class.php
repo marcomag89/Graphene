@@ -241,20 +241,21 @@ class Module
         $baseUrl= $_SERVER['SERVER_NAME'].Settings::getInstance()->getPar('baseUrl');
         $ret=array();
         foreach ($this->actions as $action) {
-            $index = count($ret);
-            $ret[$index] = [
-                "name"   => $action->getUniqueActionName(),
-                "url"    => $baseUrl.'/'.$action->getActionUrl(),
-                "method" => $action->getHandlingMethod(),
-            ];
-            if($advanced){
-                $ret[$index]['module']        = $action->getOwnerModule()->getName();
-                $ret[$index]['description']   = 'nd';
-
-                $reqBody = $action->getRequestStruct();
-                $resBody = $action->getResponseStruct();
-                if($reqBody !== null) $ret[$index]['request-body']  = $reqBody;
-                if($resBody !== null) $ret[$index]['response-body'] = $resBody;
+            if($action instanceof Action){
+                $index = count($ret);
+                $ret[$index] = [
+                    "name"   => $action->getUniqueActionName(),
+                    "url"    => $baseUrl.'/'.$action->getActionUrl(),
+                    "method" => $action->getHandlingMethod(),
+                ];
+                if($advanced){
+                    $ret[$index]['module']        = $action->getOwnerModule()->getName();
+                    $ret[$index]['description']   = $action->getDescription();
+                    $reqBody = $action->getRequestStruct();
+                    $resBody = $action->getResponseStruct();
+                    if($reqBody !== null) $ret[$index]['request-body']  = $reqBody;
+                    if($resBody !== null) $ret[$index]['response-body'] = $resBody;
+                }
             }
         }
         return $ret;

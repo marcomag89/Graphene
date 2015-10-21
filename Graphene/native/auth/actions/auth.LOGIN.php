@@ -35,4 +35,13 @@ class Login extends Action
 
         $this->sendModel($created);
     }
+    public function getRequestStruct(){
+        $user=new User();
+        return ['User'=>$user->defineStruct()];
+    }
+
+    public function getResponseStruct(){
+        $session=new Session();
+        return ['User'=>$session->getStruct()];
+    }
 }

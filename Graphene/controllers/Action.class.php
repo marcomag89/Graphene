@@ -118,6 +118,14 @@ abstract class Action
     {
         return $this->ownerModule;
     }
+    public function getDescription(){
+        if($this->doc === null && file_exists($this->actionSettings['doc'])){
+            $this->doc = file_get_contents($this->actionSettings['doc']);
+        }else{
+            $this->doc='unavailable doc in: '.$this->actionSettings['doc'];
+        }
+        return $this->doc;
+    }
 
     final function sendError($err_code, $err_message, $httpCode = null)
     {
@@ -209,6 +217,7 @@ abstract class Action
     public function getResponseStruct(){return null;}
 
     protected $pars;
+    private   $doc=null;
 
     protected $actionSettings;
 
