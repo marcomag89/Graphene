@@ -8,7 +8,7 @@ class GetClientStatus extends Action {
         $app = $this->request->getContextPar('acl-app-info');
         $ret=[
             "user"=>[
-                "mail"        => $this->request->getContextPar('user')['email'],
+                "name"        => $this->request->getContextPar('user')['username'],
                 "groups"      => $this->request->getContextPar('acl-groups'),
                 "permissions" => $this->request->getContextPar('acl-permissions')
             ],

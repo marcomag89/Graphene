@@ -16,7 +16,7 @@ class Login extends Action
         $apiKey = $this->request->getContextPar('acl-app-info')['apiKey'];
         $userData = json_decode($this->request->getBody(),true)['User'];
         $user = new User();
-        $user->setEmail($userData['email']);
+        $user->setUsername($userData['username']);
         $user->setPassword($userData['password']);
         $res  = $this->forward   ('/users/validate', $user->serialize());
         if ($res->getStatusCode() !== 200) throw new GraphException('email or password invalid',403);

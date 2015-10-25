@@ -51,9 +51,13 @@ class Config extends Action {
 
     }
     private $basicPermissions =[
-        'AUTH.LOGIN', 'AUTH.VALIDATE', 'AUTH.LOGOUT',
+        'AUTH.LOGIN',
+        'AUTH.VALIDATE',
+        'AUTH.LOGOUT',
         'USERS.VALIDATE',
-        'ACL.PERMISSION_BY_USER', 'ACL.PERMISSION_GROUP_READ', 'ACL.GROUP_READ'
+        'ACL.PERMISSION_BY_USER',
+        'ACL.PERMISSION_GROUP_READ',
+        'ACL.GROUP_READ'
     ];
 
     private $adminAppPermission =['SYSTEM.*', 'USERS.*', 'AUTH.*', 'APPS.*', 'ACL.*'];

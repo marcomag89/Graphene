@@ -108,6 +108,7 @@ class AclCheck extends Filter{
         return $groups;
     }
     private $aclExceptions=[
-        'SYSTEM.GET_CLIENT_STATUS'
+        'SYSTEM.GET_CLIENT_STATUS',
+        'SYSTEM.DOC_ACTION_BY_NAME'
     ];
 }

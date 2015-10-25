@@ -10,10 +10,10 @@ class User extends Model
 
     public function defineStruct()
     {
-        $mailMatch="/^[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+(?:.[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/";
+        //$mailMatch="/^[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+(?:.[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/";
         return array(
-            'email'    => Model::MATCH.$mailMatch . Model::NOT_NULL . Model::UNIQUE . Model::MAX_LEN . '130'. Model::SEARCHABLE,
-            'password' => Model::STRING . Model::NOT_NULL
+            'username' => Model::STRING. Model::MIN_LEN.'4'. Model::MAX_LEN.'42'. Model::NOT_NULL. Model::NOT_EMPTY,
+            'password' => Model::STRING. Model::NOT_NULL
         );
     }
 

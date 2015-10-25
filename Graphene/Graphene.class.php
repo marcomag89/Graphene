@@ -55,7 +55,7 @@ class Graphene
      */
     public function start()
     {
-        //sleep(5);
+        //sleep(2);
         $this->requests = array();
         $this->createRequest();
         $request=$this->getRequest();
