@@ -314,9 +314,10 @@ class Graphene
         }
     }
 
-    const INFO = 'Graphene 0.2b developed by Marco Magnetti [marcomagnetti@gmail.com]';
 
-    const VERSION = '0.2b';
+    const VERSION = '0.2.3 rc1';
+    const V_NAME  = 'aluminium';
+    const INFO    = 'Graphene '.self::VERSION.' ['.self::V_NAME.'] developed by Marco Magnetti [marcomagnetti@gmail.com]';
 
     private $startTime, $endTime;
 
