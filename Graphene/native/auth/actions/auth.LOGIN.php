@@ -3,10 +3,7 @@ namespace auth;
 
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
-use Graphene\controllers\http\GraphRequest;
-use auth\AuthRequest;
 use users\User;
-use auth\Session;
 
 class Login extends Action
 {
@@ -14,6 +11,7 @@ class Login extends Action
     public function run()
     {
         $apiKey = $this->request->getContextPar('acl-app-info')['apiKey'];
+
         $userData = json_decode($this->request->getBody(),true)['User'];
         $user = new User();
         $user->setUsername($userData['username']);
@@ -32,7 +30,6 @@ class Login extends Action
         $session -> createAccessToken();
         $session -> setUser($user['id']);
         $created = $session->create();
-
         $this->sendModel($created);
     }
     public function getRequestStruct(){
