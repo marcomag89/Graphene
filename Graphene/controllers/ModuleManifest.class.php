@@ -248,7 +248,7 @@ class ModuleManifest{
         return $ret;
     }
     private function cleanUrl($url,$modulePath){
-        if(!is_absolute_path($url)) $url = $modulePath.'/'.trim($url,DIRECTORY_SEPARATOR);
+        if(!is_absolute_path($url)) $url = absolute_from_script($modulePath).DIRECTORY_SEPARATOR.trim($url,DIRECTORY_SEPARATOR);
         $expl=explode(DIRECTORY_SEPARATOR,$url);
         $urlArr = [];
         foreach($expl as $dir){
