@@ -33,6 +33,7 @@ class Graphene
     private function __construct()
     {
         $this->startTime = round(microtime(true) * 1000);
+        $this->stats=[];
         date_default_timezone_set('Europe/Rome');
         $this->systemToken = uniqid('SYS_').$this->startTime;
         if ($this->isDebugMode()) {
@@ -183,14 +184,9 @@ class Graphene
      */
     private function sendResponse(GraphResponse $response)
     {
+        $this->supportCors();
         http_response_code($response->getStatusCode());
         $h = $response->getHeaders();
-        $h['Access-Control-Allow-Origin']      = '*';
-        $h['Access-Control-Allow-Credentials'] = 'true';
-        $h['Access-Control-Allow-Methods']     = 'GET, POST, OPTIONS, PUT, DELETE, PATCH';
-        $h['Access-Control-Allow-Headers']     = $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'];
-        $h['graphene-time']                    = (round(microtime(true) * 1000) - $this->startTime) . ' ms';
-        $h['server-info']                      = self::VERSION.' on PHP '.phpversion();
         foreach ($h as $khdr => $hdr) {
             header($khdr . ': ' . $hdr);
         }
@@ -314,10 +310,40 @@ class Graphene
         }
     }
 
+    public function startStat($statName,$statId=null){
+        if(!Settings::getInstance()->getPar('stats'))return;
+        if(!array_key_exists($statName,$this->stats))$this->stats[$statName]=[];
+        if($statId === null) $statId = uniqid('stat_');
+        $this->stats[$statName]['last'] = $statId;
+        $this->stats[$statName][$statId]          = [];
+        $this->stats[$statName][$statId]['begin'] = round(microtime(true) * 1000);
+    }
+
+    public function stopStat($statName,$statId=null){
+        if(!Settings::getInstance()->getPar('stats'))return;
+        if($statId === null) $statId = $this->stats[$statName]['last'];
+        $this->stats[$statName][$statId]['end']  = round(microtime(true) * 1000);
+        $this->stats[$statName][$statId]['time'] = $this->stats[$statName][$statId]['end'] - $this->stats[$statName][$statId]['begin'];
+    }
+
+    public function getStats($calculateAverages=false){
+        if($calculateAverages){
+            foreach($this->stats as $statId=>$stats){
+                $sum=0;
+                foreach($stats as $id=>$stat){
+                    if($id !== 'last'){
+                        if(array_key_exists('time',$stat))$sum += $stat['time'];
+                    }
+                }
+                $this->stats[$statId]['averageTime']=$sum/(count($stats)-1);
+            }
+        }
+        return ['Graphene Stats'=>$this->stats];
+    }
 
     const VERSION = '0.2.3 rc1';
     const V_NAME  = 'aluminium';
-    const INFO    = 'Graphene '.self::VERSION.' ['.self::V_NAME.'] developed by Marco Magnetti [marcomagnetti@gmail.com]';
+    const INFO    = 'Graphene 0.2.3 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
 
     private $startTime, $endTime;
 
@@ -330,6 +356,6 @@ class Graphene
     private $storage;
 
     private $systemToken;
-
+    private $stats;
     private static $instance = null;
 }

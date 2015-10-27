@@ -16,7 +16,7 @@ class UsersByGroup extends Action
             foreach($userGroups as $uGroup){
                 $res = $this->forward('/users/user/'.$uGroup->getUserId());
                 if($res->getStatusCode() !== 200) Log::err('user: '.$uGroup->getUserId().' not found');
-                else $ret[] = json_decode($res->getBody(),true)['User']['email'];
+                else $ret[] = json_decode($res->getBody(),true)['User']['username'];
             }
         }
         $this->response->setBody(

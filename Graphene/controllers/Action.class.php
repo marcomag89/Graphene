@@ -50,11 +50,15 @@ abstract class Action
 
     final public function start()
     {
+        $startId=uniqid();
         $this->response = new GraphResponse();
         $this->response->setHeader('content-type', 'application/json');
         try {
+            Graphene::getInstance()->startStat('Action run','['.$startId.'] '.$this->getUniqueActionName());
             $this->run();
+            Graphene::getInstance()->stopStat('Action run','['.$startId.'] '.$this->getUniqueActionName());
         } catch (Exception $e) {
+            Graphene::getInstance()->stopStat('Action run','['.$startId.'] '.$this->getUniqueActionName());
             $this->onError($e);
         }
         return $this->response;
@@ -169,6 +173,8 @@ abstract class Action
 
     protected function forward($url, $body = null, $method = null)
     {
+        $statId=uniqid();
+        Graphene::getInstance()->startStat('RequestForwarding',$url.' : '.$statId);
         $req = new GraphRequest(true);
         $req->setUrl($url);
         /* Creazione metodo */
@@ -194,7 +200,9 @@ abstract class Action
         $req->appendForward($this);
         /* Forwarding */
         $fw = $this->getFramework();
-        return $fw->forward($req);
+        $res=$fw->forward($req);
+        Graphene::getInstance()->stopStat('RequestForwarding',$url.' : '.$statId);
+        return $res;
     }
 
 

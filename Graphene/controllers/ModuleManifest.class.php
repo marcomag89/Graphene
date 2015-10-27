@@ -8,12 +8,18 @@ use \Log;
 
 class ModuleManifest{
     public function __construct($modulePath=null){
+        if(self::$cache == null)self::$cache=[];
         if($modulePath !== null){
             $this->read($modulePath);
         }
     }
 
     public function read($modulePath){
+        if(array_key_exists(self::$cache[$modulePath])){
+            $this->manifest=self::$cache[$modulePath];
+        }
+
+        Graphene::getInstance()->startStat('loadManifest',$modulePath);
         $this->modulePath=$modulePath;
         $manifest = array();
         $rManifest = $this->loadJson($modulePath);
@@ -133,7 +139,10 @@ class ModuleManifest{
         }
         //Log::debug("\n-------\nLOADED MANIFEST\n--------\n".json_encode($manifest,JSON_PRETTY_PRINT));
         //print_r($manifest);
+        self::$cache[$modulePath]=$manifest;
         $this->manifest = $manifest;
+        Graphene::getInstance()->stopStat('loadManifest',$modulePath);
+
     }
 
     private function parseCommas($parsString){
@@ -271,6 +280,7 @@ class ModuleManifest{
     public function getManifest(){
        return $this->manifest;
     }
+    private static $cache;
     private $modulePath;
     private $manifest;
 }

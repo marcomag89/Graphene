@@ -86,7 +86,12 @@ class Filter
         $this->module  = $mod;
         $this->action  = $action;
         
-        if ($this->isHandled($mod, $action)) { $this->run(); }
+        if ($this->isHandled($mod, $action)) {
+            $startId=md5(uniqid(true));
+            Graphene::getInstance()->startStat('Filter run','['.$startId.'] '.$this->getName());
+            $this->run();
+            Graphene::getInstance()->stopStat('Filter run','['.$startId.'] '.$this->getName());
+        }
         return $this->isOk();
     }
     public function getSettings(){

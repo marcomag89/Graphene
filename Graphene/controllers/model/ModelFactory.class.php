@@ -30,7 +30,8 @@ class ModelFactory
                         $ret[] = $model;
                     } else {
                         self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
-                        echo self::$LAST_BEAN->getLastTestErrors();
+                        //TODO something else
+                        //echo self::$LAST_BEAN->getLastTestErrors();
                     }
                 }
                 // if(count($ret)==0)return null;

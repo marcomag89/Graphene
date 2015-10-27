@@ -1,6 +1,7 @@
 <?php
 namespace Graphene\db;
 
+use Graphene\Graphene;
 use Graphene\models\Model;
 use Graphene\controllers\ExceptionsCodes;
 use Graphene\controllers\model\ModelFactory;
@@ -43,17 +44,23 @@ class CrudStorage
      */
     public function create(Model $model)
     {
+        Graphene::getInstance()->startStat('storageCreate');
         Log::debug('calling storage driver for create');
         $model->setLazy(false);
-        if (! $model->isValid())
-            throw new GraphException('Model, ' . $model->getModelName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
+        if (! $model->isValid()) {
+            Graphene::getInstance()->stopStat('storageCreate');
+            throw new GraphException('Model, ' . $model->getModelName() . ' is not valid for storage: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN, 400);
+        }
         $model->setVersion(1);
         $model->setId(uniqid($model->getIdPrefix()));
         $created = $this->driver->create($this->serializeForDb($model));
-        if (($retb = ModelFactory::createByDbSerialization($created)) == null)
-            throw new GraphException('Error when create, Stored ' . $model->getModelName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
+        if (($retb = ModelFactory::createByDbSerialization($created)) == null) {
+            Graphene::getInstance()->stopStat('storageCreate');
+            throw new GraphException('Error when create, Stored ' . $model->getModelName() . ' is corrupt', ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN, 400);
+        }
         else{
-        	return $retb[0];
+            Graphene::getInstance()->stopStat('storageCreate');
+            return $retb[0];
         }
     }
 
@@ -72,7 +79,9 @@ class CrudStorage
      */
     public function read(Model $model, $multiple = false, $query = null, $page = null, $pageSize = null)
     {
+
         Log::debug('calling storage driver for read');
+        Graphene::getInstance()->startStat('storageRead');
         if(!$multiple) {
             $page     = 1;
             $pageSize = 2;}
@@ -86,19 +95,26 @@ class CrudStorage
         // echo ($readed);
         $result = ModelFactory::createByDbSerialization($readed);
         if (is_null($result)) {
+            Graphene::getInstance()->stopStat('storageRead');
             throw new GraphException('Error when read, Stored ' . $model->getModelName() . ' is corrupt' . ModelFactory::getModelParsingErrs(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN,400);
         } else {
-            if (count($result) == 0) {return null;} else
+            if (count($result) == 0) {
+                Graphene::getInstance()->stopStat('storageRead');
+                return null;
+            } else
                 if ($multiple) {
                     $ret = new ModelCollection($model);
                     $ret->add($result);
                     $ret->setPage($page);
                     $ret->setPageSize($pageSize);
+                    Graphene::getInstance()->stopStat('storageRead');
                     return $ret;
                 } else {
                     if (count($result) == 1) {
+                        Graphene::getInstance()->stopStat('storageRead');
                         return $result[0];
                     } else {
+                        Graphene::getInstance()->stopStat('storageRead');
                         throw new GraphException("Unexpected result, loaded must be single model", 5002, 500);
                     }
                 }

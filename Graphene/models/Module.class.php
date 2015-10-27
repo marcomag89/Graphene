@@ -70,6 +70,7 @@ class Module
             if ($action->isHandled()) {
                 Log::debug($action->getUniqueActionName().' is handled');
                 $this->currentAction = $action;
+                Graphene::getInstance()->stopStat('DispatchingTime',$request->getMethod().' '.$request->getUrl().' '.$request->getContextPar('dispatchingId'));
                 return $action->start();
             } else
                 $this->currentAction = null;

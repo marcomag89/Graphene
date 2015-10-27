@@ -44,6 +44,8 @@ class GrapheneRouter
      * @return GraphResponse
      */
     public function dispatch(GraphRequest $request){
+        $request->setContextPar('dispatchingId',uniqid());
+        Graphene::getInstance()->startStat('DispatchingTime',$request->getMethod().' '.$request->getUrl().' '.$request->getContextPar('dispatchingId'));
         $response = null;
         $url = url_trimAndClean($request->getUrl());
         foreach ($this->modules as $dir => $module) {
