@@ -234,7 +234,7 @@ class ModelChecker
 
     private function checkDouble($val, $type)
     {
-        return $val === null || is_double($val) || doubleval($val);
+        return $val === null || is_double($val) || is_integer($val) || intval($val) || doubleval($val);
     }
 
     private function checkEnum($val, $type)

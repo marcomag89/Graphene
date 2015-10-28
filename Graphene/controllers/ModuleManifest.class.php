@@ -15,7 +15,7 @@ class ModuleManifest{
     }
 
     public function read($modulePath){
-        if(array_key_exists(self::$cache[$modulePath])){
+        if(array_key_exists($modulePath,self::$cache)){
             $this->manifest=self::$cache[$modulePath];
         }
 

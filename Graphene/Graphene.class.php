@@ -312,32 +312,28 @@ class Graphene
 
     public function startStat($statName,$statId=null){
         if(!Settings::getInstance()->getPar('stats'))return;
-        if(!array_key_exists($statName,$this->stats))$this->stats[$statName]=[];
+        if(!array_key_exists($statName,$this->stats)){
+            $this->stats[$statName]=['main'=>[]];
+
+        }
         if($statId === null) $statId = uniqid('stat_');
-        $this->stats[$statName]['last'] = $statId;
+        $this->stats[$statName]['main']['last'] = $statId;
         $this->stats[$statName][$statId]          = [];
         $this->stats[$statName][$statId]['begin'] = round(microtime(true) * 1000);
     }
 
     public function stopStat($statName,$statId=null){
         if(!Settings::getInstance()->getPar('stats'))return;
-        if($statId === null) $statId = $this->stats[$statName]['last'];
+        if($statId === null) $statId = $this->stats[$statName]['main']['last'];
         $this->stats[$statName][$statId]['end']  = round(microtime(true) * 1000);
         $this->stats[$statName][$statId]['time'] = $this->stats[$statName][$statId]['end'] - $this->stats[$statName][$statId]['begin'];
+        $this->stats[$statName]['main']['totalTime'] = $this->stats[$statName]['main']['totalTime'] += $this->stats[$statName][$statId]['time'];
+        $this->stats[$statName]['main']['count']++;
+        $this->stats[$statName]['main']['average']=$this->stats[$statName]['main']['totalTime']/$this->stats[$statName]['main']['count'];
+
     }
 
     public function getStats($calculateAverages=false){
-        if($calculateAverages){
-            foreach($this->stats as $statId=>$stats){
-                $sum=0;
-                foreach($stats as $id=>$stat){
-                    if($id !== 'last'){
-                        if(array_key_exists('time',$stat))$sum += $stat['time'];
-                    }
-                }
-                $this->stats[$statId]['averageTime']=$sum/(count($stats)-1);
-            }
-        }
         return ['Graphene Stats'=>$this->stats];
     }
 

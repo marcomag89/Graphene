@@ -141,6 +141,7 @@ class AclCheck extends Filter{
     private static $cache = null;
     private $aclExceptions=[
         'SYSTEM.GET_CLIENT_STATUS',
-        'SYSTEM.DOC_ACTION_BY_NAME'
+        'SYSTEM.DOC_ACTION_BY_NAME',
+        'SYSTEM.STAT',
     ];
 }

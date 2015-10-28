@@ -7,7 +7,9 @@
             author="Marco Magnetti [marcomagnetti@gmail.com]"
             />
 
-    <action method="post" query="config"       name = "CONFIG"                    />
+    <action method="post"  query="config"       name = "CONFIG"                   />
+    <action method="post"  query="stat"         name = "STAT"                     />
+
     <action method="get"  query="status"       name = "GET_STATUS"                />
     <action method="get"  query="modules"      name = "GET_MODULES"               />
     <action method="get"  query="client"       name = "GET_CLIENT_STATUS"         />
