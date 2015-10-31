@@ -11,7 +11,7 @@ class Create extends Action
         $model = new $this->pars[0]();
         $model = $model::getByRequest();
         $sModel = $model->create();
-        $this->sendModel($sModel);
+        $this->send($sModel);
     }
 
     public function getResponseStruct(){
@@ -33,7 +33,7 @@ class Read extends Action{
         $id = $this->request->getPar('id');
         $model->setId($id);
         $readed = $model->read();
-        $this->sendModel($readed);
+        $this->send($readed);
     }
 
     public function getResponseStruct(){
@@ -50,7 +50,7 @@ class Update extends Action
         $model = new $this->pars[0]();
         $model = $model::getByRequest();
         $uModel = $model->update();
-        $this->sendModel($uModel);
+        $this->send($uModel);
     }
 
     public function getResponseStruct(){
@@ -72,7 +72,7 @@ class Delete extends Action
         $model = new $this->pars[0]();
         $model = $model::getByRequest();
         $uModel = $model->delete();
-        $this->sendMessage($model->getModelName() . ' ' . $model->getId() . ', successfully deleted');
+        $this->send($model->getModelName() . ' ' . $model->getId() . ', successfully deleted');
     }
 
     public function getResponseStruct(){

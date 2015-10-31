@@ -171,10 +171,11 @@ class ModelController
      */
     public function serialize(Model $model)
     {
-        $ret = array(
-            $model->getModelName() => $model->getContent()
-        );
-        return json_encode($ret,JSON_PRETTY_PRINT);
+        return json_encode($this->getData($model),JSON_PRETTY_PRINT);
+    }
+
+    public function getData(Model $model){
+        return [$model->getModelName() => $model->getContent()];
     }
 
     /*

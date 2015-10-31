@@ -10,25 +10,34 @@ class GraphRequest
     public function __construct()
     {
         $this->url     = null;
-        $this->pars    = array();
-        $this->headers = array();
-        $this->contextPars = array();
+        $this->pars    = [];
+        $this->headers = [];
+        $this->data    = [];
+        $this->contextPars = [];
     }
-    
+    public function setData($data){
+        $this->data=$data;
+    }
+
+    public function getData(){
+        return $this->data;
+    }
+
     // Setters
     public function setMethod($method)
     {
         $this->method = $method;
     }
 
-    public function setBody($body)
-    {
-        $this->body = $body;
+    public function setBody($body){
+        $this->data = json_decode($body,true);
     }
 
     public function setPars($pars)
     {
-        $this->pars = $pars;
+        foreach($pars as $park=>$parv){
+            $this->pars[strtolower($park)] = $parv;
+        }
     }
 
     public function setUrl($url)
@@ -72,7 +81,7 @@ class GraphRequest
 
     public function getBody()
     {
-        return $this->body;
+        return json_encode($this->data,JSON_PRETTY_PRINT);
     }
 
     public function getIp()
@@ -117,9 +126,6 @@ class GraphRequest
     public function getPar($parName)
     {
         $parName = strtolower($parName);
-        foreach($_GET as $gKey=>$gVal){
-            if($parName === strtolower($gKey)){return $gVal;}
-        }
         if (array_key_exists($parName,$this->pars)) {
             return $this->pars[$parName];
         } else return null;
@@ -154,13 +160,15 @@ class GraphRequest
             }
         }
     }
+
     public function setContextPar($key,$value){
         $this->contextPars[$key]=$value;
     }
+
     public function getContextPar($key){
         if(array_key_exists($key,$this->contextPars))return $this->contextPars[$key];
         else return null;
     }
 
-    private $ip, $method, $url, $pars, $headers, $body, $userAgent, $contextPars;
+    private $ip, $method, $url, $pars, $headers, $data, $userAgent, $contextPars;
 }

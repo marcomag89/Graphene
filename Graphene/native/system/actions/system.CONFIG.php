@@ -10,45 +10,54 @@ class Config extends Action {
         $req=json_decode($this->request->getBody(),true)['Config'];
 
         //Creating user
-        $res  = $this->forward('/users/user',json_encode(["User"=>$req['admin']]));
-        $parsedUserResponse = json_decode($res->getBody(),true);
-        if($res->getStatusCode() !== 200){throw new GraphException('User creation error: '.$parsedUserResponse['error']['message'],$res->getStatusCode());}
-        $userId=$parsedUserResponse['User']['id'];
+        $res    = $this->forward('/users/user',["User"=>$req['admin']]);
+        $userId = $res->getData()['User']['id'];
+
         //Set basic user permissions
-        $everyonePermissionRes = $this->forward('/acl/permission/',json_encode([
+        $everyonePermissionRes = $this->forward('/acl/permission/',[
             "Permission"=>[
                 "group"       => Group::$everyoneGroupName,
                 "permissions" => $this->basicPermissions
             ]
-        ]),'PUT');
-        if($everyonePermissionRes->getStatusCode() !== 200)throw new GraphException('Error when creating default user permissions');
-        $groupInfo = json_decode($everyonePermissionRes->getBody(),true)['PermissionSet'];
+        ],'PUT');
+        $groupInfo = $everyonePermissionRes->getData()['PermissionSet'];
+
 
         //Create admin application
-        $appCreateRes = $this->forward('/apps',json_encode(["App"=>["appName"=>'GrapheneAdmin',"appAuthor"=>'Graphene team']]));
-        $appCreated = json_decode($appCreateRes->getBody(),true);
-        if($appCreateRes->getStatusCode() !== 200)
-            throw new GraphException('Error when creating management app: '.$appCreated['error']['message'],$appCreated['error']['errorCode']); $apiKey=$appCreated['App']['apiKey'];
-        $appPermissionsRes=$this->forward('/acl/app/permission/',json_encode([
+        $appCreateRes = $this->forward('/apps',[
             "App"=>[
-                "apiKey"=>$apiKey,
-                "permissions"=>$this->adminAppPermission
+                "appName"   => 'GrapheneAdmin',
+                "appAuthor" => 'Graphene team'
             ]
-        ]),'PUT');
-        if($appPermissionsRes->getStatusCode() !== 200)throw new GraphException('Error when creating management app permissions');
-        $appInfo=json_decode($appPermissionsRes->getBody(),true)['App'];
+        ]);
+
+        $appCreated        = $appCreateRes->getData();
+        $apiKey            = $appCreated['App']['apiKey'];
+        $appPermissionsRes = $this->forward('/acl/app/permission/',[
+            "App"=>[
+                "apiKey"      => $apiKey,
+                "permissions" => $this->adminAppPermission
+            ]
+        ], 'PUT');
+        $appInfo=$appPermissionsRes->getData()['App'];
 
         //Adding user to SUPER_ADMIN group [Enabling ACL]
-        $groupRes = $this->forward('/acl/userGroup',json_encode(["UserGroup"=>["userId"=>$userId,"group"=>Group::$superUserGroupName]]));
-        if($groupRes->getStatusCode() !== 200){throw new GraphException($groupRes->getBody(),$groupRes->getStatusCode());}
+        $groupRes = $this->forward('/acl/userGroup',[
+            "UserGroup"=>[
+                "userId"=>$userId,
+                "group"=>Group::$superUserGroupName
+            ]
+        ]);
 
-        $baseConfig=["Configuration"=>[
-            "administrator"     => $req['admin'],
-            "defaultUserGroup"  => $groupInfo,
-            "adminApp"          => $appInfo
-        ]];
-        $this->response->setBody(json_encode($baseConfig,JSON_PRETTY_PRINT));
+        $baseConfig=[
+            "Configuration"=>[
+                "administrator"     => $req['admin'],
+                "defaultUserGroup"  => $groupInfo,
+                "adminApp"          => $appInfo
+            ]
+        ];
 
+        $this->response->setData($baseConfig);
     }
     private $basicPermissions =[
         'AUTH.LOGIN',

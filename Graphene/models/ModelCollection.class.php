@@ -82,6 +82,10 @@ class ModelCollection implements \Iterator, \Serializable
     }
     public function serialize()
     {
+        return json_encode($this->getData(),JSON_PRETTY_PRINT);
+    }
+
+    public function getData(){
         $ret=['Collection'=>[]];
         foreach ($this->content as $cnt){
             $ret['Collection'][] = [$cnt->getModelName()=>$cnt->getContent()];
@@ -89,8 +93,7 @@ class ModelCollection implements \Iterator, \Serializable
         if($this->prvUrl !== null) $ret['cursor']['prv']=$this->prvUrl;
         if($this->curUrl !== null) $ret['cursor']['cur']=$this->curUrl;
         if($this->nxtUrl !== null) $ret['cursor']['nxt']=$this->nxtUrl;
-
-        return json_encode($ret,JSON_PRETTY_PRINT);
+        return $ret;
     }
 
     public function unserialize($str){}

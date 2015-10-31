@@ -12,17 +12,28 @@ class GraphResponse
         $this->forwarding = $forwarding;
         $this->code = 200;
         $this->headers = array();
+        $this->media   = null;
     }
-    
     // Setters
     public function setStatusCode($status)
     {
         $this->code = $status;
     }
 
+    public function setMedia($mediaFile, $mType=null){
+        if($mType === null)$mType = str_replace('_','/',explode('|',basename($mediaFile))[0]);
+        $this->setHeader('Content-Type',$mType);
+        $this->setHeader("Content-Length",filesize($mediaFile));
+        $this->media = $mediaFile;
+    }
+
+    public function setData($data){
+        $this->data=$data;
+    }
+
     public function setBody($body)
     {
-        $this->body = $body;
+        $this->data = json_decode($body,true);
     }
 
     public function setHeader($key, $value)
@@ -43,7 +54,15 @@ class GraphResponse
 
     public function getBody()
     {
-        return $this->body;
+        return json_encode($this->data,true);
+    }
+
+    public function getData(){
+        return $this->data;
+    }
+
+    public function getMedia(){
+        return $this->media;
     }
 
     public function getHeader($key)
@@ -62,5 +81,5 @@ class GraphResponse
 
     private $forwarding;
 
-    private $code, $headers, $body;
+    private $code, $headers, $data, $media;
 }

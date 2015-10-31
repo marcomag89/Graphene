@@ -16,12 +16,13 @@ class Login extends Action
         $user = new User();
         $user->setUsername($userData['username']);
         $user->setPassword($userData['password']);
-        $res  = $this->forward   ('/users/validate', $user->serialize());
-        if ($res->getStatusCode() !== 200) throw new GraphException('username or password invalid',403);
+
+        try{$res = $this->forward('/users/validate', $user->serialize());}
+        catch(GraphException $e){throw new GraphException('username or password invalid',403);}
 
         // Creazione della sessione
         $session = new Session();
-        $user = json_decode($res->getBody(), true)['User'];
+        $user    = json_decode($res->getBody(), true)['User'];
         $session -> setHostAddress($this->request->getIp());
         $session -> setHostAgent($this->request->getUserAgent());
         $session -> setApiKey($apiKey);
@@ -32,6 +33,7 @@ class Login extends Action
         $created = $session->create();
         $this->sendModel($created);
     }
+
     public function getRequestStruct(){
         $user=new User();
         return ['User'=>$user->defineStruct()];

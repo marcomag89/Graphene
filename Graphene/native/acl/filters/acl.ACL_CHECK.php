@@ -11,6 +11,7 @@ class AclCheck extends Filter{
                 'matches'     => [],
                 'permissions' => [],
                 'groups'      => [],
+                'enabled'     => [],
                 'allows'      => []
             ];
 

@@ -1,4 +1,7 @@
 <?php
+
+date_default_timezone_set('Europe/Rome');
+
 /** @noinspection PhpIncludeInspection */
 require_once G_path('utils/Settings.php');
 
@@ -113,6 +116,19 @@ function fatalErrorShutdownHandler(){
         http_response_code(500);
         print(json_encode(array("fatal"=>array('message'=>'sorry, we have an unknown problem. Check the Graphene errors log','code'=>'500')),JSON_PRETTY_PRINT));;
         error_handler(E_ERROR, $last_error['message'], $last_error['file'], $last_error['line']);
+    }
+}
+
+function rrmdir($dir) {
+    if (is_dir($dir)) {
+        $objects = scandir($dir);
+        foreach ($objects as $object) {
+            if ($object != "." && $object != "..") {
+                if (filetype($dir."/".$object) == "dir") rrmdir($dir."/".$object); else unlink($dir."/".$object);
+            }
+        }
+        reset($objects);
+        rmdir($dir);
     }
 }
 $haveException = false;

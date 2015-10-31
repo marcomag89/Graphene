@@ -4,6 +4,8 @@ namespace Graphene\controllers;
 use Graphene\Graphene;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
+use Graphene\models\Model;
+use Graphene\models\ModelCollection;
 use Graphene\models\Module;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
@@ -53,6 +55,7 @@ abstract class Action
         $startId=uniqid();
         $this->response = new GraphResponse();
         $this->response->setHeader('content-type', 'application/json');
+        $this->response->setHeader('graphene-action',$this->getUniqueActionName());
         try {
             Graphene::getInstance()->startStat('Action run','['.$startId.'] '.$this->getUniqueActionName());
             $this->run();
@@ -64,21 +67,8 @@ abstract class Action
         return $this->response;
     }
 
-    public function getHttpCode($e)
-    {
-        return 500;
-    }
-
-    public function onError($e)
-    {
-        if ($e instanceof GraphException)
-            $this->sendError($e->getCode(), $e->getMessage(), $e->getHttpCode());
-        else 
-            if ($e instanceof Exception)
-                $this->sendError($e->getCode(), $e->getMessage(), $e->getCode());
-            else
-                $this->sendError(5001, 'internal server error', 500);
-    }
+    public function getHttpCode($e) {return 500;}
+    public function onError($e)     {$this->sendException($e);}
 
     private function checkQuery()
     {
@@ -131,38 +121,61 @@ abstract class Action
         return $this->doc;
     }
 
-    final function sendError($err_code, $err_message, $httpCode = null)
-    {
-        if ($httpCode == null)
-            $httpCode = $err_code;
-        $this->response->setStatusCode($httpCode);
-        $unsupported = array(
-            "error" => array(
-                "message" => $err_message,
-                "errorCode" => $err_code
-            )
-        );
-        $this->response->setBody($this->encodeJson($unsupported));
+    function sendException($e){
+        if ($e instanceof GraphException) $this->sendError($e->getCode(), $e->getMessage(), $e->getHttpCode());
+        else{
+            if ($e instanceof Exception) $this->sendError($e->getCode(), $e->getMessage(), $e->getCode());
+            else $this->sendError(5001, 'internal server error', 500);
+        }
     }
 
-    function sendMessage($message)
-    {
-        $unsupported = array(
-            "message" => array(
-                "message" => $message
-            )
-        );
-        $this->response->setBody($this->encodeJson($unsupported));
+    final function sendError($err_code, $err_message, $httpCode = null){
+        if ($httpCode === null) $httpCode = $err_code;
+        $this->response->setStatusCode($httpCode);
+        $err = ["error"=>
+            [
+                "message" => $err_message,
+                "code"    => $err_code
+            ]
+        ];
+        $this->sendData($err);
     }
+
+    function sendMessage($message = ''){
+        $msg = ["message"=>["message"=>$message]];
+        $this->sendData($msg);
+    }
+
     function sendModel($model){
         if($model == null){
             throw new GraphException("Model not available", 404, 404);
-        }else if($model instanceof \Serializable){
+        }
+        else if($model instanceof Model){
         	$model->onSend();
-            $this->response->setBody($model->serialize());
+            $this->sendData($model->getData());
+        }else if($model instanceof ModelCollection){
+            $model->onSend();
+            $this->sendData($model->getData());
         }else{
             throw new GraphException("Invalid model instance on sendModel", 500, 500);
         }
+    }
+
+    function sendData($array){
+        if(is_array($array)){$this->response->setData($array);}
+    }
+
+    function sendMedia($mediaUrl){
+        if(!file_exists($mediaUrl)) throw new GraphException('media not found',404,404);
+        $this->response->setMedia($mediaUrl);
+    }
+
+    function send($object = ''){
+        if(is_string($object) && file_exists($object)){$this->sendMedia($object);}
+        else if(is_string($object)) $this->sendMessage($object);
+        else if(is_array($object)){$this->sendArray();}
+        else if($object === null || $object instanceof Model || $object instanceof ModelCollection) $this->sendModel($object);
+        else if($object instanceof GraphException) $this->sendException($object);
     }
 
     function getFramework()
@@ -170,41 +183,40 @@ abstract class Action
         $fw = Graphene::getInstance();
         return $fw;
     }
-
-    protected function forward($url, $body = null, $method = null)
-    {
-        $statId=uniqid();
+    protected function forward($url, $data = null, $method = null, $checkErrors=true){
+        //Statistics
+        $statId = uniqid();
         Graphene::getInstance()->startStat('RequestForwarding',$url.' : '.$statId);
+
         $req = new GraphRequest(true);
         $req->setUrl($url);
-        /* Creazione metodo */
-        if ($body == null && $method == null)
-            $req->setMethod('GET');
-        else 
-            if ($body != null && $method == null)
-                $req->setMethod('POST');
-            else 
-                if ($method != null)
-                    $req->setMethod($method);
-            /* Creazione body */
-        if ($body != null)
-            $req->setBody($body);
-        else
-            $req->setBody('');
+
+        //setting http method
+        if ($data === null && $method === null)      $req->setMethod('GET');
+        else if ($data !== null && $method === null) $req->setMethod('POST');
+        else if ($method !== null)                   $req->setMethod($method);
+
+        //setting request data
+        if($data === null)                        $req->setData([]);
+        else if(is_array($data))                  $req->setData($data);
+        else if(is_string($data))                 $req->setData(json_decode($data,true));
+        else if($data instanceof Model)           $req->setData($data->getData());
+        else if($data instanceof ModelCollection) $req->setData($data->getData());
+
+        //setting headers
         $headers = $this->request->getHeaders();
-        foreach ($headers as $hk => $hv) {
-            $req->setHeader($hk, $hv);
-        }
-        $req->setUserAgent($this->request->getUserAgent());
+        foreach ($headers as $hk => $hv) {$req->setHeader($hk, $hv);}
         $req->setHeader('forwarded-by', $this->getUniqueActionName());
         $req->appendForward($this);
-        /* Forwarding */
-        $fw = $this->getFramework();
-        $res=$fw->forward($req);
+        $res = Graphene::getInstance()->forward($req);
+
         Graphene::getInstance()->stopStat('RequestForwarding',$url.' : '.$statId);
+        if($checkErrors && $res->getStatusCode() >= 400){
+            $data = $res->getData();
+            throw new GraphException($res->getHeader('graphene-action').': '.$data['error']['message'],$data['error']['code'],400);
+        }
         return $res;
     }
-
 
     function encodeJson($array){
         return json_encode($array, JSON_PRETTY_PRINT);
@@ -218,6 +230,35 @@ abstract class Action
     public static function getStandardActionName($actionName)
     {
         return str_replace(' ', '_', strtoupper($actionName));
+    }
+
+    protected function storeMedia($mediaNode){
+        if(is_array($mediaNode)){
+            if(
+                array_key_exists('name',     $mediaNode) &&
+                array_key_exists('type',     $mediaNode) &&
+                array_key_exists('tmp_name', $mediaNode) &&
+                array_key_exists('error',    $mediaNode) &&
+                array_key_exists('size',     $mediaNode) &&
+                $mediaNode['error'] === 0
+            ){
+                $flName = md5(uniqid()).uniqid();
+                $flDir  = $this->getMediaDir().DIRECTORY_SEPARATOR.str_replace('/','_',$mediaNode['type']).'|'.$flName;
+                if(!copy($mediaNode['tmp_name'], $flDir)){
+                    throw new GraphException('cannot import media',500,500);
+                }
+                $mediaNode['file_name'] = $flDir;
+                return $flDir;
+            }else{
+                throw new GraphException('media node error',400,400);
+            }
+        }
+    }
+
+    protected function getMediaDir(){
+        $mdir = absolute_from_script($this->getOwnerModule()->getModuleDir().DIRECTORY_SEPARATOR.'media');
+        if(!file_exists($mdir)) mkdir($mdir);
+       return  $mdir;
     }
 
     public abstract function run();

@@ -6,8 +6,6 @@ use Graphene\db\CrudStorage;
 use Graphene\Graphene;
 use Graphene\controllers\model\ModelController;
 use Graphene\controllers\model\ModelFactory;
-use \Exception;
-use Graphene\controllers\http\GraphResponse;
 use Graphene\controllers\exceptions\GraphException;
 
 abstract class Model implements \Serializable
@@ -138,8 +136,12 @@ abstract class Model implements \Serializable
         }
         return substr($ret, 0, - 6);
     }
+    public function getData()
+    {
+        return $this->modelController->getData($this);
+    }
     
-    // Serializzation
+    // Serialization
     public function serialize()
     {
         return $this->modelController->serialize($this);

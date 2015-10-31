@@ -7,7 +7,7 @@
  */
 class Settings {
     private function __construct(){
-        if(is_readable('settings.json')){
+        if(is_readable(absolute_from_script('settings.json'))){
             $this->settingsArray  = json_decode(file_get_contents(absolute_from_script('settings.json')), true);
         }else{
             $errRet=array("error"=>array("message"=>"settings file not found","code"=>"500"));

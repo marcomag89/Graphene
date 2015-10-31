@@ -34,7 +34,6 @@ class Graphene
     {
         $this->startTime = round(microtime(true) * 1000);
         $this->stats=[];
-        date_default_timezone_set('Europe/Rome');
         $this->systemToken = uniqid('SYS_').$this->startTime;
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
@@ -67,6 +66,7 @@ class Graphene
         $this->storage = new CrudStorage(new $crudDriver($this->getSettings()['storageConfig']));
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
+        if(Settings::getInstance()->getPar('stats')) { Log::logLabel('STATS', $this->stats);}
     }
     public static function path($path=null){
         return G_path($path);
@@ -167,13 +167,19 @@ class Graphene
     {
         $req = new GraphRequest();
         $req->setUrl(G_requestUrl());
-        $req->setMethod($_SERVER['REQUEST_METHOD']);
-        $req->setBody(file_get_contents("php://input"));
         $req->setIp($_SERVER['REMOTE_ADDR']);
-        $headers = apache_request_headers();
-        foreach ($headers as $header => $value) {
-            $req->setHeader($header, $value);
+        $req->setMethod($_SERVER['REQUEST_METHOD']);
+        if(count($_POST) || count($_FILES)>0){
+            $tree = $this->treeFromFlat(array_merge($_FILES, $_POST, $_GET));
+            $req->setData($tree);
+        }else{
+            $jsonData = json_decode(file_get_contents("php://input"),true);
+            if($jsonData === null)$jsonData=[];
+            $req->setData(array_merge($this->treeFromFlat($_GET),$jsonData));
         }
+        $headers = apache_request_headers();
+        foreach ($headers as $header => $value) {$req->setHeader($header, $value);}
+
         $this->pushRequest($req);
     }
 
@@ -187,11 +193,17 @@ class Graphene
         $this->supportCors();
         http_response_code($response->getStatusCode());
         $h = $response->getHeaders();
-        foreach ($h as $khdr => $hdr) {
-            header($khdr . ': ' . $hdr);
-        }
+        foreach ($h as $khdr => $hdr) {header($khdr . ': ' . $hdr);}
+
         //$this->supportCors();
-        print($response->getBody());
+        if($response->getMedia() !== null){
+            // open the file in a binary mode
+            $name = $response->getMedia();
+            $fp = fopen($name, 'rb');
+            fpassthru($fp);
+        }else{
+            print($response->getBody());
+        }
     }
 
     public function supportCors()
@@ -335,6 +347,24 @@ class Graphene
 
     public function getStats($calculateAverages=false){
         return ['Graphene Stats'=>$this->stats];
+    }
+
+    public static function treeFromFlat($rows){
+        $res=array();
+        foreach ($rows as $k => $v) {
+            $expl = explode('_', $k);
+            $tRes = &$res;
+            if (count($expl) > 1) {
+                // goto leaf
+                foreach ($expl as $e) {
+                    if (! isset($tRes[$e])){$tRes[$e] = array();}
+                    $tRes = &$tRes[$e];
+                }
+                // Popolate leaf
+                $tRes = $v;
+            } else $tRes[$k] = $v;
+        }
+        return $res;
     }
 
     const VERSION = '0.2.3 rc1';
