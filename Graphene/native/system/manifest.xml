@@ -14,7 +14,6 @@
     <action method="get"  query="modules"      name = "GET_MODULES"               />
     <action method="get"  query="client"       name = "GET_CLIENT_STATUS"         />
 
-    <action method="get"  query="doc/action"          name = "DOC_ACTION_BY_URL"  />
-    <action method="get"  query="doc/action/:action"  name = "DOC_ACTION_BY_NAME" />
+    <action method="get"  query="doc"  name = "DOC_ACTION_BY_NAME" />
 
 </module>

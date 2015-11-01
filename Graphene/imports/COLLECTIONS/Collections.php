@@ -9,20 +9,15 @@ class ReadCollection extends Action
 {
     public function run()
     {
-        $model      = new $this->pars[0]();
-        $query      = $this->request->getPar('search');
-        $sortBy     = $this->request->getPar('sortBy');
-        $sortMode   = $this->request->getPar('sortMode');
-        $page     = $this->request->getPar('page');
-        $pageSize = $this->request->getPar('page_size');
+        $model    = new $this->pars[0]();
+        $data = $this->request->getData();
+        //var_dump($data);
 
-        $httpQ =http_build_query([
-            'search'  => $query,
-            'sortBy'  => $sortBy,
-            'sortMode'=> $sortMode
-        ]);
-
-        if($httpQ !== '')$httpQ='?'.$httpQ;
+        $query    = $data['search'];
+        $sortBy   = (($data['sort']['by']   !== null) ? $data['sort']['by'] : '');
+        $pageSize = ((intval($data['page']['size']))? intval($data['page']['size']):null);
+        $page     = ((intval($data['page']['no']))? intval($data['page']['no']): 1);
+        $sortMode = ((boolval($data['sort']['discend'])) ? 'DSC' : 'ASC');
 
         $gQuery=[
             'search'=>$query,
@@ -32,16 +27,29 @@ class ReadCollection extends Action
         $readed = $model->read(true,$gQuery,$page,$pageSize);
 
         if($readed instanceof ModelCollection){
-            $expl = explode('/collection', $this->request->getUrl());
-            $url  ='http://'.$_SERVER['HTTP_HOST'].Graphene::getInstance()->getSettings()['baseUrl'].$expl[0].'/collection/';
+            $url  ='http://'.$_SERVER['HTTP_HOST'].Graphene::getInstance()->getSettings()['baseUrl'].$this->request->getUrl();
             $page     = $readed->getPage();
             $pageSize = $readed->getPageSize();
-            $readed->setNextPageUrl     ($url.($page+1).'/'.$pageSize.$httpQ);
-            $readed->setCurrentPageUrl  ($url.($page).'/'.$pageSize.$httpQ);
-            if($page > 1) $readed->setPreviousPageUrl ($url.($page-1).'/'.$pageSize.$httpQ);
-        }
-        $this->sendModel($readed);
 
+            $httpQ = [
+                'search'       => $query,
+                'sort_by'      => $sortBy,
+                'sort_discend' => (($sortMode==='DSC') ? '1' : '0'),
+                'page_size'    => $pageSize,
+                'page_no'      => $page
+            ];
+
+            $httpQN = $httpQ;
+            $httpQN['page_no'] = $httpQN['page_no']+1;
+
+            $httpQP = $httpQ;
+            $httpQP['page_no'] = $httpQP['page_no']-1;
+
+            $readed->setNextPageUrl     ($url.'?'.http_build_query($httpQN));
+            $readed->setCurrentPageUrl  ($url.'?'.http_build_query($httpQ));
+            if($page > 1) $readed->setPreviousPageUrl ($url.'?'.http_build_query($httpQP));
+        }
+        $this->send($readed);
     }
 }
 

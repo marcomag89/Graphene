@@ -12,7 +12,7 @@ class User extends Model
     {
         //$mailMatch="/^[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+(?:.[a-z0-9!#$%&'*+\\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/";
         return array(
-            'username' => Model::STRING. Model::MIN_LEN.'4'. Model::MAX_LEN.'42'. Model::NOT_NULL. Model::NOT_EMPTY. Model::UNIQUE,
+            'username' => Model::STRING. Model::MIN_LEN.'4'. Model::MAX_LEN.'42'. Model::NOT_NULL. Model::NOT_EMPTY. Model::UNIQUE. Model::SEARCHABLE,
             'password' => Model::STRING. Model::NOT_NULL
         );
     }

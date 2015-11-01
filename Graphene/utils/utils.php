@@ -58,11 +58,11 @@ function is_absolute_path($path){
 
 function G_requestUrl(){
     $reqUri = $_SERVER["REQUEST_URI"];
-    url_trimAndClean($reqUri);
-    $base=Settings::getInstance()->getPar('baseUrl');
+    $base = Settings::getInstance()->getPar('baseUrl');
     if(str_starts_with($reqUri,$base)){
         $reqUri = substr($reqUri, strlen($base));
     }
+    $reqUri = '/'.url_trimAndClean($reqUri);
     return $reqUri;
 }
 

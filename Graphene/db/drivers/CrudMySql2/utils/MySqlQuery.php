@@ -142,7 +142,6 @@ class MySqlQuery
         if($request->hasSort()){
             $sortBy   = $request->getRequestSettings()['sort']['by'];
             $sortMode = $request->getRequestSettings()['sort']['mode'];
-
             switch (strtoupper($sortMode)) {
                 case 'ASC': {$sortMode='ASC';  break;}
                 case 'DSC': {$sortMode='DESC'; break;}
@@ -182,7 +181,7 @@ class MySqlQuery
         if($request->hasSearch() && count($request->getModel()->getSearchableFields()) === 0){
             $likes = '';
             $searchTherms = $request->getSearchTherms();
-            $fields       = $request->getModel()->getFlatValues();
+            $fields  = $request->getModel()->getFlatTypes();
             foreach($fields as $field=>$value){
                 if($field !== 'id' and $field !== 'version'){
                     foreach($searchTherms as $therm){

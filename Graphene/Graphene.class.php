@@ -312,14 +312,16 @@ class Graphene
 
     public function getDoc($actionName){
         $mods = $this->router->getInstalledModules();
+        $ret=[];
         foreach($mods as $mod){
             $modAct = $mod->getActionDocs(true);
             foreach($modAct as $action){
                 if($action['name'] === $actionName){
-                    return $action;
+                    $ret[]=$action;
                 }
             }
         }
+        return $ret;
     }
 
     public function startStat($statName,$statId=null){
