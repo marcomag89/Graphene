@@ -250,10 +250,10 @@ class Module
                 $index = count($ret);
                 $ret[$index] = [
                     "name"   => $action->getUniqueActionName(),
-                    "url"    => $baseUrl.'/'.$action->getActionUrl(),
-                    "method" => $action->getHandlingMethod(),
                 ];
                 if($advanced){
+                    $ret[$index]['method']        = $action->getHandlingMethod();
+                    $ret[$index]['url']           = $baseUrl.'/'.$action->getActionUrl();
                     $ret[$index]['module']        = $action->getOwnerModule()->getName();
                     $ret[$index]['description']   = $action->getDescription();
                     $reqBody = $action->getRequestStruct();

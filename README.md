@@ -20,26 +20,21 @@ Create `settings.json` file into your project root pairs to Graphene folder and 
 
 ```JSON
 {
-  "debug"        : false,
+  "debug"        : true,
+  "stats"        : false,
   "baseUrl"      : "",
   "frameworkDir" : "",
   "modulesUrl"   : "modules",
   "appName"      : "Graphene",
+  "logsDir"      : "logs",
   "storageConfig" : {
+    "host"      : "localhost",
     "driver"    : "CrudMySql2",
     "type"      : "mysql",
     "dbName"    : "graphene_db",
-    "prefix"    : "gdb",
-    "username"  : "root",
-    "password"  : "mysql"
-  },
-
-  "log" : {
-    "all"      : "logs/graphene.log",
-    "requests" : "logs/requests.log",
-    "warnings" : "logs/warnings.log",
-    "errors"   : "logs/errors.log",
-    "debug"    : "logs/debug.log"
+    "prefix"    : "gdb_",
+    "username"  : "dbuser",
+    "password"  : "dbpass"
   }
 }
 ```

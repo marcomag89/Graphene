@@ -245,7 +245,10 @@ class Graphene
             $modInfos['support']   = $mod->getSupport();
             $modInfos['version']   = $mod->getVersion();
             $modInfos['namespace'] = $mod->getNamespace();
-            $modInfos['actions']   = $mod->getActionDocs();
+            $modInfos['actions']=[];
+            foreach($mod->getActionDocs() as $doc){
+                $modInfos['actions'][]=$doc['name'];
+            }
             $ret[] = $modInfos;
         }
         return $ret;

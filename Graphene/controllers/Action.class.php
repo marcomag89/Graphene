@@ -116,7 +116,7 @@ abstract class Action
         if($this->doc === null && file_exists($this->actionSettings['doc'])){
             $this->doc = file_get_contents($this->actionSettings['doc']);
         }else{
-            $this->doc='unavailable doc for '.$this->getUniqueActionName();
+            $this->doc='unavailable doc in '.$this->actionSettings['doc'];
         }
         return $this->doc;
     }
