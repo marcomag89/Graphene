@@ -15,13 +15,13 @@ class Log{
     public static function write($label, $trace = '', $object){
         self::setUp();
         $trace = Log::getTrace($trace);
-        if($trace['file'] !== self::$lastTraceFile){
-            self::$lastTraceFile = $trace['file'];
-            $record = "\n".self::$lastTraceFile."\n";
+        if($trace['index'] !== self::$lastTraceIndex){
+            self::$lastTraceIndex = $trace['index'];
+            $record = "\n\n".self::$lastTraceIndex."\n\n";
         }
         else {$record = '';}
 
-        $record  .= ' '.str_pad($trace['line'],4).' ['.str_pad($label,5).' | '.Log::getTimeStirng().']  '.Log::serializeObject($object)."\r\n";
+        $record  .= ' '.str_pad($trace['line'],4).' ['.str_pad($label,5).']  '.Log::serializeObject($object)."\r\n";
         $lrecord  = str_pad('['.$trace['string'].' | '.Log::getTimeStirng().']',60).Log::serializeObject($object)."\r\n";
 
         $globalLog = Log::$logDir.DIRECTORY_SEPARATOR.'graphene.log';
@@ -59,15 +59,18 @@ class Log{
     public static function getTrace($backtrace){
         $exp      = explode(DIRECTORY_SEPARATOR,$backtrace[0]['file']);
         $filename = $exp[count($exp)-1];
+        $time = Log::getTimeStirng();
         return [
             "file"   => $filename,
             "line"   => $backtrace[0]['line'],
-            "string" => $filename.':'.$backtrace[0]['line']
+            "string" => $filename.':'.$backtrace[0]['line'],
+            "time"   => $time,
+            "index"  => str_pad($filename,30).' | '.$time
         ];
     }
     public static function getTimeStirng(){
         $dt = new DateTime();
         return $dt->format('Y-m-d H:i:s');
     }
-    private static $lastTraceFile, $logDir, $debugMode = false, $configured = false;
+    private static $lastTraceIndex, $logDir, $debugMode = false, $configured = false;
 }

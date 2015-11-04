@@ -240,26 +240,29 @@ class Module
         }
         return $ret;
     }
-    public function getActionDocs($advanced=false)
+    public function getActionDocs($advanced=false,$detail=false)
     {
         $this->instantiateActions($this->manifest['actions'], new GraphRequest());
         $baseUrl= $_SERVER['SERVER_NAME'].Settings::getInstance()->getPar('baseUrl');
+        if(!str_starts_with($baseUrl,'http://'))$baseUrl='http://'.$baseUrl;
         $ret=array();
         foreach ($this->actions as $action) {
             if($action instanceof Action){
                 $index = count($ret);
-                $ret[$index] = [
-                    "name"   => $action->getUniqueActionName(),
-                ];
+                $ret[$index] = ["name"   => $action->getUniqueActionName(),];
                 if($advanced){
                     $ret[$index]['method']        = $action->getHandlingMethod();
                     $ret[$index]['url']           = $baseUrl.'/'.$action->getActionUrl();
                     $ret[$index]['module']        = $action->getOwnerModule()->getName();
-                    $ret[$index]['description']   = $action->getDescription();
+                    $ret[$index]['interface']     = $action->getActionInterface();
+
                     $reqBody = $action->getRequestStruct();
                     $resBody = $action->getResponseStruct();
-                    if($reqBody !== null) $ret[$index]['request-body']  = $reqBody;
-                    if($resBody !== null) $ret[$index]['response-body'] = $resBody;
+                    if($reqBody !== null) $ret[$index]['request-data']  = $reqBody;
+                    if($resBody !== null) $ret[$index]['response-data'] = $resBody;
+                }
+                if($detail){
+                    $ret[$index]['description'] = $action->getDescription();
                 }
             }
         }

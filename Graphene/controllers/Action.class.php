@@ -121,6 +121,8 @@ abstract class Action
         return $this->doc;
     }
 
+    public function getActionInterface(){return ["name"=>"STD_ACTION"];}
+
     function sendException($e){
         if ($e instanceof GraphException) $this->sendError($e->getCode(), $e->getMessage(), $e->getHttpCode());
         else{
@@ -222,8 +224,7 @@ abstract class Action
         return json_encode($array, JSON_PRETTY_PRINT);
     }
 
-    protected function checkHandled()
-    {
+    protected function checkHandled(){
         return true;
     }
 

@@ -5,6 +5,7 @@ $utilsIncl = join(DIRECTORY_SEPARATOR, array(dirname(__FILE__),'utils','utils.ph
 
 include_once $utilsIncl;
 
+use Graphene\models\Module;
 use \Settings;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\http\GraphRequest;
@@ -56,6 +57,9 @@ class Graphene
     public function start()
     {
         //sleep(2);
+        ignore_user_abort(true);
+        set_time_limit(0);
+
         $this->requests = array();
         $this->createRequest();
         $request=$this->getRequest();
@@ -202,7 +206,7 @@ class Graphene
             $fp = fopen($name, 'rb');
             fpassthru($fp);
         }else{
-            print($response->getBody());
+            print(json_encode($response->getData(),JSON_PRETTY_PRINT));
         }
     }
 
@@ -313,14 +317,14 @@ class Graphene
         return $this->systemToken;
     }
 
-    public function getDoc($actionName){
+    public function getDoc($actionName,$detail){
         $mods = $this->router->getInstalledModules();
         $ret=[];
         foreach($mods as $mod){
-            $modAct = $mod->getActionDocs(true);
-            foreach($modAct as $action){
-                if($action['name'] === $actionName){
-                    $ret[]=$action;
+            if($mod instanceof Module){
+                $modAct = $mod->getActionDocs(true,$detail);
+                foreach($modAct as $action){
+                    if($action['name'] === $actionName){$ret[]=$action;}
                 }
             }
         }
@@ -372,20 +376,15 @@ class Graphene
         return $res;
     }
 
-    const VERSION = '0.2.3 rc1';
+    const VERSION = '0.3.0 rc1';
     const V_NAME  = 'aluminium';
-    const INFO    = 'Graphene 0.2.3 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
+    const INFO    = 'Graphene 0.3.0 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
 
     private $startTime, $endTime;
-
     private $filterManager;
-
     private $requests;
-
     private $router;
-
     private $storage;
-
     private $systemToken;
     private $stats;
     private static $instance = null;
