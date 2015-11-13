@@ -9,7 +9,7 @@ class Stat extends Action {
 
     public function run() {
         $req = json_decode($this->request->getBody(),true)['Stat'];
-        if($req !== null){
+        if ($req !== null) {
             $method  = $req['method'];
             $url     = $req['url'];
             $body    = $req['body'];
@@ -19,8 +19,10 @@ class Stat extends Action {
                     "response" => json_decode($res->getBody(),true),
                     "Stats"    => Graphene::getInstance()->getStats()
                 ],JSON_PRETTY_PRINT));
-        }else{
+        } else {
             $this->sendError(400,'invalid request',400);
-        }
-    }
-}
+        }//end if
+
+    }//end run
+
+}//end class
