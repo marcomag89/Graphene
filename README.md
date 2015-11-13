@@ -1,4 +1,4 @@
-#Graphene (alpha)#
+#Graphene [Aluminium] beta#
 This framework allows you to create Action Oriented REST services with less lines of code, like this:
 ```PHP
 class HelloWorld extends Action{
