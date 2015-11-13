@@ -16,7 +16,7 @@ class HelloWorld extends Action{
 4. Enjoy creating your [first module](https://github.com/marcomag89/Graphene/wiki/Hello-World-tutorial)!
 
 ##Setting up graphene##
-Create `settings.json` file into your project root pairs to Graphene folder and `.htaccess` or `web.config` file, and paste the following content.
+Create `settings.json` file into your project root pairs to Graphene folder and `.htaccess` or `web.config` file and paste the following content.
 
 ```JSON
 {
