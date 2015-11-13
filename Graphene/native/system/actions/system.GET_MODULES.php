@@ -6,8 +6,10 @@ use \Exception;
 
 class GetModules extends Action {
 	public function run() {
-        $this->response->setBody ( json_encode (
+        $this->response->setBody( json_encode (
             array ('InstalledModules' => Graphene::getInstance ()->getInstalledModulesInfos()
             ), JSON_PRETTY_PRINT ) );
-	}
-}
+	}//end run
+
+}//end class
+?>
