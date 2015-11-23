@@ -109,8 +109,8 @@ class Graphene
     public function start()
     {
         //sleep(2);
-        //ignore_user_abort(true);
-        //set_time_limit(0);
+        ignore_user_abort(true);
+        set_time_limit(0);
 
         $this->requests = array();
         $this->createRequest();
