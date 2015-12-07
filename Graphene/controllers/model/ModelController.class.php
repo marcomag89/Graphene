@@ -12,12 +12,13 @@ use Graphene\controllers\exceptions\GraphException;
 class ModelController
 {
 
-    public function __construct($crudDriver, $structs, $args)
+    public function __construct($crudDriver, $structs,$model, $args)
     {
         $this->structs = $structs;
         $this->args = $args;
         $this->corrupt = false;
         $this->modelChecker = new ModelChecker();
+        $this->modelInit($model);
         // Controlla se e stato settato un driver personalizzato
         if   ($crudDriver != null) $this->setCrudDriver($crudDriver);
         else $this->storage = Graphene::getInstance()->getStorage();
@@ -33,7 +34,9 @@ class ModelController
 
     /* Initialization */
     private function emptyInit() {}
-
+    private function modelInit($model) {
+        $this->modelName=$model->getModelName();
+    }
     private function requestInit(GraphRequest $request)
     {}
 
@@ -64,7 +67,7 @@ class ModelController
         $basic = $this->getBasicStruct();
         $ret = array_merge_recursive($this->structs,$basic);
         if (! $this->modelChecker->checkValidStruct($ret))
-            throw new GraphException('Invalid model struct', 500, 500);
+            throw new GraphException('Invalid '.$this->modelName.'\'s model struct', 500, 500);
         return $ret;
     }
 
@@ -251,6 +254,8 @@ class ModelController
      *
      * @var ModelChecker
      */
+    private $modelName;
+
     private $modelChecker;
 
     private $corrupt;

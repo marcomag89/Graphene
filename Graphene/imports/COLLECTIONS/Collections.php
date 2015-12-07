@@ -14,6 +14,8 @@ class ReadCollection extends Action
         $data = $this->request->getData();
         //var_dump($data);
 
+        //echo $this->pars[0]."/n";
+
         $query    = $data['search'];
         $sortBy   = (($data['sort']['by']   !== null) ? $data['sort']['by'] : '');
         $pageSize = ((intval($data['page']['size']))? intval($data['page']['size']):null);

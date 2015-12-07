@@ -33,7 +33,7 @@ class GetStatus extends Action
 			$this->status['installed-modules'][] = str_pad($mod['name'],20).' ['.count($mod['actions']).']';
 		}
 
-		$this->response->setBody($this->getStatusBody());
+        $this->response->setBody($this->getStatusBody());
 
 	}//end run()
 

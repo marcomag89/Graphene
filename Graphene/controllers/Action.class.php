@@ -175,7 +175,7 @@ abstract class Action
     function send($object = ''){
         if(is_string($object) && file_exists($object)){$this->sendMedia($object);}
         else if(is_string($object)) $this->sendMessage($object);
-        else if(is_array($object)){$this->sendArray();}
+        else if(is_array($object)){$this->sendData($object);}
         else if($object === null || $object instanceof Model || $object instanceof ModelCollection) $this->sendModel($object);
         else if($object instanceof GraphException) $this->sendException($object);
     }

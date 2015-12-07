@@ -41,6 +41,6 @@ class Login extends Action
 
     public function getResponseStruct(){
         $session=new Session();
-        return ['Session' => $session->getStruct()];
+        return ['User'=>$session->getStruct()];
     }
 }
