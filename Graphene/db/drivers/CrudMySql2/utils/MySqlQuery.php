@@ -204,7 +204,7 @@ class MySqlQuery
     private static function getSelect($request,$settings){
         /* select base */
         $select = '';
-        $searchableFields =$request->getModel()->getSearchableFields();
+        $searchableFields = $request->getModel()->getSearchableFields();
         if($request->hasSearch() && count($searchableFields)>0){
             $select.='( ';
             foreach($searchableFields as $field){

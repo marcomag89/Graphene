@@ -243,8 +243,11 @@ class Module
     public function getActionDocs($advanced=false,$detail=false)
     {
         $this->instantiateActions($this->manifest['actions'], new GraphRequest());
-        $baseUrl= $_SERVER['SERVER_NAME'].Settings::getInstance()->getPar('baseUrl');
-        if(!str_starts_with($baseUrl,'http://'))$baseUrl='http://'.$baseUrl;
+        $protocol = stripos($_SERVER['SERVER_PROTOCOL'], 'https') === true ? 'https://' : 'http://';
+        $serverUrl = $protocol . $_SERVER['HTTP_HOST'] . Graphene::getInstance()->getSettings()['baseUrl'];
+
+        //$baseUrl= $_SERVER['SERVER_NAME'].Settings::getInstance()->getPar('baseUrl');
+        //if(!str_starts_with($baseUrl,'http://'))$baseUrl='http://'.$baseUrl;
         $ret=array();
         foreach ($this->actions as $action) {
             if($action instanceof Action){
@@ -252,7 +255,7 @@ class Module
                 $ret[$index] = ["name"   => $action->getUniqueActionName(),];
                 if($advanced){
                     $ret[$index]['method']        = $action->getHandlingMethod();
-                    $ret[$index]['url']           = $baseUrl.'/'.$action->getActionUrl();
+                    $ret[$index]['url'] = $serverUrl . '/' . $action->getActionUrl();
                     $ret[$index]['module']        = $action->getOwnerModule()->getName();
                     $ret[$index]['interface']     = $action->getActionInterface();
 

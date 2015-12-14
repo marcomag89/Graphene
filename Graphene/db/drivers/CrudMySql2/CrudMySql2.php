@@ -59,7 +59,7 @@ class CrudMySql2 implements CrudDriver{
         return true;
     }
 
-    private $connectionManager;
-    private $configManager;
+    protected $connectionManager;
+    protected $configManager;
     const INFO = 'mySql driver 0.2.1, for Graphene 0.2.x';
 }

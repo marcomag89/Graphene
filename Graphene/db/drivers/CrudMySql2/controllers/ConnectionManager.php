@@ -22,16 +22,16 @@ class ConnectionManager {
         return $this->configManager->getPrefix();
     }
     private function connect(){
+
         try {
-            $this->connection = new PDO(
-                'mysql:host=' . $this->configManager->getUrl() . ';dbname=' . $this->configManager->getDbName(),
-                $this->configManager->getUserName(),
-                $this->configManager->getPassword()
-            );
+            $conString = 'mysql:host=' . $this->configManager->getUrl() . ':' . $this->configManager->getDbPort() . '; dbname=' . $this->configManager->getDbName();
+            $user = $this->configManager->getUserName();
+            $pwd = $this->configManager->getPassword();
+            $this->connection = new PDO($conString, $user, $pwd);
             Log::debug('mySql connection success as: '.$this->configManager->getUserName());
             return $this->connection;
         } catch (Exception $e) {
-            Log::debug('mySql connection fails: '.$e->getMessage());
+            Log::err('mySql connection fails: ' . $e->getMessage());
             $this->connection = null;
             $ex = new GraphException('Error on mysql connection: ' . $e->getMessage(), ExceptionCodes::DRIVER_CONNECTION, 500);
             ExceptionConverter::throwException($ex);

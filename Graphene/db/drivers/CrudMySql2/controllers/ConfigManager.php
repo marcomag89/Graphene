@@ -8,6 +8,7 @@ class ConfigManager
     public function __construct($config)
     {
         $this->url = $config['host'];
+        $this->port = array_key_exists('port', $config) ? $config['port'] : '3306';
         $this->dbName = $config['dbName'];
         $this->userName = $config['username'];
         $this->prefix = $config['prefix'];
@@ -52,5 +53,10 @@ class ConfigManager
         return $this->dbName;
     }
 
-    private $url, $dbName, $userName, $prefix, $password;
+    public function getDbPort()
+    {
+        return $this->port;
+    }
+
+    private $url, $port, $dbName, $userName, $prefix, $password;
 }

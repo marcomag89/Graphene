@@ -177,8 +177,9 @@ class CrudStorage
             throw new GraphException('Unavailable ' . $model->getModelName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE, 400);
         if ($model->getVersion() == null)
             throw new GraphException('Unavailable ' . $model->getModelName() . ' version', ExceptionsCodes::BEAN_STORAGE_VERSION_UNAVAILABLE, 500);
-        if (! $model->isValid())
-            throw new GraphException('Error on storage, ' . $model->getModelName() . ' is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN, 500);
+        /*if (! $model->isValid())
+        *   throw new GraphException('Error on storage, ' . $model->getModelName() . ' is corrupt: ' . $model->getLastTestErrors(), ExceptionsCodes::BEAN_STORAGE_CORRUPTED_BEAN, 500);
+        */
         $bkpContent = $model->getContent();
         $model->setLazy(true);
         $model->setContent(array(
