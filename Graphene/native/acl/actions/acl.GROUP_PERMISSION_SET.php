@@ -8,6 +8,9 @@ class GroupPermissionSet extends Action
 {
     public function run(){
         $permissionProto = json_decode($this->request->getBody(),true)['Permission'];
+        if (!array_key_exists('group', $permissionProto) || !array_key_exists('permissions', $permissionProto))
+            throw new GraphException('Invalid permission set request', 400);
+
         $group = $permissionProto['group'];
         $permissions = $permissionProto['permissions'];
 
@@ -35,17 +38,19 @@ class GroupPermissionSet extends Action
         $errs=[];
         foreach($doRemove as $prm){
             $req = ["Permission"=>["group"=>$group,"action"=>$prm]];
-            $frwRes=$this->forward('/acl/permission',json_encode($req),'DELETE');
-            if($frwRes->getStatusCode() !== 200){
-                $errs[]=json_decode($frwRes->getBody(),true);
+            try {
+                $this->forward('/acl/permission', $req, 'DELETE');
+            } catch (\Exception $e) {
+                $errs[] = $e->getMessage();
             }
         }
 
         foreach($doAdd as $prm){
             $req=["Permission"=>["group"=>$group,"action"=>$prm]];
-            $frwRes=$this->forward('/acl/permission',json_encode($req),'POST');
-            if($frwRes->getStatusCode() !== 200){
-                $errs[]=json_decode($frwRes->getBody(),true);
+            try {
+                $this->forward('/acl/permission', $req, 'POST');
+            } catch (\Exception $e1) {
+                $errs[] = $e1->getMessage();
             }
         }
         $res = json_decode($this->forward('/acl/permission/'.$group)->getBody(),true);

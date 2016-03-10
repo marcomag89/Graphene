@@ -6,6 +6,19 @@ use Graphene\db\drivers\MySqlTypes;
 use Graphene\models\Model;
 
 class RequestModel{
+    private
+        $flatValues,
+        $flatTypes,
+        $modelTableName,
+        $structure,
+        $content,
+        $domain,
+        $convertedFlatTypes,
+        /**
+         * @var ConnectionManager
+         */
+        $connectionManager;
+
     /**
      * @param $structure
      * @param $content
@@ -24,15 +37,52 @@ class RequestModel{
         $this -> convertedFlatTypes = MySqlTypes::convertFlatStructTypes($this->flatTypes);
         $this -> modelTableName     = strtolower(str_replace('.', '_', $domain) . '_model');
     }
+
     private function parseModelName($domain){
         $expl = explode('.',$domain);
         $name=$expl[(count($expl)-1)];
         //echo "\n".$domain.' : '.$name;
         return $name;
     }
+
+    private function contentToFlatArray($content, &$path = '', &$schema = null) {
+        if ($schema == null) $schema = [];
+        foreach ($content as $key => $value) {
+            if (strcmp($path, '') == 0) $tmpPath = $key;
+            else $tmpPath = $path . '_' . $key;
+
+            if (is_array($value) && $content != null) $this->contentToFlatArray($value, $tmpPath, $schema);
+            else {
+                $schema[$tmpPath] = $value;
+            }
+        }
+        return $schema;
+    }
+
+    public static function treeFromFlat($rows) {
+        $res = [];
+        foreach ($rows as $k => $v) {
+            $expl = explode('_', $k);
+            $tRes = &$res;
+            if (count($expl) > 1) {
+                // goto leaf
+                foreach ($expl as $e) {
+                    if (!isset($tRes[$e])) {
+                        $tRes[$e] = [];
+                    }
+                    $tRes = &$tRes[$e];
+                }
+                // Popolate leaf
+                $tRes = $v;
+            } else $tRes[$k] = $v;
+        }
+        return $res;
+    }
+
     public function getName(){
         return $this->name;
     }
+
     public function getStructure(){
         return $this->struct;
     }
@@ -45,20 +95,20 @@ class RequestModel{
         return $this->domain;
     }
 
-    public function getFlatValues(){
-        return $this->flatValues;
-    }
-
     public function getFlatDbValues(){
         $ret=[];
         foreach($this->getFlatValues() as $key=>$value){
+            //Bool fix
+            if (str_contains($this->flatTypes[$key], Model::BOOLEAN) && $value !== null) {
+                $value = $value ? '1' : '0';
+            }
             $ret[$key]=$this->connectionManager->getConnection()->quote($value);
         }
         return $ret;
     }
 
-    public function getFlatTypes(){
-        return $this->flatTypes;
+    public function getFlatValues() {
+        return $this->flatValues;
     }
 
     public function getFlatColumnsDbTypes(){
@@ -73,17 +123,6 @@ class RequestModel{
         return $this->getFieldsByType(Model::SEARCHABLE);
     }
 
-    public function getUniques(){
-        return $this->getFieldsByType(Model::UNIQUE);
-    }
-    public function haveField($needle){
-        $vals = $this->getFlatTypes();
-        foreach($vals as $field=>$value){
-            if(strtolower($needle) === strtolower($field)){return true;}
-        }
-        return false;
-    }
-
     public function getFieldsByType($fieldType){
         $cols=$this->getFlatTypes();
         $ret=[];
@@ -94,34 +133,22 @@ class RequestModel{
         return $ret;
     }
 
-    private function contentToFlatArray($content, &$path = '', &$schema = null){
-        if ($schema == null) $schema = array();
-        foreach ($content as $key => $value) {
-            if (strcmp($path, '') == 0) $tmpPath = $key;
-            else $tmpPath = $path . '_' . $key;
-
-            if (is_array($value) && $content != NULL) $this->contentToFlatArray($value, $tmpPath, $schema);
-            else {$schema[$tmpPath] = $value;}
-        }
-        return $schema;
+    public function getFlatTypes() {
+        return $this->flatTypes;
     }
 
-    public static function treeFromFlat($rows){
-        $res=array();
-        foreach ($rows as $k => $v) {
-            $expl = explode('_', $k);
-            $tRes = &$res;
-            if (count($expl) > 1) {
-                // goto leaf
-                foreach ($expl as $e) {
-                    if (! isset($tRes[$e])){$tRes[$e] = array();}
-                    $tRes = &$tRes[$e];
-                }
-                // Popolate leaf
-                $tRes = $v;
-            } else $tRes[$k] = $v;
+    public function getUniques() {
+        return $this->getFieldsByType(Model::UNIQUE);
+    }
+
+    public function haveField($needle) {
+        $vals = $this->getFlatTypes();
+        foreach ($vals as $field => $value) {
+            if (strtolower($needle) === strtolower($field)) {
+                return true;
+            }
         }
-        return $res;
+        return false;
     }
 
     private function colsToJsonArr($row,$json)
@@ -155,17 +182,4 @@ class RequestModel{
         }
         return $res;
     }
-
-    private
-        $flatValues,
-        $flatTypes,
-        $modelTableName,
-        $structure,
-        $content,
-        $domain,
-        $convertedFlatTypes,
-        /**
-         * @var ConnectionManager
-         */
-        $connectionManager;
 }

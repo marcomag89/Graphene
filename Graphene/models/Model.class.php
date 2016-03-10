@@ -11,10 +11,112 @@ use Graphene\controllers\exceptions\GraphException;
 abstract class Model implements \Serializable
 {
 
+    const CHECK_SEP = '--';
+    const CHECK_PAR = '::';
+
+    /*
+     * -----
+     * Getters
+     * -----
+     */
+    /**
+     * Check integer value
+     */
+    const INTEGER = '--t_integer';
+    /**
+     * Date field checker (format 'yyyy-mm-dd')
+     */
+    const DATE = '--t_date';
+    /**
+     * Date field checker (format 'yyyy-mm-dd hh:mm:ss')
+     */
+    const DATETIME = '--t_datetime';
+    /**
+     * String field checker
+     */
+    const STRING = '--t_string';
+    /**
+     * boolean field checker
+     */
+    const BOOLEAN = '--t_boolean';
+    /**
+     * double field checker
+     */
+    const DECIMAL = '--t_decimal';
+    /**
+     * Uid field checker 0-9 A-Z
+     */
+    const UID = '--t_uid::';
+    /**
+     * String that matches a regex
+     */
+    const MATCH = '--t_match::';
+    /**
+     * Enum field checker
+     *
+     * @example Model::ENUM_VALUE.'foo,bar,cont'
+     */
+    const ENUM = '--t_enum::';
+    const NOT_NULL = '--c_not_null';
+    const UNIQUE = '--c_unique';
+
+    // Serialization
+    const SEARCHABLE = '--c_searchable';
+    const NOT_EMPTY = '--c_not_empty';
+    /*
+     * -----
+     * Setters
+     * -----
+     */
+    const MIN_LEN = '--c_min_len::';
+
+    /*
+     * -----------
+     * CRUD Storage
+     * -----------
+     */
+    const MAX_LEN = '--c_max_len::';
+    /**
+     * lunghezza del prefisso degli UID
+     */
+    const PREFIX_UID_LENGTH = 7;
+    /**
+     * filler per uid inferiori a prefix_uid_length
+     */
+    const PREFIX_UID_FILLER = '0';
+    protected $content = [];
+    private $structs;
+    /**
+     * @var ModelController
+     */
+    private $modelController;
+
+    /*
+     * -----------
+     * Dynamic functions
+     * -----------
+     */
+    private $domain;
+
+    /* Extensible functions */
+    private $name = null;
+
     public function __construct()
     {
         $this->structs = $this->defineStruct();
         $this->modelController = new ModelController($this->getCustomCrudDriver(), $this->structs, $this, func_get_args());
+    }
+
+    /**
+     * @return array
+     */
+    public abstract function defineStruct();
+
+    /**
+     * @return CrudDriver | null
+     */
+    public function getCustomCrudDriver() {
+        return null;
     }
 
     /**
@@ -29,18 +131,24 @@ abstract class Model implements \Serializable
         if (isset($requestModels[self::stcName()]))
             return $requestModels[self::stcName()];
         else
-            throw new GraphException('Sent model is not valid for'.self::stcName(), 400,400);
+            throw new GraphException('Sent model is not valid ' . self::stcName(), 400, 400);
     }
 
-    /*
-     * -----
-     * Getters
-     * -----
-     */
     /**
      * @return string
      */
     public static function stcName(){return explode('\\', get_called_class())[1];}
+
+    /**
+     * @return string
+     */
+    public function getDomain() {
+        if ($this->domain == null) {
+            $fw = Graphene::getInstance();
+            $this->domain = $fw->getApplicationName() . "." . $fw->getCurrentModule()->getNamespace() . "." . $this->getModelName();
+        }
+        return $this->domain;
+    }
 
     /**
      * @return string
@@ -56,18 +164,6 @@ abstract class Model implements \Serializable
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
-    public function getDomain()
-    {
-        if ($this->domain == null) {
-            $fw = Graphene::getInstance();
-            $this->domain = $fw->getApplicationName() . "." . $fw->getCurrentModule()->getNamespace() . "." . $this->getModelName();
-        }
-        return $this->domain;
-    }
-
     public function setLazy($boolean)
     {
         $this->modelController->setLazy($boolean);
@@ -81,29 +177,16 @@ abstract class Model implements \Serializable
         return $this->content;
     }
 
+    public function setContent($content) {
+        $this->content = $content;
+    }
+
     /**
      * @return ModelController
      */
     public function getModelController()
     {
         return $this->modelController;
-    }
-
-    /**
-     * @param bool $asString
-     * @param bool $prettyPrint
-     * @return array|string
-     * @throws GraphException
-     */
-    final public function getStruct($asString = false, $prettyPrint = false)
-    {
-        $str = $this->modelController->getStruct();
-        if ($asString && ! $prettyPrint)
-            return json_encode($str);
-        if ($asString && $prettyPrint)
-            return json_encode($str, JSON_PRETTY_PRINT);
-        else
-            return $str;
     }
 
     /**
@@ -136,34 +219,21 @@ abstract class Model implements \Serializable
         }
         return substr($ret, 0, - 6);
     }
+
     public function getData()
     {
         return $this->modelController->getData($this);
     }
-    
-    // Serialization
+
     public function serialize()
     {
         return $this->modelController->serialize($this);
     }
+
     public function unserialize($serialized){
         throw new GraphException("You can't unserialize model (yet)", 5009, 500);
     }
-    /*
-     * -----
-     * Setters
-     * -----
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
-    }
 
-    /*
-     * -----------
-     * CRUD Storage
-     * -----------
-     */
     /**
      * @return CrudStorage
      */
@@ -185,6 +255,16 @@ abstract class Model implements \Serializable
     }
 
     /**
+     * @return bool
+     */
+    public function canCreate() {
+        return true;
+    }
+
+    public function onCreate() {
+    }
+
+    /**
      * @param bool $multiple
      * @param null $query
      * @param null $page
@@ -201,6 +281,16 @@ abstract class Model implements \Serializable
     }
 
     /**
+     * @return bool
+     */
+    public function canRead() {
+        return true;
+    }
+
+    public function onRead() {
+    }
+
+    /**
      * @return Model | null
      * @throws GraphException
      */
@@ -211,6 +301,18 @@ abstract class Model implements \Serializable
             return $this->modelController->update($this);
         }else throw new GraphException('cannot UPDATE '.$this->getModelName().' model',500,500);
     }
+
+    /**
+     * @return bool
+     */
+    public function canUpdate() {
+        return true;
+    }
+
+    public function onUpdate() {
+    }
+    // COSTANTI TIPO
+    // value types
 
     /**
      * @return Model | null
@@ -225,6 +327,16 @@ abstract class Model implements \Serializable
     }
 
     /**
+     * @return bool
+     */
+    public function canDelete() {
+        return true;
+    }
+
+    public function onDelete() {
+    }
+
+    /**
      * @return Model | null
      * @throws GraphException
      */
@@ -236,11 +348,13 @@ abstract class Model implements \Serializable
         }else throw new GraphException('cannot PATCH '.$this->getModelName().' model',500,500);
     }
 
-    /*
-     * -----------
-     * Dynamic functions
-     * -----------
-     */
+    public function canPatch() {
+        return true;
+    }
+
+    public function onPatch() {
+    }
+
     /**
      * @param $funct
      * @param $pars
@@ -251,145 +365,58 @@ abstract class Model implements \Serializable
         return $this->modelController->call($funct, $pars, $this);
     }
 
-    /* Extensible functions */
-    /**
-     * @return array
-     */
-    public abstract function defineStruct();
-
-    /**
-     * @return CrudDriver | null
-     */
-    public function getCustomCrudDriver(){return null;}
-
-    /**
-     * @return bool
-     */
-    public function canCreate(){return true;}
-    public function onCreate(){}
-
-    /**
-     * @return bool
-     */
-    public function canRead(){return true;}
-    public function onRead()
-    {}
-
-    /**
-     * @return bool
-     */
-    public function canUpdate(){return true;}
-    public function onUpdate(){}
-
-    /**
-     * @return bool
-     */
-    public function canDelete(){return true;}
-    public function onDelete() {}
-
-    public function canPatch(){return true;}
-    public function onPatch(){}
-
-    public function onSend(){}
-    public function onSerialize(){}
-
-    public function getCreateActionStruct()    {return $this->defineStruct();}
-    public function getReadActionStruct()      {return $this->getStruct();}
-    public function getUpdateActionStruct()    {return $this->getStruct();}
-    public function getDeleteActionStruct()    {return $this->getStruct();}
-    public function getCollectionActionStruct(){return $this->getStruct();}
-
-    public function getCustomPrefix(){
-        return substr($this->getModelName(), 0, self::PREFIX_UID_LENGTH);
+    public function onSend() {
     }
+
+    public function onSerialize() {
+    }  // controlla se e' uno dei valori argomento
+
+
+    // CHECKS
+
+    public function getCreateActionStruct() {
+        return $this->defineStruct();
+    }     // vero se il contenuto non e' null
+
+    public function getReadActionStruct() {
+        return $this->getStruct();
+    }       // controllo su DB se l'elemento risulta univoco
+
+    /**
+     * @param bool $asString
+     * @param bool $prettyPrint
+     * @return array|string
+     * @throws GraphException
+     */
+    final public function getStruct($asString = false, $prettyPrint = false) {
+        $str = $this->modelController->getStruct();
+        if ($asString && !$prettyPrint)
+            return json_encode($str);
+        if ($asString && $prettyPrint)
+            return json_encode($str, JSON_PRETTY_PRINT);
+        else
+            return $str;
+    }   // campo rilevante per le ricerche
+
+    public function getUpdateActionStruct() {
+        return $this->getStruct();
+    }    // controllo stringa non vuota
+
+    public function getDeleteActionStruct() {
+        return $this->getStruct();
+    }    // lunghezza minima del campo
+
+    public function getCollectionActionStruct() {
+        return $this->getStruct();
+    }    // lunghezza massima del campo
+
     public function getIdPrefix(){
         $prefix = strtoupper(str_pad($this->getCustomPrefix(),self::PREFIX_UID_LENGTH,self::PREFIX_UID_FILLER));
         return $prefix;
     }
 
-    private $structs;
-
-    /**
-     * @var ModelController
-     */
-    private $modelController;
-
-    private $domain;
-
-    private $name = null;
-
-    protected $content = array();
-
-    const CHECK_SEP = '--';
-
-    const CHECK_PAR = '::';
-    // COSTANTI TIPO
-    // value types
-    /**
-     * Check integer value
-     */
-    const INTEGER = '--t_integer';
-
-    /**
-     * Date field checker (format 'yyyy-mm-dd')
-     */
-    const DATE = '--t_date';
-
-    /**
-     * Date field checker (format 'yyyy-mm-dd hh:mm:ss')
-     */
-    const DATETIME = '--t_datetime';
-
-    /**
-     * String field checker
-     */
-    const STRING = '--t_string';
-
-    /**
-     * boolean field checker
-     */
-    const BOOLEAN = '--t_boolean';
-
-    /**
-     * double field checker
-     */
-    const DECIMAL = '--t_decimal';
-
-    /**
-     * Uid field checker 0-9 A-Z
-     */
-    const UID = '--t_uid::';
-
-    /**
-     * String that matches a regex
-     */
-    const MATCH = '--t_match::';
-
-    /**
-     * Enum field checker
-     *
-     * @example Model::ENUM_VALUE.'foo,bar,cont'
-     */
-    const ENUM = '--t_enum::';  // controlla se e' uno dei valori argomento
-
-
-    // CHECKS
-
-    const NOT_NULL   = '--c_not_null';     // vero se il contenuto non e' null
-    const UNIQUE     = '--c_unique';       // controllo su DB se l'elemento risulta univoco
-    const SEARCHABLE = '--c_searchable';   // campo rilevante per le ricerche
-    const NOT_EMPTY  = '--c_not_empty';    // controllo stringa non vuota
-    const MIN_LEN    = '--c_min_len::';    // lunghezza minima del campo
-    const MAX_LEN    = '--c_max_len::';    // lunghezza massima del campo
-
-    /**
-     * lunghezza del prefisso degli UID
-    */
-    const PREFIX_UID_LENGTH = 7;
-
-    /**
-     * filler per uid inferiori a prefix_uid_length
-     */
-    const PREFIX_UID_FILLER = '0';
+    public function getCustomPrefix() {
+        return substr($this->getModelName(), 0, self::PREFIX_UID_LENGTH);
+    }
 
 }

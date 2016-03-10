@@ -37,7 +37,7 @@ function autol_models($name)
     $expl = explode('\\', $name);
     if (($mod = Graphene::getInstance()->getModule($expl[0])) === false) return;
     if (($modelDir = $mod->getModelDirectory($expl[1])) === null) return;
-    Log::debug($modelDir);
+    //Log::debug($modelDir);
     if(is_readable(G_path($modelDir))) $modelDir = G_path($modelDir);
     else if(is_readable(absolute_from_script($modelDir))) $modelDir= absolute_from_script($modelDir);
     else return;

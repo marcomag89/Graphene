@@ -15,7 +15,7 @@
     <action name = "GROUP_DELETE"          method = "delete"  query = "group/:group"              />
 
     <action name = "GROUP_PERMISSION_ADD"    method = "post"    query = "permission"                />
-    <action name = "GROUP_PERMISSION_SET"    method = "put"    query = "permission"                />
+    <action name="GROUP_PERMISSION_SET" method="put" query="permission"/>
     <action name = "GROUP_PERMISSION_REMOVE" method = "delete"  query = "permission"                />
     <action name = "GROUP_PERMISSION_READ"   method = "get"     query = "permission/:group"         />
 
@@ -24,6 +24,7 @@
     <action name = "PERMISSION_BY_USER"    method = "get"     query = "permission/byUser/:userId" />
     <action name = "USER_GROUP_BY_USER"    method = "get"     query = "userGroup/byUser/:userId"  />
     <action name = "USERS_BY_GROUP"        method = "get"     query = "userGroup/byGroup/:group"  />
+    <action name="USER_REMOVE" method="delete" query="user/remove"/>
 
     <!-- apps acl -->
     <action name = "APP_PERMISSION_ADD"       method = "post"    query = "app/permission"           />

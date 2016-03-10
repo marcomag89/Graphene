@@ -8,6 +8,10 @@ use \Log;
 
 
 class ModuleManifest{
+    private static $cache;
+    private $modulePath;
+    private $manifest;
+
     public function __construct($modulePath=null){
         if(self::$cache == null)self::$cache=[];
         if($modulePath !== null){
@@ -146,6 +150,55 @@ class ModuleManifest{
 
     }
 
+    private function loadJson($modulePath) {
+        $manifestDir = $modulePath . '/manifest.json';
+        if (!file_exists($manifestDir)) {
+            return null;
+        }
+        $jsonStr = file_get_contents($manifestDir);
+        $json = json_decode($jsonStr, true);
+        return $json;
+    }
+
+    private function loadXml($modulePath) {
+        if (!file_exists($modulePath . "/manifest.xml")) return null;
+
+        $xml = json_decode(json_encode(simplexml_load_file($modulePath . "/manifest.xml")), true);
+        $xml['v'] = $xml['@attributes']['v'];
+        $xml['info'] = $xml['info']['@attributes'];
+        $xml['actions'] = [];
+        $xml['filters'] = [];
+        if (array_key_exists('action', $xml)) {
+            if (array_key_exists('@attributes', $xml['action'])) {
+                $xml['actions'][] = $xml['action']['@attributes'];
+            } else {
+                foreach ($xml['action'] as $action) {
+                    if (array_key_exists('@attributes', $action)) {
+                        $xml['actions'][] = $action['@attributes'];
+                    }
+                }
+            }
+        }
+        if (array_key_exists('filter', $xml)) {
+            if (array_key_exists('@attributes', $xml['filter'])) {
+                $xml['filters'][] = $xml['filter']['@attributes'];
+            } else {
+                foreach ($xml['filter'] as $filter) {
+                    if (array_key_exists('@attributes', $filter)) {
+                        $xml['filters'][] = $filter['@attributes'];
+                    }
+                }
+            }
+        }
+        $ret = [
+            'info'    => $xml['info'],
+            'actions' => $xml['actions'],
+            'filters' => $xml['filters']
+        ];
+        //Log::debug("\n--------\nXML\n-------\n".json_encode($ret,JSON_PRETTY_PRINT));
+        return $ret;
+    }
+
     private function parseCommas($parsString){
         if($parsString === '') return array();
         $p = explode(',',$parsString);
@@ -163,7 +216,7 @@ class ModuleManifest{
                 $injectionPath = strtoupper(substr($action['name'], 1));
                 if(!str_contains($injectionPath,'/')){$injectionPath = G_path('imports/'.$injectionPath);}
 
-                Log::debug('resolving import: '.$injectionPath);
+                //Log::debug('resolving import: '.$injectionPath);
                 $stdActions = array();
                 /*
                  *
@@ -211,53 +264,16 @@ class ModuleManifest{
         return $retActions;
     }
 
-    private function loadJson($modulePath){
-        $manifestDir = $modulePath . '/manifest.json';
-        if (! file_exists($manifestDir)){return null;}
-        $jsonStr = file_get_contents($manifestDir);
-        $json = json_decode($jsonStr,true);
-        return $json;
-    }
-
-    private function loadXml($modulePath){
-        if (! file_exists($modulePath . "/manifest.xml")) return null;
-
-        $xml = json_decode(json_encode(simplexml_load_file($modulePath . "/manifest.xml")), true);
-        $xml['v']    = $xml['@attributes']['v'];
-        $xml['info'] = $xml['info']['@attributes'];
-        $xml['actions'] = array();
-        $xml['filters'] = array();
-        if(array_key_exists('action',$xml)){
-            if(array_key_exists('@attributes',$xml['action'])){
-                $xml['actions'][] = $xml['action']['@attributes'];
-            }else{
-                foreach($xml['action'] as $action) {
-                    if (array_key_exists('@attributes', $action)) {
-                        $xml['actions'][] = $action['@attributes'];
-                    }
-                }
-            }
+    private function actionNameToCamel($actionName) {
+        $expl = explode('_', strtolower($actionName));
+        $ret = '';
+        foreach ($expl as $lit) {
+            $ret .= ucfirst($lit);
         }
-        if(array_key_exists('filter',$xml)){
-            if(array_key_exists('@attributes',$xml['filter'])){
-                $xml['filters'][] = $xml['filter']['@attributes'];
-            }else{
-                foreach($xml['filter'] as $filter) {
-                    if (array_key_exists('@attributes', $filter)) {
-                        $xml['filters'][] = $filter['@attributes'];
-                    }
-                }
-            }
-        }
-        $ret = array(
-            'info'    => $xml['info'],
-            'actions' => $xml['actions'],
-            'filters' => $xml['filters']
-        );
-        //Log::debug("\n--------\nXML\n-------\n".json_encode($ret,JSON_PRETTY_PRINT));
         return $ret;
     }
-    private function cleanUrl($url,$modulePath){
+
+    private function cleanUrl($url, $modulePath){
         if(!is_absolute_path($url)) $url = absolute_from_script($modulePath).DIRECTORY_SEPARATOR.trim($url,DIRECTORY_SEPARATOR);
         $expl=explode(DIRECTORY_SEPARATOR,$url);
         $urlArr = [];
@@ -271,17 +287,7 @@ class ModuleManifest{
         return $this->actionNameToCamel($filterName);
     }
 
-    private function actionNameToCamel($actionName){
-        $expl = explode('_',strtolower($actionName));
-        $ret='';
-        foreach($expl as $lit){$ret.=ucfirst($lit);}
-        return $ret;
-    }
-
     public function getManifest(){
        return $this->manifest;
     }
-    private static $cache;
-    private $modulePath;
-    private $manifest;
 }

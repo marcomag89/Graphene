@@ -31,6 +31,18 @@ use \Log;
 class Graphene
 {
 
+    const VERSION = '0.3.0 rc1';
+    const V_NAME = 'aluminium';
+    const INFO = 'Graphene 0.3.0 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
+    private static $instance = null;
+    private $startTime, $endTime;
+    private $filterManager;
+    private $requests;
+    private $router;
+    private $storage;
+    private $systemToken;
+    private $stats;
+
     private function __construct()
     {
         $this->startTime = round(microtime(true) * 1000);
@@ -49,37 +61,20 @@ class Graphene
         }
     }
 
-    /**
-     * Questo metodo instanzia il ROUTER lo storage nativo e recupera le
-     * informazioni base
-     * per generare la richiesta
-     */
-    public function start()
+    public function isDebugMode()
     {
-        //sleep(2);
-        ignore_user_abort(true);
-        set_time_limit(0);
-
-        $this->requests = array();
-        $this->createRequest();
-        $request=$this->getRequest();
-        Log::request($request->getMethod().' '.$request->getUrl().' from '.$_SERVER['REMOTE_ADDR']);
-        $this->filterManager = new FilterManager();
-        $this->router = new GrapheneRouter($this->getRequest());
-        $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->getSettings()['storageConfig']['driver'];
-        $this->storage = new CrudStorage(new $crudDriver($this->getSettings()['storageConfig']));
-        $response = $this->router->dispatch($this->getRequest());
-        $this->sendResponse($response);
-        if(Settings::getInstance()->getPar('stats')) { Log::logLabel('STATS', $this->stats);}
+        return Settings::getInstance()->getPar('debug') === true;
     }
+
     public static function path($path=null){
         return G_path($path);
     }
+
     /**
      * Recupera l'istanza del framework, o ne crea una nel caso non esista
      *
      * @return Graphene instance
-     *        
+     *
      */
     public static function getInstance()
     {
@@ -101,65 +96,34 @@ class Graphene
         spl_autoload_register("autol_models");
     }
 
-    public function getSettings()
-    {
-        return Settings::getInstance()->getSettingsArray();
-    }
-
-    public function getApplicationName()
-    {
-        return (string) $this->getSettings()['appName'];
-    }
-
-    public function getStorage()
-    {
-        return $this->storage;
+    public static function host() {
+        return $_SERVER['SERVER_NAME'];
     }
 
     /**
-     * Esegue il forwarding della richiesta per ottenere informazioni da altri
-     * moduli
-     *
-     * @param GraphRequest $request
-     * @return GraphResponse
-     * @throws GraphException
+     * Questo metodo instanzia il ROUTER lo storage nativo e recupera le
+     * informazioni base
+     * per generare la richiesta
      */
-    public function forward(GraphRequest $request)
+    public function start()
     {
-        if (! str_starts_with($request->getUrl(), "http://")) {
-            $this->pushRequest($request);
-            $resp = $this->router->dispatch($request);
-            $this->popRequest();
-            return $resp;
-        } else {
-            if (! extension_loaded('curl')){ throw new GraphException('request forwarding exception: cUrl extension is not installed',5000,500); }
-            $fp = fsockopen($request->getHost(), 80, $errno, $errstr, 30);
-            if (! $fp) { throw new GraphException('request forwarding exception: '.$errstr ($errno),5001,500); }
-            else {
-                $msg = "GET /" . $request->getPathname() . " HTTP/1.0\r\nHost: " . $request->getHost() . "\r\n\r\n";
-                fwrite($fp, $msg);
-                $resString = '';
-                while (! feof($fp)) { $resString .= fgets($fp, 128);}
-                fclose($fp);
-                return $this->parseResponse($resString);
-            }
-        }
-    }
+        //sleep(2);
+        ignore_user_abort(true);
+        set_time_limit(0);
 
-    private function parseResponse($str)
-    {
-        $res = new GraphResponse();
-        $schema = explode("\r\n\r\n", $str);
-        $res->setBody($schema[1]);
-        $status = explode(' ', explode("\n", $schema[0])[0])[1];
-        $res->setStatusCode($status);
-        $headers = explode("\n", $schema[0]);
-        unset($headers[0]);
-        foreach ($headers as $h) {
-            $kv = explode(':', $h);
-            $res->setHeader($kv[0], $kv[1]);
+        $this->requests = [];
+        $this->createRequest();
+        $request = $this->getRequest();
+        Log::request($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
+        $this->filterManager = new FilterManager();
+        $this->router = new GrapheneRouter($this->getRequest());
+        $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->getSettings()['storageConfig']['driver'];
+        $this->storage = new CrudStorage(new $crudDriver($this->getSettings()['storageConfig']));
+        $response = $this->router->dispatch($this->getRequest());
+        $this->sendResponse($response);
+        if (Settings::getInstance()->getPar('stats')) {
+            Log::logLabel('STATS', $this->stats);
         }
-        return $res;
     }
 
     /**
@@ -173,7 +137,7 @@ class Graphene
         $req->setUrl(G_requestUrl());
         $req->setIp($_SERVER['REMOTE_ADDR']);
         $req->setMethod($_SERVER['REQUEST_METHOD']);
-        if(count($_POST) || count($_FILES)>0){
+        if (count($_POST) > 0 || count($_FILES) > 0) {
             $tree = $this->treeFromFlat(array_merge($_FILES, $_POST, $_GET));
             $req->setData($tree);
         }else{
@@ -185,6 +149,39 @@ class Graphene
         foreach ($headers as $header => $value) {$req->setHeader($header, $value);}
 
         $this->pushRequest($req);
+    }
+
+    public static function treeFromFlat($rows) {
+        $res = [];
+        foreach ($rows as $k => $v) {
+            $expl = explode('_', $k);
+            $tRes = &$res;
+            if (count($expl) > 1) {
+                // goto leaf
+                foreach ($expl as $e) {
+                    if (!isset($tRes[$e])) {
+                        $tRes[$e] = [];
+                    }
+                    $tRes = &$tRes[$e];
+                }
+                // Popolate leaf
+                $tRes = $v;
+            } else $tRes[$k] = $v;
+        }
+        return $res;
+    }
+
+    private function pushRequest(GraphRequest $request) {
+        array_push($this->requests, $request);
+    }
+
+    public function getRequest() {
+        $current = end($this->requests);
+        return $current;
+    }
+
+    public function getSettings() {
+        return Settings::getInstance()->getSettingsArray();
     }
 
     /**
@@ -219,18 +216,79 @@ class Graphene
                 header('Access-Control-Allow-Credentials: true');
                 // header('Access-Control-Max-Age: 86400'); // cache for 1 day
             }
-            
+
             // Access-Control headers are received during OPTIONS requests
             if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
                 if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
                     header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE, PATCH");
-                
+
                 if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
                     header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
-                
+
                 exit(0);
             }
         }
+    }
+
+    public function getApplicationName() {
+        return (string) $this->getSettings()['appName'];
+    }
+
+    public function getStorage() {
+        return $this->storage;
+    }
+
+    /**
+     * Esegue il forwarding della richiesta per ottenere informazioni da altri
+     * moduli
+     *
+     * @param GraphRequest $request
+     * @return GraphResponse
+     * @throws GraphException
+     */
+    public function forward(GraphRequest $request) {
+        if (!str_starts_with($request->getUrl(), "http://")) {
+            $this->pushRequest($request);
+            $resp = $this->router->dispatch($request);
+            $this->popRequest();
+            return $resp;
+        } else {
+            if (!extension_loaded('curl')) {
+                throw new GraphException('request forwarding exception: cUrl extension is not installed', 5000, 500);
+            }
+            $fp = fsockopen($request->getHost(), 80, $errno, $errstr, 30);
+            if (!$fp) {
+                throw new GraphException('request forwarding exception: ' . $errstr ($errno), 5001, 500);
+            } else {
+                $msg = "GET /" . $request->getPathname() . " HTTP/1.0\r\nHost: " . $request->getHost() . "\r\n\r\n";
+                fwrite($fp, $msg);
+                $resString = '';
+                while (!feof($fp)) {
+                    $resString .= fgets($fp, 128);
+                }
+                fclose($fp);
+                return $this->parseResponse($resString);
+            }
+        }
+    }
+
+    private function popRequest() {
+        array_pop($this->requests);
+    }
+
+    private function parseResponse($str) {
+        $res = new GraphResponse();
+        $schema = explode("\r\n\r\n", $str);
+        $res->setBody($schema[1]);
+        $status = explode(' ', explode("\n", $schema[0])[0])[1];
+        $res->setStatusCode($status);
+        $headers = explode("\n", $schema[0]);
+        unset($headers[0]);
+        foreach ($headers as $h) {
+            $kv = explode(':', $h);
+            $res->setHeader($kv[0], $kv[1]);
+        }
+        return $res;
     }
 
     public function getCurrentModule()
@@ -274,10 +332,6 @@ class Graphene
             return false;
     }
 
-    public static function host(){
-        return $_SERVER['SERVER_NAME'];
-    }
-
     public function addFilter(Filter $filter)
     {
         $this->filterManager->addFilter($filter);
@@ -288,31 +342,11 @@ class Graphene
         return $this->filterManager;
     }
 
-    public function isDebugMode()
-    {
-        return Settings::getInstance()->getPar('debug') === true;
-    }
-
-    private function pushRequest(GraphRequest $request)
-    {
-        array_push($this->requests, $request);
-    }
-
-    private function popRequest()
-    {
-        array_pop($this->requests);
-    }
-
-    public function getRequest()
-    {
-        $current = end($this->requests);
-        return $current;
-    }
-
     public function getRouter()
     {
         return $this->router;
     }
+
     public function getSystemToken(){
         return $this->systemToken;
     }
@@ -357,35 +391,4 @@ class Graphene
     public function getStats($calculateAverages=false){
         return ['Graphene Stats'=>$this->stats];
     }
-
-    public static function treeFromFlat($rows){
-        $res=array();
-        foreach ($rows as $k => $v) {
-            $expl = explode('_', $k);
-            $tRes = &$res;
-            if (count($expl) > 1) {
-                // goto leaf
-                foreach ($expl as $e) {
-                    if (! isset($tRes[$e])){$tRes[$e] = array();}
-                    $tRes = &$tRes[$e];
-                }
-                // Popolate leaf
-                $tRes = $v;
-            } else $tRes[$k] = $v;
-        }
-        return $res;
-    }
-
-    const VERSION = '0.3.0 rc1';
-    const V_NAME  = 'aluminium';
-    const INFO    = 'Graphene 0.3.0 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
-
-    private $startTime, $endTime;
-    private $filterManager;
-    private $requests;
-    private $router;
-    private $storage;
-    private $systemToken;
-    private $stats;
-    private static $instance = null;
 }

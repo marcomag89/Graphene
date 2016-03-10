@@ -33,7 +33,7 @@ function G_path($path){
 function G_Require($path){
     $absolute = G_path($path);
     if(is_readable($absolute)){
-        Log::debug('COMPLETED Require of: '.$absolute);
+        //Log::debug('COMPLETED Require of: '.$absolute);
         /** @noinspection PhpIncludeInspection */
         require_once $absolute;
     }else{

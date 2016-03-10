@@ -3,19 +3,26 @@ namespace users;
 
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
-use Graphene\models\Model;
 
-class Validate extends Action
-{
+class Validate extends Action {
 
-    public function run()
-    {
+    public function run() {
         $user = User::getByRequest();
-        if($user->getUsername() !== null && $user->getPassword()!==null){
+        if ($user->getUsername() !== null && $user->getPassword() !== null) {
+            $user->encriptPassword();
             $readed = $user->read();
-            $this->sendModel($readed);
-        }else{
-            throw new GraphException('bad request',400);
+            if ($readed === null) {
+                $emailUser = new User();
+                $emailUser->setEmail($user->getUsername());
+                $readed = $emailUser->read();
+            }
+            if ($readed !== null) {
+                $this->sendModel($readed);
+            } else {
+                throw new GraphException('invalid username or password', 400);
+            }
+        } else {
+            throw new GraphException('bad request', 400);
         }
     }
 }

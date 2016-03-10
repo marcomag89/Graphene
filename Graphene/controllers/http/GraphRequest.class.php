@@ -7,6 +7,8 @@ use Graphene\Graphene;
 class GraphRequest
 {
 
+    private $ip, $method, $url, $pars, $headers, $data, $userAgent, $contextPars;
+
     public function __construct()
     {
         $this->url     = null;
@@ -15,15 +17,17 @@ class GraphRequest
         $this->data    = [];
         $this->contextPars = [];
     }
+
     public function setData($data){
         $this->data=$data;
     }
+
+    // Setters
 
     public function getData(){
         return $this->data;
     }
 
-    // Setters
     public function setMethod($method)
     {
         $this->method = $method;
@@ -45,22 +49,11 @@ class GraphRequest
         $this->url = $url;
     }
 
-    public function setIp($ip)
-    {
-        $this->ip = $ip;
-    }
-
     public function setUserAgent($agent)
     {
         $this->userAgent = $agent;
     }
 
-    public function setHeader($key, $value){
-        if($key !== null && $value !== null){
-            $this->headers[strtolower($key)] = $value;
-        }
-    }
-    // Getters
     public function appendForward(Action $action)
     {
         if (isset($this->headers['forwarded-by']))
@@ -68,6 +61,8 @@ class GraphRequest
         else
             $this->headers['forwarded-by'] = $action->getUniqueActionName();
     }
+
+    // Getters
 
     public function isForwarding()
     {
@@ -87,6 +82,10 @@ class GraphRequest
     public function getIp()
     {
         return $this->ip;
+    }
+
+    public function setIp($ip) {
+        $this->ip = $ip;
     }
 
     public function getUrl()
@@ -161,6 +160,12 @@ class GraphRequest
         }
     }
 
+    public function setHeader($key, $value) {
+        if ($key !== null && $value !== null) {
+            $this->headers[strtolower($key)] = $value;
+        }
+    }
+
     public function setContextPar($key,$value){
         $this->contextPars[$key]=$value;
     }
@@ -170,5 +175,7 @@ class GraphRequest
         else return null;
     }
 
-    private $ip, $method, $url, $pars, $headers, $data, $userAgent, $contextPars;
+    public function getContextPars() {
+        return $this->contextPars;
+    }
 }

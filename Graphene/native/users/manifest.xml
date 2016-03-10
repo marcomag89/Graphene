@@ -1,18 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module v="0.0.1.0">
-	<info
-		version		= "0.1.0.1"
-		name		= "com.graphene.users"
-		namespace	= "users"
-		author		= "Marco Magnetti [marcomagnetti@gmail.com]"
-		models-path	= "models"
-        depends     = "com.graphene.acl" />
+    <info
+            version="0.1.0.1"
+            name="com.graphene.users"
+            namespace="users"
+            author="Marco Magnetti [marcomagnetti@gmail.com]"
+            models-path="models"
+    />
 
-	<action name="VALIDATE" handler="Validate@actions/Validate.php" method="post" query="validate" 	/>
+    <action name="UPDATE_USER_BY_KEY" method="put" query="UpdateByKey"/>
+    <action name="VALIDATE_EDITING_KEY" method="get" query="validateEditingKey/:key"/>
+    <action name="SEND_EDIT_MAIL_KEY" method="post" query="sendEditMail"/>
 
-	<!-- CRUD ACTIONS INJECTION-->
-	<action name="$CRUD"        pars="users\User" query-prefix="user/"/>
-    <action name="$COLLECTIONS" pars="users\User" />
+    <action name="VALIDATE" handler="Validate@actions/Validate.php" method="post" query="validate"/>
 
-    <filter name = "USER_CHECK" scope = "global" after = "com.graphene.auth.AUTH_CHECK"/>
+    <action name="CREATE_EXTERNAL" method="post" query="external"/>
+
+
+    <!-- CRUD ACTIONS INJECTION-->
+    <action name="READ_COLLECTION" query="collection" method="GET"/>
+    <action name="CREATE" query="user" method="POST"/>
+    <action name="READ" query="user/:id" method="GET"/>
+    <action name="UPDATE" query="user" method="PUT"/>
+    <action name="DELETE" query="user" method="DELETE"/>
+
+    <filter name="USER_CHECK" scope="global" after="com.graphene.auth.AUTH_CHECK"/>
 </module>

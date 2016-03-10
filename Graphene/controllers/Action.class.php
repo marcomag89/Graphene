@@ -14,6 +14,29 @@ use \Log;
 abstract class Action
 {
 
+    protected $pars;
+    protected $actionSettings;
+    /**
+     * @var GraphResponse
+     */
+    protected $response;
+    /**
+     * @var GraphRequest
+     */
+    protected $request;
+    /**
+     * @var Module
+     */
+    protected $ownerModule;
+    protected $actionName;
+    protected $handlingMethod;
+    protected $handlingQuery;
+    private $doc = null;
+    /**
+     * @var UrlProcessor
+     */
+    private $urlProcessor;
+
     final public function setUp(Module $ownerModule, $actionSettings, GraphRequest $request)
     {
         $this->actionSettings = $actionSettings;
@@ -25,6 +48,10 @@ abstract class Action
         $this->ownerModule    = $ownerModule;
     }
 
+    public static function getStandardActionName($actionName) {
+        return str_replace(' ', '_', strtoupper($actionName));
+    }
+
     final public function isHandled()
     {
         $tests=array();
@@ -32,8 +59,21 @@ abstract class Action
                ($tests['query']    = $this->checkQuery())   &&
                ($tests['handling'] = $this->checkHandled()) &&
                ($tests['filters']  = $this->checkFilters());
-        Log::debug('test results for '.$this->getUniqueActionName().': '.json_encode($tests));
+        //Log::debug('test results for '.$this->getUniqueActionName().': '.json_encode($tests));
         return $ret;
+    }
+
+    private function checkQuery() {
+        $rel = $this->ownerModule->getActionUrl($this->request);
+        if ($this->urlProcessor->matches($rel)) {
+            $this->request->setPars($this->urlProcessor->getPars());
+            return true;
+        } else
+            return false;
+    }
+
+    protected function checkHandled() {
+        return true;
     }
 
     final private function checkFilters()
@@ -67,22 +107,42 @@ abstract class Action
         return $this->response;
     }
 
-    public function getHttpCode($e) {return 500;}
-    public function onError($e)     {$this->sendException($e);}
-
-    private function checkQuery()
-    {
-        $rel = $this->ownerModule->getActionUrl($this->request);
-        if ($this->urlProcessor->matches($rel)) {
-            $this->request->setPars($this->urlProcessor->getPars());
-            return true;
-        } else
-            return false;
+    public function getUniqueActionName() {
+        return strtoupper($this->ownerModule->getNamespace()) . '.' . $this->actionName;
     }
 
-    public function getUniqueActionName()
-    {
-        return strtoupper($this->ownerModule->getNamespace()) . '.' . $this->actionName;
+    public abstract function run();
+
+    public function onError($e)     {$this->sendException($e);}
+
+    function sendException($e) {
+        if ($e instanceof GraphException) $this->sendError($e->getCode(), $e->getMessage(), $e->getHttpCode());
+        else {
+            if ($e instanceof Exception) $this->sendError($e->getCode(), $e->getMessage(), $e->getCode());
+            else $this->sendError(5001, 'internal server error', 500);
+        }
+    }
+
+    final function sendError($err_code, $err_message, $httpCode = null) {
+        if ($httpCode === null) $httpCode = $err_code;
+        $this->response->setStatusCode($httpCode);
+        $err = ["error" =>
+                    [
+                        "message" => $err_message,
+                        "code"    => $err_code
+                    ]
+        ];
+        $this->sendData($err);
+    }
+
+    function sendData($array) {
+        if (is_array($array)) {
+            $this->response->setData($array);
+        }
+    }
+
+    public function getHttpCode($e) {
+        return 500;
     }
 
     public function getActionUrl(){
@@ -108,10 +168,6 @@ abstract class Action
         return $this->handlingQuery;
     }
 
-    public function getOwnerModule()
-    {
-        return $this->ownerModule;
-    }
     public function getDescription(){
         if($this->doc === null && file_exists($this->actionSettings['doc'])){
             $this->doc = file_get_contents($this->actionSettings['doc']);
@@ -123,24 +179,19 @@ abstract class Action
 
     public function getActionInterface(){return ["name"=>"STD_ACTION"];}
 
-    function sendException($e){
-        if ($e instanceof GraphException) $this->sendError($e->getCode(), $e->getMessage(), $e->getHttpCode());
-        else{
-            if ($e instanceof Exception) $this->sendError($e->getCode(), $e->getMessage(), $e->getCode());
-            else $this->sendError(5001, 'internal server error', 500);
-        }
+    function send($object = '') {
+        if (is_string($object) && file_exists($object)) {
+            $this->sendMedia($object);
+        } else if (is_string($object)) $this->sendMessage($object);
+        else if (is_array($object)) {
+            $this->sendData($object);
+        } else if ($object === null || $object instanceof Model || $object instanceof ModelCollection) $this->sendModel($object);
+        else if ($object instanceof GraphException) $this->sendException($object);
     }
 
-    final function sendError($err_code, $err_message, $httpCode = null){
-        if ($httpCode === null) $httpCode = $err_code;
-        $this->response->setStatusCode($httpCode);
-        $err = ["error"=>
-            [
-                "message" => $err_message,
-                "code"    => $err_code
-            ]
-        ];
-        $this->sendData($err);
+    function sendMedia($mediaUrl) {
+        if (!file_exists($mediaUrl)) throw new GraphException('media not found', 404, 404);
+        $this->response->setMedia($mediaUrl);
     }
 
     function sendMessage($message = ''){
@@ -163,28 +214,24 @@ abstract class Action
         }
     }
 
-    function sendData($array){
-        if(is_array($array)){$this->response->setData($array);}
-    }
-
-    function sendMedia($mediaUrl){
-        if(!file_exists($mediaUrl)) throw new GraphException('media not found',404,404);
-        $this->response->setMedia($mediaUrl);
-    }
-
-    function send($object = ''){
-        if(is_string($object) && file_exists($object)){$this->sendMedia($object);}
-        else if(is_string($object)) $this->sendMessage($object);
-        else if(is_array($object)){$this->sendData($object);}
-        else if($object === null || $object instanceof Model || $object instanceof ModelCollection) $this->sendModel($object);
-        else if($object instanceof GraphException) $this->sendException($object);
-    }
-
     function getFramework()
     {
         $fw = Graphene::getInstance();
         return $fw;
     }
+
+    function encodeJson($array) {
+        return json_encode($array, JSON_PRETTY_PRINT);
+    }
+
+    public function getRequestStruct() {
+        return null;
+    }
+
+    public function getResponseStruct() {
+        return null;
+    }
+
     protected function forward($url, $data = null, $method = null, $checkErrors=true){
         //Statistics
         $statId = uniqid();
@@ -220,19 +267,6 @@ abstract class Action
         return $res;
     }
 
-    function encodeJson($array){
-        return json_encode($array, JSON_PRETTY_PRINT);
-    }
-
-    protected function checkHandled(){
-        return true;
-    }
-
-    public static function getStandardActionName($actionName)
-    {
-        return str_replace(' ', '_', strtoupper($actionName));
-    }
-
     protected function storeMedia($mediaNode){
         if(is_array($mediaNode)){
             if(
@@ -244,12 +278,17 @@ abstract class Action
                 $mediaNode['error'] === 0
             ){
                 $flName = md5(uniqid()).uniqid();
-                $flDir  = $this->getMediaDir().DIRECTORY_SEPARATOR.str_replace('/','_',$mediaNode['type']).'|'.$flName;
+                $flName = str_replace('/', '_', $mediaNode['type']) . '|' . $flName;
+
+                $flDir = $this->getMediaDir() . DIRECTORY_SEPARATOR . $flName;
                 if(!copy($mediaNode['tmp_name'], $flDir)){
                     throw new GraphException('cannot import media',500,500);
                 }
-                $mediaNode['file_name'] = $flDir;
-                return $flDir;
+                unset($mediaNode['tmp_name']);
+
+                $mediaNode['file_name'] = $flName;
+                $mediaNode['file_dir'] = $flDir;
+                return $mediaNode;
             }else{
                 throw new GraphException('media node error',400,400);
             }
@@ -262,38 +301,7 @@ abstract class Action
        return  $mdir;
     }
 
-    public abstract function run();
-    public function getRequestStruct() {return null;}
-    public function getResponseStruct(){return null;}
-
-    protected $pars;
-    private   $doc=null;
-
-    protected $actionSettings;
-
-    /**
-     * @var GraphResponse
-     */
-    protected $response;
-
-    /**
-     * @var GraphRequest
-     */
-    protected $request;
-
-    /**
-     * @var Module
-     */
-    protected $ownerModule;
-
-    /**
-     * @var UrlProcessor
-     */
-    private $urlProcessor;
-
-    protected $actionName;
-
-    protected $handlingMethod;
-
-    protected $handlingQuery;
+    public function getOwnerModule() {
+        return $this->ownerModule;
+    }
 }

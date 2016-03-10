@@ -4,7 +4,16 @@ use Graphene\controllers\Filter;
 use \Log;
 
 class AclCheck extends Filter{
+    private static $cache = null;
+    private static $sysAllow = false;
+    private $aclExceptions = [
+        'SYSTEM.GET_CLIENT_STATUS',
+        'SYSTEM.DOC_ACTION_BY_NAME',
+        'SYSTEM.STAT',
+    ];
+
     public function run (){
+
         if(self::$cache == null)
             self::$cache=[
                 'app-info'    => [],
@@ -26,7 +35,9 @@ class AclCheck extends Filter{
             $appPermissions  = $appInfo['permissions'];
         else $appPermissions = [];
         $filterEnabled=$this->isAclEnabled();
-        if($filterEnabled  && //Filtro abilitato
+
+        if (!self::$sysAllow && //Filtro gia superato
+            $filterEnabled && //Filtro abilitato
             (!$this->enabledTo($actionName,$appPermissions)|| //Permesso applicazione non trovato
                 (
                     array_search(Group::$superUserGroupName,$groups) === false && //Utente non super_user
@@ -34,51 +45,15 @@ class AclCheck extends Filter{
                 )
             )
         ){
-            $this->status=300;
+            $this->status = 403;
             $this->message='Access denied to action: '.$this->action->getUniqueActionName();
+        } else {
+            self::$sysAllow = true;
         }
-        $this->request->setContextPar('acl-enabled'    ,$filterEnabled);
-        $this->request->setContextPar('acl-app-info'   ,$appInfo);
-        $this->request->setContextPar('acl-permissions',$permissions);
-        $this->request->setContextPar('acl-groups'     ,$groups);
-    }
-
-    private function enabledTo($actionName, $permissionList){
-        foreach($this->aclExceptions as $exc){
-            if($this->matches($exc,$actionName)){
-                return true;
-            }
-        }
-        foreach($permissionList as $prm){
-            if($this->matches($prm,$actionName)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private function isAclEnabled(){
-        if(array_key_exists('bool',self::$cache['enabled']))return self::$cache['enabled']['bool'];
-        else self::$cache['enable']['bool'] = false;
-        $res=$this->forward('/acl/userGroup/byGroup/'.Group::$superUserGroupName);
-        if($res->getStatusCode() === 200){
-            $users  = json_decode($res->getBody(),true)['GroupUsers']['users'];
-            self::$cache['enabled']['bool'] = (count($users)>0);
-        }
-        return self::$cache['enabled']['bool'];
-    }
-
-    private function matches($needle,$action){
-        if(array_key_exists($needle.'_'.$action,self::$cache['matches']))return self::$cache['matches'][$needle.'_'.$action];
-        self::$cache['matches'][$needle.'_'.$action]=false;
-        $tneedle = strtoupper($needle);
-        $taction = strtoupper($action);
-
-        if(str_ends_with($tneedle,'.*') && str_starts_with($taction, substr($tneedle,0,strlen($tneedle-1))))
-            self::$cache['matches'][$needle.'_'.$action]= true;
-        else if($tneedle === $taction) self::$cache['matches'][$needle.'_'.$action] = true;
-        else self::$cache['matches'][$needle.'_'.$action]= false;
-        return self::$cache['matches'][$needle.'_'.$action];
+        $this->request->setContextPar(ACL::ENABLED, $filterEnabled);
+        $this->request->setContextPar(ACL::APP_INFO, $appInfo);
+        $this->request->setContextPar(ACL::PERMISSIONS, $permissions);
+        $this->request->setContextPar(ACL::GROUPS, $groups);
     }
 
     private function loadAppInfo($apiKey){
@@ -95,9 +70,9 @@ class AclCheck extends Filter{
     }
 
     private function loadPermissions($user){
-        if($user === null)$userId='anonimous';
+        if ($user === null) $userId = 'anonimous';
         else $userId=$user['id'];
-        if(array_key_exists($userId,self::$cache['permissions']))return self::$cache['permissions'][$userId];
+        if (array_key_exists($userId, self::$cache['permissions'])) return self::$cache['permissions'][$userId];
         $permissions = array();
 
         if($user !== null){
@@ -112,7 +87,7 @@ class AclCheck extends Filter{
             $res = $this->forward('/acl/permission/'.Group::$everyoneGroupName);
             if($res->getStatusCode() === 200){
                 $permissions = json_decode($res->getBody(),true)['PermissionSet']['permissions'];
-                self::$cache['permissions'][$userId]=$permissions;
+                self::$cache['permissions'][$userId] = $permissions;
             }else{
                 Log::err('error when loading anonymous user permissions');
             }
@@ -139,10 +114,49 @@ class AclCheck extends Filter{
         }
         return self::$cache['groups'][$userId];
     }
-    private static $cache = null;
-    private $aclExceptions=[
-        'SYSTEM.GET_CLIENT_STATUS',
-        'SYSTEM.DOC_ACTION_BY_NAME',
-        'SYSTEM.STAT',
-    ];
+
+    private function isAclEnabled() {
+        if (array_key_exists('bool', self::$cache['enabled'])) return self::$cache['enabled']['bool'];
+        else self::$cache['enable']['bool'] = false;
+        $res = $this->forward('/acl/userGroup/byGroup/' . Group::$superUserGroupName);
+        if ($res->getStatusCode() === 200) {
+            $users = json_decode($res->getBody(), true)['GroupUsers']['users'];
+            self::$cache['enabled']['bool'] = (count($users) > 0);
+        }
+        return self::$cache['enabled']['bool'];
+    }
+
+    private function enabledTo($actionName, $permissionList) {
+        foreach ($this->aclExceptions as $exc) {
+            if ($this->matches($exc, $actionName)) {
+                return true;
+            }
+        }
+        foreach ($permissionList as $prm) {
+            if ($this->matches($prm, $actionName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function matches($needle, $action) {
+        if (array_key_exists($needle . '_' . $action, self::$cache['matches'])) return self::$cache['matches'][$needle . '_' . $action];
+        self::$cache['matches'][$needle . '_' . $action] = false;
+        $tneedle = strtoupper($needle);
+        $taction = strtoupper($action);
+
+        if (str_ends_with($tneedle, '.*') && str_starts_with($taction, substr($tneedle, 0, strlen($tneedle - 1))))
+            self::$cache['matches'][$needle . '_' . $action] = true;
+        else if ($tneedle === $taction) self::$cache['matches'][$needle . '_' . $action] = true;
+        else self::$cache['matches'][$needle . '_' . $action] = false;
+        return self::$cache['matches'][$needle . '_' . $action];
+    }
+}
+
+class ACL {
+    const ENABLED = 'acl-enabled';
+    const APP_INFO = 'acl-app-info';
+    const PERMISSIONS = 'acl-permissions';
+    const GROUPS = 'acl-groups';
 }

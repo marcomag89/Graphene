@@ -13,6 +13,20 @@ use \Log;
 class Module
 {
 
+    protected $actions;
+    protected $namespace;
+    protected $module_dir;
+    protected $domain;
+    protected $version;
+    protected $name;
+    protected $author;
+    protected $authEmail;
+    protected $support;
+    private $modelsPath;
+    private $currentAction;
+    private $manifest;
+    private $request;
+
     /**
      * @param  $modulePath
      * @throws \Graphene\controllers\GraphException
@@ -37,14 +51,6 @@ class Module
         }
     }
 
-    public function getManifestManager(){
-        return $this->manifestManager;
-    }
-
-    public function getModelDirectory($modelClass){
-        return $this->getModuleDir() . '/' . $this->manifest['info']['models-path'] . '/' . $modelClass . '.php';
-    }
-
     private function loadFilters($filters){
         foreach ($filters as $filter) {
             if (file_exists($filter['file'])) {
@@ -57,6 +63,18 @@ class Module
                 Log::err('filter file: '.$filter['file'].' not found');
             }
         }
+    }
+
+    public function getManifestManager() {
+        return $this->manifestManager;
+    }
+
+    public function getModelDirectory($modelClass) {
+        return $this->getModuleDir() . '/' . $this->manifest['info']['models-path'] . '/' . $modelClass . '.php';
+    }
+
+    public function getModuleDir() {
+        return $this->module_dir;
     }
 
     public function exec(GraphRequest $request)
@@ -78,29 +96,6 @@ class Module
         if (strcasecmp($request->getMethod(), 'OPTIONS') == 0)
             return $this->getOptionResponse($request);
         return null;
-    }
-
-    private function getOptionResponse(GraphRequest $request)
-    {
-        $res = new GraphResponse();
-        $res->setStatusCode(200);
-        $res->setHeader('allow', 'HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS');
-        return $res;
-    }
-
-    public function getActionUrl(GraphRequest $request)
-    {
-        return substr($request->getUrl(), strlen((string) $this->domain) + 2);
-    }
-
-    public function getCurrentAction()
-    {
-        return $this->currentAction;
-    }
-
-    public function getAction($action)
-    {
-        $this->actions = array();
     }
 
     private function instantiateActions($actions, $request)
@@ -128,7 +123,7 @@ class Module
                 if($actionClass instanceof Action){
                     $actionClass  -> setUp($this, $action, $request);
                     $this->actions[] = $actionClass;
-                    Log::debug('Action '.str_pad($action['unique-name'],50).' loaded');
+                    //Log::debug('Action '.str_pad($action['unique-name'],50).' loaded');
                 }else{
                     Log::err('Action '.str_pad($action['unique-name'],50).' not loaded'.str_pad('',10).'handler class '.$class.' is not an instance of Action in '.$file);
                 }
@@ -140,36 +135,28 @@ class Module
         }
     }
 
-    private function injectActions($injection, $request)
+    public function getNamespace()
     {
-        $injectionDir = Graphene::getInstance()->getRouter()->getInjectionDir();
-        $injectionName = strtoupper(substr($injection['name'], 1));
-        if (file_exists($injectionDir . '/' . $injectionName . '/manifest.xml')) {
-            $injXml = json_decode(json_encode(simplexml_load_file($injectionDir . '/' . $injectionName . '/manifest.xml')), true);
-            if (isset($injXml['action']))
-                $actions = $injXml['action'];
-            else
-                $actions = array();
+        return $this->namespace;
+    }
 
-            foreach ($actions as $action) {
-                $action=$action['@attributes'];
-                if (str_starts_with($action['name'], '$'))
-                    $this->injectActions($action, $request);
-                else {
-                    if (isset($injection['pars']))
-                        $pars = explode(',', $injection['pars']);
-                    else
-                        $pars = array();
-                    if (isset($injection['query-prefix']))
-                        $pfx = $injection['query-prefix'];
-                    else
-                        $pfx = '';
-                    $this->loadAction($action, $request, $injectionDir . '/' . strtoupper($injectionName), 'injection', $pars, $pfx);
-                }
-            }
-        } else {
-            //echo 'no injection for: ' . $injectionDir . '/' . $injectionName . '/manifest.xml';
-        }
+    private function getOptionResponse(GraphRequest $request) {
+        $res = new GraphResponse();
+        $res->setStatusCode(200);
+        $res->setHeader('allow', 'HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS');
+        return $res;
+    }
+
+    public function getActionUrl(GraphRequest $request) {
+        return substr($request->getUrl(), strlen((string) $this->domain) + 2);
+    }
+
+    public function getCurrentAction() {
+        return $this->currentAction;
+    }
+
+    public function getAction($action) {
+        $this->actions = [];
     }
 
     public function getAuthorEmail()
@@ -182,11 +169,6 @@ class Module
         return $this->domain;
     }
 
-    public function getName()
-    {
-        return $this->name;
-    }
-
     public function getAuthor()
     {
         return $this->manifest['info']['author'];
@@ -196,31 +178,25 @@ class Module
     {
         return $this->actions;
     }
+ // richiesta
 
     public function getSupport()
     {
         return $this->manifest['info']['support'];
     }
+ // azioni
 
     public function getVersion()
     {
         return $this->manifest['info']['version'];
     }
-
-    public function getModuleDir()
-    {
-        return $this->module_dir;
-    }
-
-    public function getNamespace()
-    {
-        return $this->namespace;
-    }
+ // nome univoco del modulo
 
     public function isActionsModule()
     {
         return $this->actions != null;
     }
+ // Pathname del modulo
 
     public function haveAction($action)
     {
@@ -231,6 +207,7 @@ class Module
         }
         return false;
     }
+ // Dominio del modulo all'interno dell'api
 
     public function getActionNames()
     {
@@ -240,6 +217,8 @@ class Module
         }
         return $ret;
     }
+ // Versione del modulo
+
     public function getActionDocs($advanced=false,$detail=false)
     {
         $this->instantiateActions($this->manifest['actions'], new GraphRequest());
@@ -271,34 +250,47 @@ class Module
         }
         return $ret;
     }
+ // Nome esteso del modulo
+
+    public function getName() {
+        return $this->name;
+    }
+
+    // Autore o autori del modulo
 
     public function getDipendences(){
         return $this->manifest['info']['depends'];
     }
-
-    private $modelsPath;
-
-    private $currentAction;
-
-    private $manifest;
-
-    private $request;
- // richiesta
-    protected $actions;
- // azioni
-    protected $namespace;
- // nome univoco del modulo
-    protected $module_dir;
- // Pathname del modulo
-    protected $domain;
- // Dominio del modulo all'interno dell'api
-    protected $version;
- // Versione del modulo
-    protected $name;
- // Nome esteso del modulo
-    protected $author;
- // Autore o autori del modulo
-    protected $authEmail;
  // email degli autori
-    protected $support; // sito o contatto di supporto
+
+    private function injectActions($injection, $request) {
+        $injectionDir = Graphene::getInstance()->getRouter()->getInjectionDir();
+        $injectionName = strtoupper(substr($injection['name'], 1));
+        if (file_exists($injectionDir . '/' . $injectionName . '/manifest.xml')) {
+            $injXml = json_decode(json_encode(simplexml_load_file($injectionDir . '/' . $injectionName . '/manifest.xml')), true);
+            if (isset($injXml['action']))
+                $actions = $injXml['action'];
+            else
+                $actions = [];
+
+            foreach ($actions as $action) {
+                $action = $action['@attributes'];
+                if (str_starts_with($action['name'], '$'))
+                    $this->injectActions($action, $request);
+                else {
+                    if (isset($injection['pars']))
+                        $pars = explode(',', $injection['pars']);
+                    else
+                        $pars = [];
+                    if (isset($injection['query-prefix']))
+                        $pfx = $injection['query-prefix'];
+                    else
+                        $pfx = '';
+                    $this->loadAction($action, $request, $injectionDir . '/' . strtoupper($injectionName), 'injection', $pars, $pfx);
+                }
+            }
+        } else {
+            //echo 'no injection for: ' . $injectionDir . '/' . $injectionName . '/manifest.xml';
+        }
+    } // sito o contatto di supporto
 }

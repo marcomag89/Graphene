@@ -7,6 +7,16 @@ use \PDO;
 use \PDOStatement;
 
 class ConnectionManager {
+    private $queryCounter = 0;
+    /**
+     * @var PDO
+     */
+    private $connection = null;
+    /**
+     * @var ConfigManager
+     */
+    private $configManager = null;
+
     public function __construct($configManager){
         $this->configManager = $configManager;
     }
@@ -18,9 +28,7 @@ class ConnectionManager {
         if($this->connection === null)$this->connection =$this->connect();
         return $this->connection;
     }
-    public function getPrefix(){
-        return $this->configManager->getPrefix();
-    }
+
     private function connect(){
 
         try {
@@ -36,6 +44,10 @@ class ConnectionManager {
             $ex = new GraphException('Error on mysql connection: ' . $e->getMessage(), ExceptionCodes::DRIVER_CONNECTION, 500);
             ExceptionConverter::throwException($ex);
         }
+    }
+
+    public function getPrefix() {
+        return $this->configManager->getPrefix();
     }
 
     /**
@@ -65,13 +77,4 @@ class ConnectionManager {
             throw new GraphException('mySql exception on query no.' . $this->queryCounter . ', see log for more info', ExceptionCodes::DRIVER_CREATE, 500);
         }
     }
-    private $queryCounter = 0;
-    /**
-     * @var PDO
-     */
-    private $connection    = null;
-    /**
-     * @var ConfigManager
-     */
-    private $configManager = null;
 }

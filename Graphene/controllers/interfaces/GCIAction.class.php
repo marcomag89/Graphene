@@ -2,27 +2,63 @@
 namespace Graphene\controllers\interfaces;
 /** Graphene collection interface action */
 use Graphene\controllers\Action;
-use Graphene\models\ModelCollection;
-use Graphene\models\Model;
 use Graphene\Graphene;
+use Graphene\models\Model;
+use Graphene\models\ModelCollection;
 
 
 abstract class GCIAction extends Action{
 
-    protected abstract function getModelInstance();
-    protected function getIncomingQuery()    { return $this->request->getData(); }
-    protected function getSearchQuery($data) { return $data['search']; }
-    protected function getSortField($data)   { return (($data['sort']['by']   !== null) ? $data['sort']['by'] : ''); }
-    protected function getPageSize($data)    { return ((intval($data['page']['size']))? intval($data['page']['size']):null); }
-    protected function getPageNo($data)      { return ((intval($data['page']['no']))? intval($data['page']['no']): 1); }
-    protected function getSortMode($data)    { return ((boolval($data['sort']['discend'])) ? 'DSC' : 'ASC');}
-    protected function getItemName(){
-        return $this->getModelInstance()->getModelName();
+    protected $queryParams;
+
+    public function run() {
+        if (array_key_exists('qParams', $this->request->getData())) {
+            $this->queryParams = json_decode($this->request->getData()['qParams'], true);
+        }
+        $model = $this->getModelInstance();
+        $data = $this->getIncomingQuery();
+
+        $pageSize = $this->getPageSize($data);
+        $page = $this->getPageNo($data);
+        $gQuery = $this->getStorageQuery($data);
+
+        $readed = $this->fetch($model, $gQuery, $page, $pageSize);
+
+        if ($readed instanceof ModelCollection) {
+
+            $cursor = $this->getCursor($data, $readed);
+            $results = [];
+            foreach ($readed as $item) {
+                $item->onSend();
+                array_push($results, [$item->getModelName() => $this->formatItem($item->getContent())]);
+            }
+            $this->send([
+                'Collection' => $results,
+                'cursor'     => $cursor
+            ]);
+        } else {
+            $this->send(null);
+        }
     }
 
-    protected function getItemStruct(){
-        return $this->getModelInstance()->getReadActionStruct();
+    protected abstract function getModelInstance();
+
+    protected function getIncomingQuery()    { return $this->request->getData(); }
+
+    protected function getPageSize($data) {
+        return (
+            array_key_exists('page', $data) &&
+            array_key_exists('size', $data['page'])
+        ) ? intval($data['page']['size']) : null;
     }
+
+    protected function getPageNo($data) {
+        return (
+            array_key_exists('page', $data) &&
+            array_key_exists('no', $data['page'])
+        ) ? intval($data['page']['no']) : 1;
+    }
+
     protected function getStorageQuery($data) {
         return [
             'search' => $this->getSearchQuery($data),
@@ -31,6 +67,26 @@ abstract class GCIAction extends Action{
                 'mode'=>$this->getSortMode($data)
             ]
         ];
+    }
+
+    protected function getSearchQuery($data) {
+        return array_key_exists('search', $data) && $data['search'] !== '' ? $data['search'] : null;
+    }
+
+    protected function getSortField($data) {
+        return (
+            array_key_exists('sort', $data) &&
+            array_key_exists('by', $data['sort']) &&
+            ($data['sort']['by'] !== null)
+        ) ? $data['sort']['by'] : '';
+    }
+
+    protected function getSortMode($data) {
+        return (
+            array_key_exists('sort', $data) &&
+            array_key_exists('discend', $data['sort']) &&
+            boolval($data['sort']['discend'])
+        ) ? 'DSC' : 'ASC';
     }
 
     protected function fetch($model,$storageQuery,$page,$pageSize){
@@ -65,46 +121,12 @@ abstract class GCIAction extends Action{
         $cursor = [];
         $cursor['nxt'] = $url.'?'.http_build_query($httpQN);
         $cursor['cur'] = $url.'?'.http_build_query($httpQ);
-        if($page > 1) $cursor['prv'] ($url.'?'.http_build_query($httpQP));
+        if ($page > 1) $cursor['prv'] = ($url . '?' . http_build_query($httpQP));
 
         return $cursor;
     }
 
     protected function formatItem($item){return $item;}
-
-    public function run()
-    {
-        $model = $this->getModelInstance();
-        $data  = $this->getIncomingQuery();
-
-        $pageSize = $this->getPageSize($data);
-        $page     = $this->getPageNo($data);
-        $gQuery   = $this->getStorageQuery($data);
-
-        $readed = $this->fetch($model, $gQuery, $page, $pageSize);
-
-        if($readed instanceof ModelCollection){
-
-            $cursor = $this->getCursor($data,$readed);
-            $results = [];
-            foreach($readed as $item){
-                array_push($results,[$item->getModelName() => $this->formatItem($item->getContent())]);
-            }
-            $this->send([
-                'Collection' => $results,
-                'cursor'     => $cursor
-            ]);
-        }else{
-            $this->send(null);
-        }
-    }
-
-
-    /*
-     * GRAPHENE DOC
-     *
-     *
-     * */
 
     public function getRequestStruct(){
         return [
@@ -120,6 +142,13 @@ abstract class GCIAction extends Action{
         ];
     }
 
+
+    /*
+     * GRAPHENE DOC
+     *
+     *
+     * */
+
     public function getResponseStruct(){
         $model = $this->getModelInstance();
         if($model instanceof Model){
@@ -133,6 +162,15 @@ abstract class GCIAction extends Action{
             ];
         }
     }
+
+    protected function getItemName() {
+        return $this->getModelInstance()->getModelName();
+    }
+
+    protected function getItemStruct() {
+        return $this->getModelInstance()->getReadActionStruct();
+    }
+
     public function getActionInterface(){
         $struct = [$this->getItemName() => $this->getItemStruct()];
         $flatStructArr = $this->contentToFlatArray($struct);
@@ -170,6 +208,4 @@ abstract class GCIAction extends Action{
         return "# Read ".$modName." collection\n this action allows to read collection of ".$modName." instances, implementing **GCI** (*Graphene Collection Interface*).\nThis interface is automatically paged and you can quest this action using search and sort url parameters\n\n* **page_no** page selector, default is **1**\n* **page_size** allows to select a page size, default is **20**\n* **search** search string default is an empty string\n* **sort_by** set this parameter with name of field\n* **sort_discend** if value is '1' sort will bi discend default **0**\n\n".
         parent::getDescription();
     }
-
-
 }

@@ -5,6 +5,8 @@ use \Log;
 
 class ConfigManager
 {
+    private $url, $port, $dbName, $userName, $prefix, $password;
+
     public function __construct($config)
     {
         $this->url = $config['host'];
@@ -53,10 +55,7 @@ class ConfigManager
         return $this->dbName;
     }
 
-    public function getDbPort()
-    {
+    public function getDbPort() {
         return $this->port;
     }
-
-    private $url, $port, $dbName, $userName, $prefix, $password;
 }

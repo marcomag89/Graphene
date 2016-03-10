@@ -10,6 +10,10 @@ use Graphene\db\CrudDriver;
 
 class CrudMySql2 implements CrudDriver{
 
+    const INFO = 'mySql driver 0.2.1, for Graphene 0.2.x';
+    protected $connectionManager;
+    protected $configManager;
+
     public function __construct($dbConfig){
         $this->configManager     = new ConfigManager($dbConfig);
         $this->connectionManager = new ConnectionManager($this->configManager);
@@ -26,7 +30,6 @@ class CrudMySql2 implements CrudDriver{
         return self::INFO;
     }
 
-
     public function create($json){
         $req   = new StorageRequest($json,$this->connectionManager);
         $this->coreManager->init($req->getModel());
@@ -39,6 +42,7 @@ class CrudMySql2 implements CrudDriver{
         $req   = new StorageRequest($json,$this->connectionManager,$query);
         $this->coreManager->init($req->getModel());
         $query = MySqlQuery::getReadQuery($this->configManager,$req);
+        \Log::debug($query);
         $res = $this->connectionManager->query($query);
         return $req->serializeResponse($res);
     }
@@ -58,8 +62,4 @@ class CrudMySql2 implements CrudDriver{
         $this->connectionManager->query($query);
         return true;
     }
-
-    protected $connectionManager;
-    protected $configManager;
-    const INFO = 'mySql driver 0.2.1, for Graphene 0.2.x';
 }
