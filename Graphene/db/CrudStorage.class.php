@@ -8,7 +8,8 @@ use Graphene\controllers\model\ModelFactory;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\models\ModelCollection;
 use \Exception;
-use \Log;
+
+//use \Log;
 
 class CrudStorage
 {
@@ -189,7 +190,7 @@ class CrudStorage
      * <b>Model</b> model da patchare [id e versione obbligatori]
      */
     public function patch(Model $model) {
-        Log::debug('calling storage driver for patch');
+        //Log::debug('calling storage driver for patch');
         if ($model->getId() == null)
             throw new GraphException('Unavailable ' . $model->getModelName() . ' id', ExceptionsCodes::BEAN_STORAGE_ID_UNAVAILABLE, 400);
         if ($model->getVersion() == null)

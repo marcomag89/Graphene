@@ -36,7 +36,8 @@ class ConnectionManager {
             $user = $this->configManager->getUserName();
             $pwd = $this->configManager->getPassword();
             $this->connection = new PDO($conString, $user, $pwd);
-            Log::debug('mySql connection success as: '.$this->configManager->getUserName());
+
+            //Log::debug('mySql connection success as: '.$this->configManager->getUserName());
             return $this->connection;
         } catch (Exception $e) {
             Log::err('mySql connection fails: ' . $e->getMessage());

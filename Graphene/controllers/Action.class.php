@@ -9,7 +9,6 @@ use Graphene\models\ModelCollection;
 use Graphene\models\Module;
 use \Exception;
 use Graphene\controllers\exceptions\GraphException;
-use \Log;
 
 abstract class Action
 {

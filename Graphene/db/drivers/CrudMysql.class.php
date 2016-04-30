@@ -7,21 +7,12 @@ use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\exceptions\ExceptionCodes;
 use Graphene\models\Model;
 use \PDO;
-use \Log;
 use \PDOStatement;
 
 class CrudMySql implements CrudDriver
 {
 
-    public function __construct($dbConfig)
-    {
-        $this->url      = $dbConfig['host'];
-        $this->dbname   = $dbConfig['dbName'];
-        $this->username = $dbConfig['username'];
-        $this->prefix   = $dbConfig['prefix'];
-        $this->password = $dbConfig['password'];
-        Log::debug('Crud MySql driver initialized');
-    }
+    const TBL_CREATION_PTT = 'CREATE TABLE IF NOT EXISTS `<dbname>`.`<tableName>`( <fields> PRIMARY KEY(`id`) <uniqueIndexes> ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8;';
 
     /*
      * ----------------------------------------
@@ -29,23 +20,34 @@ class CrudMySql implements CrudDriver
      * ----------------------------------------
      */
     // Connection
-    public function getConnection()
-    {
-        if ($this->connection == null) {
-            try {
-                $this->connection = new PDO('mysql:host=' . $this->url . ';dbname=' . $this->dbname, $this->username, $this->password);
-                Log::debug('mySql connection success');
-                return $this->connection;
-            } catch (Exception $e) {
-                Log::debug('mySql connection fails: '.$e->getMessage());
-                $this->connection = null;
-                throw new GraphException('Error on mysql connection: ' . $e->getMessage(), ExceptionCodes::DRIVER_CONNECTION, 500);
-            }
-        } else
-            return $this->connection;
-    }
+    const DELETE_PTT = 'DELETE FROM `<dbname>`.`<tableName>` WHERE `id`=<id>;';
 
     /* TAG Create */
+    const SELECT_PTT = 'SELECT * FROM `<dbname>`.`<tableName>`  WHERE <cond> <limit> <offset>';
+
+    /* TAG Read */
+    const UPDATE_PTT = 'UPDATE `<dbname>`.`<tableName>` SET <kv>  WHERE `id`=<id>';
+
+    /* TAG Update */
+    const UNIQUE_PTT = 'UNIQUE INDEX `<field>_UNIQUE (`<field>`)';
+
+    /* TAG Delete */
+    const LOG_NAME = '[CRUD mySql Driver v2] ';
+    const INSERT_PTT = 'INSERT INTO `<dbname>`.`<tableName>` (<fields>) VALUES (<values>);';
+    const INFO = 'mySql CRUD-JSON driver v.1b, for Graphene 0.1b';
+    private $connection;
+    private $url, $username, $password, $dbname, $prefix;
+
+    public function __construct($dbConfig)
+    {
+        $this->url = $dbConfig['host'];
+        $this->dbname = $dbConfig['dbName'];
+        $this->username = $dbConfig['username'];
+        $this->prefix = $dbConfig['prefix'];
+        $this->password = $dbConfig['password'];
+        //Log::debug('Crud MySql driver initialized');
+    }
+
     public function create($json)
     {
         $this->init($json);
@@ -85,100 +87,6 @@ class CrudMySql implements CrudDriver
         // print_r($cols);
     }
 
-    /* TAG Read */
-    public function read($json, $query = null)
-    {
-        $this->init($json);
-        $decoded = json_decode($json, true);
-        $q = self::SELECT_PTT;
-        $cond = $this->getCondition($query, $this->columnsByStruct($decoded['content']));
-        if($decoded['pageSize'] > 0){
-            $limit  = 'LIMIT '.$decoded['pageSize'];
-            $offset = 'OFFSET '.(($decoded['page']-1) * $decoded['pageSize']);
-        }else{
-            $limit='';
-            $offset='';
-        }
-        $q = str_replace('<dbname>', $this->dbname, $q);
-        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
-        $q = str_replace('<cond>',   $cond, $q);
-        $q = str_replace('<limit>',  $limit, $q);
-        $q = str_replace('<offset>', $offset, $q);
-        $return = array();
-        // Exec query
-        $res = $this->connection->query($q);
-        $err = $this->connection->errorInfo();
-        if (strcasecmp($err[0], '00000') != 0)
-            throw new GraphException('mySql driver READ exception ' . $err[2], ExceptionCodes::DRIVER_READ, 500);
-        if ($res instanceof PDOStatement) {
-            $results = array();
-            $i = 0;
-            while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
-                foreach ($row as $rk => $rv) {
-                    $results[$i][$rk] = $rv;
-                }
-                $i ++;
-            }
-            foreach ($results as $res) {
-                $return[] = $this->colsToJsonArr($res,$json);
-            }
-        }
-        $retJson = $decoded;
-        unset($retJson['content']);
-        $retJson['collection'] = $return;
-        $ret = json_encode($retJson, JSON_PRETTY_PRINT);
-        var_dump($ret);
-        return $ret;
-    }
-
-    /* TAG Update */
-    public function update($json)
-    {
-        $this->init($json);
-        $decoded = json_decode($json, true);
-        $cols = $this->columnsByStruct($decoded['content']);
-        $q = self::UPDATE_PTT;
-        $kv = ' ';
-        foreach ($cols as $label => $value) {
-            if (! strcasecmp($label, 'id') == 0) {
-                $kv = $kv . '`' . $label . '`=' .$this->connection->quote($value) . ',';
-            }
-        }
-        $kv = substr($kv, 0, - 1);
-        $q = str_replace('<dbname>', $this->dbname, $q);
-        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
-        $q = str_replace('<kv>', $kv, $q);
-        $q = str_replace('<id>', $this->connection->quote($cols['id']), $q);
-        $res = $this->connection->query($q);
-        $err = $this->connection->errorInfo();
-        if (strcasecmp($err[0], '00000') != 0)
-            throw new GraphException('mySql driver UPDATE exception ' . $err[2], ExceptionCodes::DRIVER_UPDATE, 500);
-        if ($res instanceof PDOStatement)
-            $res->fetchAll();
-        $tmpJ = $decoded;
-        unset($tmpJ['content']);
-        $tmpJ['content']['id'] = $decoded['content']['id'];
-        return $this->read(json_encode($tmpJ));
-    }
-
-    /* TAG Delete */
-    public function delete($json)
-    {
-        $this->init($json);
-        $decoded = json_decode($json, true);
-        $q = self::DELETE_PTT;
-        $q = str_replace('<dbname>', $this->dbname, $q);
-        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
-        $q = str_replace('<id>', $this->connection->quote($decoded['content']['id']), $q);
-        $res = $this->connection->query($q);
-        $err = $this->connection->errorInfo();
-        if (strcasecmp($err[0], '00000') != 0)
-            throw new GraphException('mySql driver DELETE exception ' . $err[2], ExceptionCodes::DRIVER_UPDATE, 500);
-        if ($res instanceof PDOStatement)
-            $res->fetchAll();
-        return true;
-    }
-
     private function init($json)
     {
         $this->getConnection();
@@ -189,6 +97,23 @@ class CrudMySql implements CrudDriver
             $exists->fetchAll();
         else
             $this->createTable($tableName, $decoded);
+    }
+
+    public function getConnection() {
+        if ($this->connection == null) {
+            try {
+                $this->connection = new PDO('mysql:host=' . $this->url . ';dbname=' . $this->dbname, $this->username, $this->password);
+
+                //Log::debug('mySql connection success');
+                return $this->connection;
+            } catch (Exception $e) {
+                //Log::debug('mySql connection fails: '.$e->getMessage());
+                $this->connection = null;
+                throw new GraphException('Error on mysql connection: ' . $e->getMessage(), ExceptionCodes::DRIVER_CONNECTION, 500);
+            }
+        } else {
+            return $this->connection;
+        }
     }
 
     private function createTable($tableName, $decodedJson)
@@ -232,43 +157,6 @@ class CrudMySql implements CrudDriver
         return $schema;
     }
 
-    /**
-     * @param $row
-     * @param $json
-     * @return array
-     */
-    private function colsToJsonArr($row,$json)
-    {
-        $res = array();
-        $struct = json_decode($json,true)['struct'];
-
-        foreach ($row as $k => $v) {
-            $expl = explode('_', $k);
-            $tRes = &$res;
-            $tStruct = &$struct;
-            if (count($expl) > 1) {
-                // goto leaf
-                foreach ($expl as $e) {
-                    if (! isset($tRes[$e])){
-                        $tRes[$e] = array();
-                        $tStruct  = &$struct[$e];
-                    }
-                    $tRes = &$tRes[$e];
-                }
-                // Popolate leaf
-                $tRes = $v;
-            } else {
-                if(str_contains($tStruct[$k],Model::DATETIME) && $v === '0000-00-00 00:00:00'){$v=null;}
-                else if(str_contains($tStruct[$k],Model::BOOLEAN)){if($v === 1 || $v === '1') $v = true; else $v=false;}
-                else if(str_contains($tStruct[$k],Model::INTEGER) && ($v !==null || $v!=='')){$v=intval($v);}
-                else if(str_contains($tStruct[$k],Model::DECIMAL) && ($v !==null || $v!=='')){$v=floatval($v);}
-
-                $tRes[$k] = $v;
-            }
-        }
-        return $res;
-    }
-
     private function convertTypes($flat)
     {
         $ret = array();
@@ -276,17 +164,6 @@ class CrudMySql implements CrudDriver
             $ret[$flatk] = $this->convertType($flatv);
         }
         return $ret;
-    }
-
-    private function getUniques($cols)
-    {
-        $colstr = ' ';
-        foreach ($cols as $col => $type) {
-            if (in_array(substr(Model::UNIQUE, strlen(Model::CHECK_SEP)), explode(Model::CHECK_SEP, $type)))
-                $colstr = $colstr . ', UNIQUE INDEX `' . $col . '_UNIQUE` (`' . $col . '` ASC)';
-        }
-        // $colstr=substr($colstr, 0,-1);
-        return $colstr;
     }
 
     private function convertType($type)
@@ -383,6 +260,70 @@ class CrudMySql implements CrudDriver
         return $ret;
     }
 
+    /*
+     * ---------------------
+     * COSTANTI
+     * --------------------
+     */
+
+    private function getUniques($cols) {
+        $colstr = ' ';
+        foreach ($cols as $col => $type) {
+            if (in_array(substr(Model::UNIQUE, strlen(Model::CHECK_SEP)), explode(Model::CHECK_SEP, $type))) {
+                $colstr = $colstr . ', UNIQUE INDEX `' . $col . '_UNIQUE` (`' . $col . '` ASC)';
+            }
+        }
+
+        // $colstr=substr($colstr, 0,-1);
+        return $colstr;
+    }
+
+    public function read($json, $query = null) {
+        $this->init($json);
+        $decoded = json_decode($json, true);
+        $q = self::SELECT_PTT;
+        $cond = $this->getCondition($query, $this->columnsByStruct($decoded['content']));
+        if ($decoded['pageSize'] > 0) {
+            $limit = 'LIMIT ' . $decoded['pageSize'];
+            $offset = 'OFFSET ' . (($decoded['page'] - 1) * $decoded['pageSize']);
+        } else {
+            $limit = '';
+            $offset = '';
+        }
+        $q = str_replace('<dbname>', $this->dbname, $q);
+        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
+        $q = str_replace('<cond>', $cond, $q);
+        $q = str_replace('<limit>', $limit, $q);
+        $q = str_replace('<offset>', $offset, $q);
+        $return = [];
+        // Exec query
+        $res = $this->connection->query($q);
+        $err = $this->connection->errorInfo();
+        if (strcasecmp($err[0], '00000') != 0) {
+            throw new GraphException('mySql driver READ exception ' . $err[2], ExceptionCodes::DRIVER_READ, 500);
+        }
+        if ($res instanceof PDOStatement) {
+            $results = [];
+            $i = 0;
+            while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
+                foreach ($row as $rk => $rv) {
+                    $results[$i][$rk] = $rv;
+                }
+                $i++;
+            }
+            foreach ($results as $res) {
+                $return[] = $this->colsToJsonArr($res, $json);
+            }
+        }
+        $retJson = $decoded;
+        unset($retJson['content']);
+        $retJson['collection'] = $return;
+        $ret = json_encode($retJson, JSON_PRETTY_PRINT);
+        var_dump($ret);
+
+        return $ret;
+    }
+
     private function getCondition($query, $cols)
     {
         /*  {
@@ -420,36 +361,107 @@ class CrudMySql implements CrudDriver
         return $cond;
     }
 
-    public function getSettings()
-    {}
+    /**
+     * @param $row
+     * @param $json
+     *
+     * @return array
+     */
+    private function colsToJsonArr($row, $json) {
+        $res = [];
+        $struct = json_decode($json, true)['struct'];
 
-    public function getInfos()
-    {
-        return self::INFO;
+        foreach ($row as $k => $v) {
+            $expl = explode('_', $k);
+            $tRes = &$res;
+            $tStruct = &$struct;
+            if (count($expl) > 1) {
+                // goto leaf
+                foreach ($expl as $e) {
+                    if (!isset($tRes[$e])) {
+                        $tRes[$e] = [];
+                        $tStruct = &$struct[$e];
+                    }
+                    $tRes = &$tRes[$e];
+                }
+                // Popolate leaf
+                $tRes = $v;
+            } else {
+                if (str_contains($tStruct[$k], Model::DATETIME) && $v === '0000-00-00 00:00:00') {
+                    $v = null;
+                } else if (str_contains($tStruct[$k], Model::BOOLEAN)) {
+                    if ($v === 1 || $v === '1') {
+                        $v = true;
+                    } else {
+                        $v = false;
+                    }
+                } else if (str_contains($tStruct[$k], Model::INTEGER) && ($v !== null || $v !== '')) {
+                    $v = intval($v);
+                } else if (str_contains($tStruct[$k], Model::DECIMAL) && ($v !== null || $v !== '')) {
+                    $v = floatval($v);
+                }
+
+                $tRes[$k] = $v;
+            }
+        }
+
+        return $res;
     }
 
-    private $connection;
+    public function update($json) {
+        $this->init($json);
+        $decoded = json_decode($json, true);
+        $cols = $this->columnsByStruct($decoded['content']);
+        $q = self::UPDATE_PTT;
+        $kv = ' ';
+        foreach ($cols as $label => $value) {
+            if (!strcasecmp($label, 'id') == 0) {
+                $kv = $kv . '`' . $label . '`=' . $this->connection->quote($value) . ',';
+            }
+        }
+        $kv = substr($kv, 0, -1);
+        $q = str_replace('<dbname>', $this->dbname, $q);
+        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
+        $q = str_replace('<kv>', $kv, $q);
+        $q = str_replace('<id>', $this->connection->quote($cols['id']), $q);
+        $res = $this->connection->query($q);
+        $err = $this->connection->errorInfo();
+        if (strcasecmp($err[0], '00000') != 0) {
+            throw new GraphException('mySql driver UPDATE exception ' . $err[2], ExceptionCodes::DRIVER_UPDATE, 500);
+        }
+        if ($res instanceof PDOStatement) {
+            $res->fetchAll();
+        }
+        $tmpJ = $decoded;
+        unset($tmpJ['content']);
+        $tmpJ['content']['id'] = $decoded['content']['id'];
 
-    private $url, $username, $password, $dbname, $prefix;
+        return $this->read(json_encode($tmpJ));
+    }
 
-    /*
-     * ---------------------
-     * COSTANTI
-     * --------------------
-     */
-    const TBL_CREATION_PTT = 'CREATE TABLE IF NOT EXISTS `<dbname>`.`<tableName>`( <fields> PRIMARY KEY(`id`) <uniqueIndexes> ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8;';
+    public function delete($json) {
+        $this->init($json);
+        $decoded = json_decode($json, true);
+        $q = self::DELETE_PTT;
+        $q = str_replace('<dbname>', $this->dbname, $q);
+        $q = str_replace('<tableName>', $this->prefix . '_' . str_replace('.', '_', $decoded['domain']) . '_model', $q);
+        $q = str_replace('<id>', $this->connection->quote($decoded['content']['id']), $q);
+        $res = $this->connection->query($q);
+        $err = $this->connection->errorInfo();
+        if (strcasecmp($err[0], '00000') != 0) {
+            throw new GraphException('mySql driver DELETE exception ' . $err[2], ExceptionCodes::DRIVER_UPDATE, 500);
+        }
+        if ($res instanceof PDOStatement) {
+            $res->fetchAll();
+        }
 
-    const DELETE_PTT = 'DELETE FROM `<dbname>`.`<tableName>` WHERE `id`=<id>;';
+        return true;
+    }
 
-    const SELECT_PTT = 'SELECT * FROM `<dbname>`.`<tableName>`  WHERE <cond> <limit> <offset>';
+    public function getSettings() {
+    }
 
-    const UPDATE_PTT = 'UPDATE `<dbname>`.`<tableName>` SET <kv>  WHERE `id`=<id>';
-
-    const UNIQUE_PTT = 'UNIQUE INDEX `<field>_UNIQUE (`<field>`)';
-
-    const LOG_NAME = '[CRUD mySql Driver v2] ';
-
-    const INSERT_PTT = 'INSERT INTO `<dbname>`.`<tableName>` (<fields>) VALUES (<values>);';
-
-    const INFO = 'mySql CRUD-JSON driver v.1b, for Graphene 0.1b';
+    public function getInfos() {
+        return self::INFO;
+    }
 }

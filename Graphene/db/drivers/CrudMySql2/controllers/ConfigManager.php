@@ -15,7 +15,7 @@ class ConfigManager
         $this->userName = $config['username'];
         $this->prefix = $config['prefix'];
         $this->password = $config['password'];
-        Log::debug('MySql driver setup completed');
+        //Log::debug('MySql driver setup completed');
     }
 
     public function getUrl()

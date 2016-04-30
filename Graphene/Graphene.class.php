@@ -14,7 +14,8 @@ use Graphene\controllers\GrapheneRouter;
 use Graphene\controllers\Filter;
 use Graphene\controllers\FilterManager;
 use Graphene\db\CrudStorage;
-use \Log;
+
+//use \Log;
 
 
 /**
@@ -114,7 +115,7 @@ class Graphene
         $this->requests = [];
         $this->createRequest();
         $request = $this->getRequest();
-        Log::request($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
+        //Log::request($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
         $this->filterManager = new FilterManager();
         $this->router = new GrapheneRouter($this->getRequest());
         $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->getSettings()['storageConfig']['driver'];
@@ -122,7 +123,7 @@ class Graphene
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
         if (Settings::getInstance()->getPar('stats')) {
-            Log::logLabel('STATS', $this->stats);
+            //Log::logLabel('STATS', $this->stats);
         }
     }
 

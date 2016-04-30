@@ -18,7 +18,7 @@ class CreateExternal extends Action {
                 'template' => $this->request->getData()['UserExternal']['template']
             ]
         ])->getData();
-        \Log::debug($userData);
+        //\Log::debug($userData);
         $this->send($userData);
     }
 }

@@ -6,7 +6,7 @@ use Graphene\controllers\exceptions\GraphException;
 
 class AppPermissionsSet extends Action {
     public function run() {
-        $appProto = json_decode($this->request->getBody(), true)['App'];
+        $appProto = $this->request->getData()['App'];
         $apiKey = $appProto['apiKey'];
         $permissions = $appProto['permissions'];
         $res = $this->forward('/acl/app/withPermission/' . $apiKey);
@@ -30,6 +30,7 @@ class AppPermissionsSet extends Action {
                 $doRemove[] = $permission;
             }
         }
+
         foreach ($doRemove as $prm) {
             $req = ["AppPermission" => ["apiKey" => $apiKey, "action" => $prm]];
             try {
@@ -50,6 +51,6 @@ class AppPermissionsSet extends Action {
 
         $app = $this->forward('/acl/app/withPermission/' . $apiKey)->getData();
         $app['errors'] = $errs;
-        $this->response->setData($app);
+        $this->send($app);
     }
 }

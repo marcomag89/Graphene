@@ -6,7 +6,7 @@ use Graphene\models\Model;
 
 class Read extends StdRead {
 
-    function getModelInstance() {
+    protected function getModelInstance() {
         return new User();
     }
 
@@ -18,6 +18,7 @@ class Read extends StdRead {
             $user = new User();
             $user->setContent($userC);
         }
+
         return $user;
     }
 }

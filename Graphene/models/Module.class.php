@@ -79,15 +79,13 @@ class Module
 
     public function exec(GraphRequest $request)
     {
-        //Log::debug('searching for action in: '.$this->getName());
-        //Log::debug(json_encode($this->manifest,JSON_PRETTY_PRINT));
         $this->instantiateActions($this->manifest['actions'], $request);
 
         foreach ($this->actions as $action) {
             $this->currentAction = $action;
             if ($action->isHandled()) {
                 Graphene::getInstance()->stopStat('DispatchingTime',$request->getMethod().' '.$request->getUrl().' '.$request->getContextPar('dispatchingId'));
-                Log::debug($action->getUniqueActionName().' is handled');
+                Log::info($action->getUniqueActionName() . ' HANDLED');
                 $this->currentAction = $action;
                 return $action->start();
             } else

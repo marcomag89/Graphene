@@ -12,34 +12,36 @@ class GetStatus extends Action {
         $this->status = [];
         $fw = Graphene::getInstance();
         $mods = $fw->getInstalledModulesInfos();
-        $this->status['framework-infos'] = Graphene::INFO;
-        $this->status['framework-version'] = Graphene::VERSION;
-        $this->status['php-version'] = 'PHP v.' . phpversion();
-        $this->status['app-name'] = $fw->getApplicationName();
+        $this->status['framework'] = [
+            'info'    => Graphene::INFO,
+            'version' => Graphene::VERSION,
+        ];
+        $this->status['php'] = 'PHP v.' . phpversion();
+        $this->status['appName'] = $fw->getApplicationName();
 
-        if ($fw->getStorage()->checkConnection())
+        if ($fw->getStorage()->checkConnection()) {
             $this->status['db']['connectionStatus'] = 'ok';
-        else
+        } else {
             $this->status['db']['connectionStatus'] = 'connection fails';
+        }
 
         $this->status['db']['driver'] = $fw->getStorage()->getDriverInfos();
 
         // Sending response
         $this->status['server']['time'] = date('Y-m-d H:i:s');
-        $this->status['server']['ip-address'] = $_SERVER['SERVER_ADDR'];
+        $this->status['server']['ip'] = array_key_exists('SERVER_ADDR', $_SERVER) ? $_SERVER['SERVER_ADDR'] : 'ND';
         $this->status['server']['software'] = $_SERVER['SERVER_SOFTWARE'];
 
-        $this->status['installed-modules'] = [];
+        $this->status['installedModules'] = [];
         foreach ($mods as $mod) {
-            $this->status['installed-modules'][] = str_pad($mod['name'], 20) . ' [' . count($mod['actions']) . ']';
+
+            $this->status['modules'][] = [
+                'name'    => $mod['name'],
+                'actions' => count($mod['actions'])
+            ];
         }
+        $this->send(['GrapheneStatus' => $this->status]);
 
-        $this->response->setBody($this->getStatusBody());
-
-    }//end getStatusBody()
-
-    private function getStatusBody() {
-        return json_encode(['GrapheneStatus' => $this->status], JSON_PRETTY_PRINT);
-    }
+    }//end
 
 }//end class

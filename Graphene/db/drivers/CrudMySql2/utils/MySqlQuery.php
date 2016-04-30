@@ -214,10 +214,13 @@ class MySqlQuery {
     }
 
     public static function composeReadQuery($queryComponents) {
+        $condition = $queryComponents['condition'];
+        $condition = array_key_exists('groupBy', $queryComponents) ? $condition . ' GROUP BY ' . $queryComponents['groupBy'] : $condition;
+
         $q = $queryComponents['model'];
         $q = str_replace('<selection>', $queryComponents['selection'], $q);
         $q = str_replace('<identifier>', $queryComponents['from'], $q);
-        $q = str_replace('<cond>', $queryComponents['condition'], $q);
+        $q = str_replace('<cond>', $condition, $q);
         $q = str_replace('<paging>', $queryComponents['paging'], $q);
         return $q;
     }

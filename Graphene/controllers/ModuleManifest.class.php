@@ -4,7 +4,6 @@ namespace Graphene\controllers;
 
 use Graphene\Graphene;
 use Graphene\controllers\exceptions\GraphException;
-use \Log;
 
 
 class ModuleManifest{
@@ -110,7 +109,7 @@ class ModuleManifest{
                 $manifest['actions'][$k]['pars']        = $this->parseCommas($rManifest['actions'][$k]['pars']);
 
             } else {
-                Log::err('action '.$k.' name is not defined in: '.$modulePath);
+                //Log::err('action '.$k.' name is not defined in: '.$modulePath);
             }
         }
 
@@ -139,7 +138,7 @@ class ModuleManifest{
                 $manifest['filters'][$k]['after']       = $this->parseCommas($rManifest['filters'][$k]['after']);
 
             }else{
-                Log::err('filter '.$k.' name is not defined in: '.$modulePath);
+                //Log::err('filter '.$k.' name is not defined in: '.$modulePath);
             }
         }
         //Log::debug("\n-------\nLOADED MANIFEST\n--------\n".json_encode($manifest,JSON_PRETTY_PRINT));

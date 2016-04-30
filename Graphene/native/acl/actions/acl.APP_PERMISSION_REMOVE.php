@@ -4,22 +4,20 @@ namespace acl;
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
 
-class AppPermissionRemove extends Action
-{
-    public function run(){
-        $appPrm = json_decode($this->request->getBody(),true)['AppPermission'];
+class AppPermissionRemove extends Action {
+    public function run() {
+        $appPrm = $this->request->getData()['AppPermission'];
         $apiKey = $appPrm['apiKey'];
-        $res=$this->forward('/apps/validate/'.$apiKey);
-        if($res->getStatusCode() !== 200 ) throw new GraphException('Application not found',400);
-        $appId = json_decode($res->getBody(),true)['App']['id'];
+        $app = $this->forward('/apps/validate/' . $apiKey)->getData()['App'];
         $permission = new AppPermission();
-        $permission->setAppId  ($appId);
-        $permission->setAction ($appPrm['action']);
-        $rPermission=$permission->read();
-        if($rPermission !== null){
+        $permission->setAppId($app['id']);
+        $permission->setAction($appPrm['action']);
+        $rPermission = $permission->read();
+        if ($rPermission !== null) {
             $rPermission->delete();
             $this->sendMessage('permission deleted successfully');
+        } else {
+            throw new GraphException('permission not found');
         }
-        else throw new GraphException('permission not found');
     }
 }

@@ -4,11 +4,17 @@ namespace Graphene\controllers;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\Graphene;
 use Graphene\models\Module;
-use Graphene\controllers\Filter;
-use \Log;
 
 class FilterManager
 {
+
+    private static $ids;
+    private $filterErrors;
+    private $sortedFilters;
+    /**
+     * @var Filter[]
+     */
+    private $filters;
 
     public function __construct(){
         $this->filters      = array();
@@ -37,7 +43,7 @@ class FilterManager
                 if(array_search($filter->getName(),$executed) === false && $this->checkAfter($executed, $filter)){
                     $execs++;
                     $executed[] = $filter->getName();
-                    Log::debug('executing filter: '.$filter->getName());
+                    //Log::debug('executing filter: '.$filter->getName());
                     if (! $filter->exec($req, $module, $action)) {
                         $errs[] = array(
                             'ignored' => $filter->errorIgnored(),
@@ -51,7 +57,7 @@ class FilterManager
         } while($execs > 0);
 
         if(count($executed) !== count($this->filters)){
-            Log::err('Some filter was not executed');
+            //Log::err('Some filter was not executed');
             //TODO elenco filtri non eseguiti e dipendenze richieste
         }
 
@@ -79,11 +85,6 @@ class FilterManager
         return true;
     }
 
-    public function getLastId()
-    {
-        return self::$ids;
-    }
-
     public function haveErrors()
     {
         foreach ($this->filterErrors as $reqId => $errs) {
@@ -101,6 +102,10 @@ class FilterManager
             return end($this->filterErrors[$this->getLastId()]);
         else
             return false;
+    }
+
+    public function getLastId() {
+        return self::$ids;
     }
 
     public function getFilterErrors(){
@@ -124,12 +129,4 @@ class FilterManager
             }
         }
     }
-
-    private static $ids;
-    private $filterErrors;
-    private $sortedFilters;
-    /**
-     * @var Filter[]
-     */
-    private $filters;
 }

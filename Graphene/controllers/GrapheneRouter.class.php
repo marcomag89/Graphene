@@ -5,7 +5,8 @@ use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\models\Module;
 use Graphene\Graphene;
-use \Log;
+
+//use \Log;
 
 /**
  * Router di Graphene:
@@ -24,6 +25,14 @@ use \Log;
 class GrapheneRouter
 {
 
+    private $modules;
+    private $baseUrl;
+    private $modStack;
+    private $request;
+    private $modulesDir;
+    private $injectionDir;
+    private $nativePath;
+
     public function __construct()
     {
         $r = Graphene::getInstance();
@@ -34,33 +43,6 @@ class GrapheneRouter
         $this->routeTable = array();
         $this->modStack = array();
         $this->loadModules();
-    }
-
-    /**
-     * Dirotta la richiesta al servizio che corrisponde al matching, ritornando
-     * una risposta
-     *
-     * @param GraphRequest $request
-     * @return GraphResponse
-     */
-    public function dispatch(GraphRequest $request){
-        $request->setContextPar('dispatchingId',uniqid());
-        Graphene::getInstance()->startStat('DispatchingTime',$request->getMethod().' '.$request->getUrl().' '.$request->getContextPar('dispatchingId'));
-        $response = null;
-        $url = url_trimAndClean($request->getUrl());
-        foreach ($this->modules as $dir => $module) {
-            $domain = (string) $module->getDomain();
-            if (str_starts_with($url, strtolower($domain))) {
-                $this->pushModule($module);
-                $response = $module -> exec($request);
-                $this -> popModule();
-                if ($response != null)break;
-            }
-        }
-        if($response === null){
-
-        }
-        return $this->getSafeResponse($response);
     }
 
     /**
@@ -95,6 +77,7 @@ class GrapheneRouter
         }
         $this->modules=$this->checkModulesDipendences($modules);
     }
+
     /**
      * @param $modules
      * @return array
@@ -109,7 +92,7 @@ class GrapheneRouter
                 foreach($dips as $dip){
                     if(!array_key_exists($dip,$available)){
                         $completed = false;
-                        Log::err('unable to load '.$name. ' module because dipendency '.$dip.' is not installed');
+                        //Log::err('unable to load '.$name. ' module because dipendency '.$dip.' is not installed');
                     }
                 }
                 if(!$completed){
@@ -123,6 +106,44 @@ class GrapheneRouter
             $ret[$name] = $modules[$name];
         }
         return $ret;
+    }
+
+    /**
+     * Dirotta la richiesta al servizio che corrisponde al matching, ritornando
+     * una risposta
+     *
+     * @param GraphRequest $request
+     * @return GraphResponse
+     */
+    public function dispatch(GraphRequest $request) {
+        $request->setContextPar('dispatchingId', uniqid());
+        Graphene::getInstance()->startStat('DispatchingTime', $request->getMethod() . ' ' . $request->getUrl() . ' ' . $request->getContextPar('dispatchingId'));
+        $response = null;
+        $url = url_trimAndClean($request->getUrl());
+        foreach ($this->modules as $dir => $module) {
+            $domain = (string)$module->getDomain();
+            if (str_starts_with($url, strtolower($domain))) {
+                $this->pushModule($module);
+                $response = $module->exec($request);
+                $this->popModule();
+                if ($response != null) {
+                    break;
+                }
+            }
+        }
+        if ($response === null) {
+
+        }
+
+        return $this->getSafeResponse($response);
+    }
+
+    private function pushModule($module) {
+        array_push($this->modStack, $module);
+    }
+
+    private function popModule() {
+        $pop = array_pop($this->modStack);
     }
 
     /**
@@ -173,6 +194,15 @@ class GrapheneRouter
         foreach ($modules as $mod) {}
     }
 
+    public function getInstalledModules() {
+        $ret = [];
+        foreach ($this->modules as $md => $mod) {
+            $ret[] = $mod;
+        }
+
+        return $ret;
+    }
+
     public function getModuleByNamespace($namespace)
     {
         $modules = $this->getInstalledModules();
@@ -181,16 +211,6 @@ class GrapheneRouter
                 return $mod;
         }
         return null;
-    }
-
-    private function pushModule($module)
-    {
-        array_push($this->modStack, $module);
-    }
-
-    private function popModule()
-    {
-        $pop = array_pop($this->modStack);
     }
 
     public function getCurrentModule()
@@ -216,26 +236,4 @@ class GrapheneRouter
     {
         return $this->modStack;
     }
-
-    public function getInstalledModules()
-    {
-        $ret = array();
-        foreach ($this->modules as $md => $mod)
-            $ret[] = $mod;
-        return $ret;
-    }
-
-    private $modules;
-
-    private $baseUrl;
-
-    private $modStack;
-
-    private $request;
-
-    private $modulesDir;
-
-    private $injectionDir;
-
-    private $nativePath;
 }

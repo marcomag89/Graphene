@@ -2,16 +2,51 @@
 namespace acl;
 
 use Graphene\controllers\Action;
-use Graphene\controllers\exceptions\GraphException;
 
 class UserGroupSet extends Action {
     public function run() {
-        $userGroup = UserGroup::getByRequest();
-        if ($userGroup->getUserId() !== null) {
-            $this->forward('/users/user/' . $userGroup->getUserId());
-        } else {
-            throw new GraphException('user id is not valid', 400);
+        //Lettura gruppi utente
+        $request = $this->request->getData()['UserGroup'];
+        $uGroups = $this->forward('/acl/userGroup/byUser/' . $request['userId'])->getData()['UserGroups'];
+        $this->doAdd($request['userId'], $this->getNotOwned($uGroups, $request['groups']));
+        $this->doRemove($request['userId'], $this->getNotOwned($request['groups'], $uGroups));
+        $this->send($uGroups = $this->forward('/acl/userGroup/byUser/' . $request['userId'])->getData());
+    }
+
+    private function doAdd($userId, $groups) {
+        foreach ($groups as $group) {
+            $this->forward('/acl/userGroup', [
+                "UserGroup" => [
+                    "userId" => $userId,
+                    "group"  => $group
+                ]
+            ], 'POST');
         }
-        $this->sendModel($userGroup->create());
+    }
+
+    private function getNotOwned($owned, $compares) {
+        $ret = [];
+        foreach ($compares as $compare) {
+            if (!in_array($compare, $owned)) {
+                $ret[] = $compare;
+            }
+        }
+
+        return $ret;
+    }
+
+    private function doRemove($userId, $groups) {
+        foreach ($groups as $group) {
+            try {
+                $this->forward('/acl/userGroup', [
+                    "UserGroup" => [
+                        "userId" => $userId,
+                        "group"  => $group
+                    ]
+                ], 'DELETE');
+            } catch (\Exception $e) {
+                \Log::err($e->getMessage());
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ class Update extends StdUpdate {
     }
 
     function getModelFromRequest() {
-        \Log::debug($this->request->getData());
+        //\Log::debug($this->request->getData());
         if (!array_key_exists('User', $this->request->getData())) {
             throw new GraphException('Sent model is not valid User');
         }

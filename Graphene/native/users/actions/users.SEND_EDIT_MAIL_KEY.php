@@ -20,8 +20,8 @@ class SendEditMailKey extends Action {
         $data = $this->request->getData();
         if (!array_key_exists('ResetMail', $data)) throw new GraphException('invalid request', 400);
         $email = $data['ResetMail']['email'];
-        \Log::debug($data);
-        \Log::debug($email);
+        //\Log::debug($data);
+        //\Log::debug($email);
         $user = new User();
         $user->setEmail($email);
         $user = $user->read();
