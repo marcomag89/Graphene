@@ -37,15 +37,17 @@ class UserGroupSet extends Action {
 
     private function doRemove($userId, $groups) {
         foreach ($groups as $group) {
-            try {
-                $this->forward('/acl/userGroup', [
-                    "UserGroup" => [
-                        "userId" => $userId,
-                        "group"  => $group
-                    ]
-                ], 'DELETE');
-            } catch (\Exception $e) {
-                \Log::err($e->getMessage());
+            if ($group != Group::$superUserGroupName) {
+                try {
+                    $this->forward('/acl/userGroup', [
+                        "UserGroup" => [
+                            "userId" => $userId,
+                            "group"  => $group
+                        ]
+                    ], 'DELETE');
+                } catch (\Exception $e) {
+                    \Log::err($e->getMessage());
+                }
             }
         }
     }

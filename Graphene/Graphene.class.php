@@ -1,7 +1,7 @@
 <?php
 namespace Graphene;
 //Header function
-$utilsIncl = join(DIRECTORY_SEPARATOR, array(dirname(__FILE__),'utils','utils.php'));
+$utilsIncl = join(DIRECTORY_SEPARATOR, [dirname(__FILE__), 'utils', 'utils.php']);
 
 include_once $utilsIncl;
 
@@ -26,11 +26,9 @@ use Graphene\db\CrudStorage;
  * Classe Singletone fornito un metodo getInstance()
  *
  * @author Marco Magnetti <marcomagnetti@gmail.com>
- *        
+ *
  */
-
-class Graphene
-{
+class Graphene {
 
     const VERSION = '0.3.0 rc1';
     const V_NAME = 'aluminium';
@@ -43,12 +41,13 @@ class Graphene
     private $storage;
     private $systemToken;
     private $stats;
+    private $requestId;
 
-    private function __construct()
-    {
+    private function __construct() {
         $this->startTime = round(microtime(true) * 1000);
-        $this->stats=[];
-        $this->systemToken = uniqid('SYS_').$this->startTime;
+        $this->stats = [];
+        $this->systemToken = uniqid('SYS_') . $this->startTime;
+        ini_set('memory_limit', '512M');
         if ($this->isDebugMode()) {
             error_reporting(E_ALL);
             ini_set('opcache.enabled', 0);
@@ -62,12 +61,11 @@ class Graphene
         }
     }
 
-    public function isDebugMode()
-    {
+    public function isDebugMode() {
         return Settings::getInstance()->getPar('debug') === true;
     }
 
-    public static function path($path=null){
+    public static function path($path = null) {
         return G_path($path);
     }
 
@@ -77,20 +75,19 @@ class Graphene
      * @return Graphene instance
      *
      */
-    public static function getInstance()
-    {
+    public static function getInstance() {
         if (Graphene::$instance == null) {
             Graphene::registerAutoloaders();
             Graphene::$instance = new Graphene();
         }
+
         return Graphene::$instance;
     }
 
     /**
      * Registra gli autoloaders basati su namespace o su modulo
      */
-    public static function registerAutoloaders()
-    {
+    public static function registerAutoloaders() {
         spl_autoload_register("autol_db_drivers");
         spl_autoload_register("autol_namespace");
         spl_autoload_register("autol_moduleContent");
@@ -106,19 +103,19 @@ class Graphene
      * informazioni base
      * per generare la richiesta
      */
-    public function start()
-    {
+    public function start() {
         //sleep(2);
         ignore_user_abort(true);
         set_time_limit(0);
 
         $this->requests = [];
+        $this->requestId = uniqid("RID");
         $this->createRequest();
         $request = $this->getRequest();
-        //Log::request($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
+        \Log::request($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
         $this->filterManager = new FilterManager();
-        $this->router = new GrapheneRouter($this->getRequest());
-        $crudDriver = 'Graphene\\db\\drivers\\' . (string) $this->getSettings()['storageConfig']['driver'];
+        $this->router = new GrapheneRouter($request);
+        $crudDriver = 'Graphene\\db\\drivers\\' . (string)$this->getSettings()['storageConfig']['driver'];
         $this->storage = new CrudStorage(new $crudDriver($this->getSettings()['storageConfig']));
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
@@ -132,8 +129,7 @@ class Graphene
      *
      * @return GraphRequest request
      */
-    private function createRequest()
-    {
+    private function createRequest() {
         $req = new GraphRequest();
         $req->setUrl(G_requestUrl());
         $req->setIp($_SERVER['REMOTE_ADDR']);
@@ -141,13 +137,17 @@ class Graphene
         if (count($_POST) > 0 || count($_FILES) > 0) {
             $tree = $this->treeFromFlat(array_merge($_FILES, $_POST, $_GET));
             $req->setData($tree);
-        }else{
-            $jsonData = json_decode(file_get_contents("php://input"),true);
-            if($jsonData === null)$jsonData=[];
-            $req->setData(array_merge($this->treeFromFlat($_GET),$jsonData));
+        } else {
+            $jsonData = json_decode(file_get_contents("php://input"), true);
+            if ($jsonData === null) {
+                $jsonData = [];
+            }
+            $req->setData(array_merge($this->treeFromFlat($_GET), $jsonData));
         }
         $headers = apache_request_headers();
-        foreach ($headers as $header => $value) {$req->setHeader($header, $value);}
+        foreach ($headers as $header => $value) {
+            $req->setHeader($header, $value);
+        }
 
         $this->pushRequest($req);
     }
@@ -167,8 +167,11 @@ class Graphene
                 }
                 // Popolate leaf
                 $tRes = $v;
-            } else $tRes[$k] = $v;
+            } else {
+                $tRes[$k] = $v;
+            }
         }
+
         return $res;
     }
 
@@ -178,6 +181,7 @@ class Graphene
 
     public function getRequest() {
         $current = end($this->requests);
+
         return $current;
     }
 
@@ -190,28 +194,28 @@ class Graphene
      *
      * @param GraphResponse $response
      */
-    private function sendResponse(GraphResponse $response)
-    {
+    private function sendResponse(GraphResponse $response) {
         $this->supportCors();
         http_response_code($response->getStatusCode());
         $h = $response->getHeaders();
-        foreach ($h as $khdr => $hdr) {header($khdr . ': ' . $hdr);}
+        foreach ($h as $khdr => $hdr) {
+            header($khdr . ': ' . $hdr);
+        }
 
         //$this->supportCors();
-        if($response->getMedia() !== null){
+        if ($response->getMedia() !== null) {
             // open the file in a binary mode
             $name = $response->getMedia();
             $fp = fopen($name, 'rb');
             fpassthru($fp);
-        }else{
-            print(json_encode($response->getData(),JSON_PRETTY_PRINT));
+        } else {
+            print(json_encode($response->getData(), JSON_PRETTY_PRINT));
         }
     }
 
-    public function supportCors()
-    {
+    public function supportCors() {
         // Allow from any origin
-        if (! str_starts_with($_SERVER['SERVER_SOFTWARE'], "Microsoft-IIS")) {
+        if (!str_starts_with($_SERVER['SERVER_SOFTWARE'], "Microsoft-IIS")) {
             if (isset($_SERVER['HTTP_ORIGIN'])) {
                 header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
                 header('Access-Control-Allow-Credentials: true');
@@ -220,11 +224,13 @@ class Graphene
 
             // Access-Control headers are received during OPTIONS requests
             if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-                if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
+                if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
                     header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE, PATCH");
+                }
 
-                if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+                if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
                     header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+                }
 
                 exit(0);
             }
@@ -232,7 +238,7 @@ class Graphene
     }
 
     public function getApplicationName() {
-        return (string) $this->getSettings()['appName'];
+        return (string)$this->getSettings()['appName'];
     }
 
     public function getStorage() {
@@ -244,6 +250,7 @@ class Graphene
      * moduli
      *
      * @param GraphRequest $request
+     *
      * @return GraphResponse
      * @throws GraphException
      */
@@ -252,6 +259,7 @@ class Graphene
             $this->pushRequest($request);
             $resp = $this->router->dispatch($request);
             $this->popRequest();
+
             return $resp;
         } else {
             if (!extension_loaded('curl')) {
@@ -268,6 +276,7 @@ class Graphene
                     $resString .= fgets($fp, 128);
                 }
                 fclose($fp);
+
                 return $this->parseResponse($resString);
             }
         }
@@ -289,107 +298,121 @@ class Graphene
             $kv = explode(':', $h);
             $res->setHeader($kv[0], $kv[1]);
         }
+
         return $res;
     }
 
-    public function getCurrentModule()
-    {
+    public function getCurrentModule() {
         return $this->router->getCurrentModule();
     }
 
-    public function getInstalledModulesInfos()
-    {
+    public function getInstalledModulesInfos() {
         $mods = $this->router->getInstalledModules();
-        $ret = array();
+        $ret = [];
         foreach ($mods as $mod) {
-            $modInfos = array();
-            $modInfos['name']      = $mod->getName();
-            $modInfos['author']    = $mod->getAuthor();
-            $modInfos['support']   = $mod->getSupport();
-            $modInfos['version']   = $mod->getVersion();
+            $modInfos = [];
+            $modInfos['name'] = $mod->getName();
+            $modInfos['author'] = $mod->getAuthor();
+            $modInfos['support'] = $mod->getSupport();
+            $modInfos['version'] = $mod->getVersion();
             $modInfos['namespace'] = $mod->getNamespace();
-            $modInfos['actions']=[];
-            foreach($mod->getActionDocs() as $doc){
-                $modInfos['actions'][]=$doc['name'];
+            $modInfos['actions'] = [];
+            foreach ($mod->getActionDocs() as $doc) {
+                $modInfos['actions'][] = $doc['name'];
             }
             $ret[] = $modInfos;
         }
+
         return $ret;
     }
 
     /**
      * @param $namespace
+     *
      * @return Module | Bool
      */
-    public function getModule($namespace)
-    {
+    public function getModule($namespace) {
         if ($this->router != null) {
             $mod = $this->router->getModuleByNamespace($namespace);
-            if ($mod == null)
+            if ($mod == null) {
                 return false;
-            else
+            } else {
                 return $mod;
-        } else
+            }
+        } else {
             return false;
+        }
     }
 
-    public function addFilter(Filter $filter)
-    {
+    public function addFilter(Filter $filter) {
         $this->filterManager->addFilter($filter);
     }
 
-    public function getFilterManager()
-    {
+    public function getFilterManager() {
         return $this->filterManager;
     }
 
-    public function getRouter()
-    {
+    public function getRouter() {
         return $this->router;
     }
 
-    public function getSystemToken(){
+    public function getSystemToken() {
         return $this->systemToken;
     }
 
-    public function getDoc($actionName,$detail){
+    public function getDoc($actionName, $detail) {
         $mods = $this->router->getInstalledModules();
-        $ret=[];
-        foreach($mods as $mod){
-            if($mod instanceof Module){
-                $modAct = $mod->getActionDocs(true,$detail);
-                foreach($modAct as $action){
-                    if($action['name'] === $actionName){$ret[]=$action;}
+        $ret = [];
+        foreach ($mods as $mod) {
+            if ($mod instanceof Module) {
+                $modAct = $mod->getActionDocs(true, $detail);
+                foreach ($modAct as $action) {
+                    if ($action['name'] === $actionName) {
+                        $ret[] = $action;
+                    }
                 }
             }
         }
+
         return $ret;
     }
 
-    public function startStat($statName,$statId=null){
-        if(!Settings::getInstance()->getPar('stats'))return;
-        if(!array_key_exists($statName,$this->stats)){
-            $this->stats[$statName]=['main'=>[]];
+    public function startStat($statName, $statId = null) {
+        if (!Settings::getInstance()->getPar('stats')) {
+            return;
+        }
+        if (!array_key_exists($statName, $this->stats)) {
+            $this->stats[$statName] = ['main' => []];
 
         }
-        if($statId === null) $statId = uniqid('stat_');
+        if ($statId === null) {
+            $statId = uniqid('stat_');
+        }
         $this->stats[$statName]['main']['last'] = $statId;
-        $this->stats[$statName][$statId]          = [];
+        $this->stats[$statName][$statId] = [];
         $this->stats[$statName][$statId]['begin'] = round(microtime(true) * 1000);
     }
 
-    public function stopStat($statName,$statId=null){
-        if(!Settings::getInstance()->getPar('stats'))return;
-        if($statId === null) $statId = $this->stats[$statName]['main']['last'];
-        $this->stats[$statName][$statId]['end']  = round(microtime(true) * 1000);
+    public function stopStat($statName, $statId = null) {
+        if (!Settings::getInstance()->getPar('stats')) {
+            return;
+        }
+        if ($statId === null) {
+            $statId = $this->stats[$statName]['main']['last'];
+        }
+        $this->stats[$statName][$statId]['end'] = round(microtime(true) * 1000);
         $this->stats[$statName][$statId]['time'] = $this->stats[$statName][$statId]['end'] - $this->stats[$statName][$statId]['begin'];
         $this->stats[$statName]['main']['totalTime'] = $this->stats[$statName]['main']['totalTime'] += $this->stats[$statName][$statId]['time'];
         $this->stats[$statName]['main']['count']++;
-        $this->stats[$statName]['main']['average']=$this->stats[$statName]['main']['totalTime']/$this->stats[$statName]['main']['count'];
+        $this->stats[$statName]['main']['average'] = $this->stats[$statName]['main']['totalTime'] / $this->stats[$statName]['main']['count'];
 
     }
 
-    public function getStats($calculateAverages=false){
-        return ['Graphene Stats'=>$this->stats];
+    public function getStats($calculateAverages = false) {
+        return ['Graphene Stats' => $this->stats];
+    }
+
+    public function getRequestId() {
+        return $this->requestId;
     }
 }

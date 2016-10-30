@@ -11,12 +11,15 @@ class AppPermissionsSet extends Action {
         $permissions = $appProto['permissions'];
         $res = $this->forward('/acl/app/withPermission/' . $apiKey);
         $pRes = json_decode($res->getBody(), true);
-        if ($res->getStatusCode() !== 200) throw new GraphException('App info error: ' . $pRes['error']['message'], $pRes['error']['code'], 400);
+        if ($res->getStatusCode() !== 200) {
+            throw new GraphException('App info error: ' . $pRes['error']['message'], $pRes['error']['code'], 400);
+        }
         $app = $pRes['App'];
         $rPermissions = $app['permissions'];
         $doAdd = [];
         $doRemove = [];
 
+        \Log::info($permissions);
         //controllo permessi da aggiungere
         foreach ($permissions as $permission) {
             if (!in_array($permission, $rPermissions)) {

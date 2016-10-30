@@ -7,13 +7,17 @@ use Graphene\controllers\exceptions\GraphException;
 class Validate extends Action {
 
     public function run() {
-        $user = User::getByRequest();
+        $userR = User::getByRequest();
+        $user = new User();
+        $user->setContent($userR->getContent());
+
         if ($user->getUsername() !== null && $user->getPassword() !== null) {
-            $user->encriptPassword();
+            $user->encryptPassword();
             $readed = $user->read();
             if ($readed === null) {
                 $emailUser = new User();
                 $emailUser->setEmail($user->getUsername());
+                $emailUser->setPassword($user->getPassword());
                 $readed = $emailUser->read();
             }
             if ($readed !== null) {

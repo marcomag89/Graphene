@@ -1,6 +1,7 @@
 <?php
 const T_PAD = 256;
 use Graphene\models\Model;
+use Graphene\Graphene;
 
 class Log {
     private static $lastTraceIndex, $logDir, $debugMode = false, $configured = false;
@@ -16,24 +17,13 @@ class Log {
         self::setUp();
         $trace = Log::getTrace($trace);
 
-        /*        if ($trace['index'] !== self::$lastTraceIndex) {
-                    self::$lastTraceIndex = $trace['index'];
-                    $record = "\n\n" . self::$lastTraceIndex . "\n\n";
-                } else {
-                    $record = '';
-                }*/
-
-        $record = $trace["time"] . " " . str_pad($label, 8) . Log::serializeObject($object) . " @" . $trace['file'] . ":" . $trace['line'] . "\r\n";
-        //$lrecord = str_pad('[' . $trace['string'] . ' | ' . Log::getTimeStirng() . ']', 60) . Log::serializeObject
-        //($object) . "\r\n";
-        //$clog = $label . Log::serializeObject($object) . ' @ ' . $trace['file'] . ':' . $trace['line'];
-
+        $record = $trace["time"] . " " . $trace['requestId'] . " " . str_pad($label, 8) . Log::serializeObject($object) . " @" . $trace['file'] . ":" . $trace['line'];
         $globalLog = Log::$logDir . DIRECTORY_SEPARATOR . 'graphene.log';
-        $labelLog = Log::$logDir . DIRECTORY_SEPARATOR . strtolower($label) . '.log';
 
-        file_put_contents($globalLog, $record, FILE_APPEND | LOCK_EX);
-        //file_put_contents($labelLog, $lrecord, FILE_APPEND | LOCK_EX);
-        //error_log($clog);
+        if (Log::$debugMode) {
+            error_log($record);
+        }
+        file_put_contents($globalLog, $record . "\r\n", FILE_APPEND | LOCK_EX);
     }
 
     public static function setUp() {
@@ -56,10 +46,11 @@ class Log {
         $time = Log::getTimeStirng();
 
         return [
-            "file"  => $filename,
-            "line"  => $backtrace[0]['line'],
-            "time"  => $time,
-            "stack" => json_encode($backtrace, JSON_PRETTY_PRINT)
+            "file"      => $filename,
+            "line"      => $backtrace[0]['line'],
+            "time"      => $time,
+            "stack"     => json_encode($backtrace, JSON_PRETTY_PRINT),
+            "requestId" => Graphene::getInstance()->getRequestId()
         ];
     }
 

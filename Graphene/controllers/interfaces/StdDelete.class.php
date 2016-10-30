@@ -25,7 +25,6 @@ abstract class StdDelete extends Action {
 
     protected function onDeleteSuccess(Model $model) {
         $this->send($model->getModelName() . ' ' . $model->getId() . ', successfully deleted');
-
     }
 
     public function getActionInterface() {

@@ -17,8 +17,11 @@ class Login extends Action
         $user->setUsername($userData['username']);
         $user->setPassword($userData['password']);
 
-        try{$res = $this->forward('/users/validate', $user->serialize());}
-        catch(GraphException $e){throw new GraphException('username or password invalid',403);}
+        try {
+            $res = $this->forward('/users/validate', $user->serialize());
+        } catch (GraphException $e) {
+            throw new GraphException('username or password invalid', 403);
+        }
 
         // Creazione della sessione
         $session = new Session();
