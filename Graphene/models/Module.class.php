@@ -85,7 +85,7 @@ class Module
             $this->currentAction = $action;
             if ($action->isHandled()) {
                 Graphene::getInstance()->stopStat('DispatchingTime',$request->getMethod().' '.$request->getUrl().' '.$request->getContextPar('dispatchingId'));
-                Log::info($action->getUniqueActionName() . ' HANDLED');
+                Log::debug($action->getUniqueActionName() . ' HANDLED');
                 $this->currentAction = $action;
                 return $action->start();
             } else

@@ -3,18 +3,21 @@ namespace Graphene\controllers\exceptions;
 
 use \Exception;
 
-class GraphException extends Exception
-{
+/**
+ * Class GraphException
+ * @package Graphene\controllers\exceptions
+ */
+class GraphException extends Exception {
 
-    public function __construct($message, $code = 500, $httpCode = null)
-    {
+    public function __construct($message, $code = 500, $httpCode = null) {
         parent::__construct($message, $code);
-        if($httpCode == null) $httpCode = $code;
+        if ($httpCode == null) {
+            $httpCode = $code;
+        }
         $this->httpCode = $httpCode;
     }
 
-    public function getHttpCode()
-    {
+    public function getHttpCode() {
         return $this->httpCode;
     }
 

@@ -12,14 +12,21 @@ abstract class StdRead extends Action {
         $id = $this->getRequestedId();
         $model->setId($id);
         $readed = $this->readModel($model);
-        $this->send($this->formatReadedModel($readed));
+        if ($readed != null) {
+            $this->send($this->formatReadedModel($readed));
+        } else {
+            throw new GraphException("model not found", 404);
+        }
     }
 
     protected abstract function getModelInstance();
 
     protected function getRequestedId() {
         $id = $this->request->getPar('id');
-        if ($id === null || $id === '') throw new GraphException('Invalid id', 400);
+        if ($id === null || $id === '') {
+            throw new GraphException('Invalid id', 400);
+        }
+
         return $id;
     }
 
@@ -27,7 +34,14 @@ abstract class StdRead extends Action {
         return $model->read();
     }
 
-    protected function formatReadedModel(Model $model) {
+    /**
+     * Allows action user to format model before send
+     *
+     * @param Model $model
+     *
+     * @return array | Model
+     */
+    protected function formatReadedModel($model) {
         return $model;
     }
 
@@ -37,6 +51,7 @@ abstract class StdRead extends Action {
 
     public function getResponseStruct() {
         $model = $this->getModelInstance();
+
         return [$model->getModelName() => $model->getReadActionStruct()];
     }
 
@@ -54,6 +69,7 @@ abstract class StdRead extends Action {
                 }
             }
         }
+
         return [
             "name"        => "STD_READ",
             "struct"      => $struct,
@@ -62,16 +78,23 @@ abstract class StdRead extends Action {
     }
 
     private function contentToFlatArray($content, &$path = '', &$schema = null) {
-        if ($schema == null) $schema = [];
+        if ($schema == null) {
+            $schema = [];
+        }
         foreach ($content as $key => $value) {
-            if (strcmp($path, '') == 0) $tmpPath = $key;
-            else $tmpPath = $path . '_' . $key;
+            if (strcmp($path, '') == 0) {
+                $tmpPath = $key;
+            } else {
+                $tmpPath = $path . '_' . $key;
+            }
 
-            if (is_array($value) && $content != null) $this->contentToFlatArray($value, $tmpPath, $schema);
-            else {
+            if (is_array($value) && $content != null) {
+                $this->contentToFlatArray($value, $tmpPath, $schema);
+            } else {
                 $schema[$tmpPath] = $value;
             }
         }
+
         return $schema;
     }
 }

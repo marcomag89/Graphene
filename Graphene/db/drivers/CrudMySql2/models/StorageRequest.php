@@ -41,8 +41,10 @@ class StorageRequest
         return $ret;
     }
 
-    public function getOperator($field){
-        if(
+    public function getOperator($field, $value){
+        if($value === 'NULL'){
+            return 'IS';
+        }else if(
             array_key_exists('compare',$this->requestSettings) &&
             array_key_exists($field,$this->requestSettings['compare'])
         ){
@@ -55,7 +57,9 @@ class StorageRequest
                 case 'neq' : return '<>';
                 default    : return '=';
             }
-        }else return '=';
+        } else {
+                return '=';
+        }
     }
 
     public function hasSearch(){

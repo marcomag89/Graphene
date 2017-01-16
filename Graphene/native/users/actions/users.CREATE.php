@@ -24,7 +24,7 @@ class Create extends StdCreate {
         }
     }
 
-    protected function formatCreatedModel(Model $user) {
+    protected function formatCreatedModel($user) {
         $userC = $user->getContent();
         unset($userC['password']);
         unset($userC['editingKey']);

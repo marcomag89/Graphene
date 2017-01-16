@@ -5,24 +5,46 @@ use Graphene\models\Model;
 use Graphene\controllers\Action;
 
 abstract class StdUpdate extends Action {
+
+    /**
+     * Graphene Run
+     */
     public function run() {
         $model = $this->getModelFromRequest();
         $uModel = $this->updateModel($model);
         $this->send($this->formatUpdatedModel($uModel));
     }
 
+    /**
+     * Gets model content from request data
+     * @return Model
+     */
     protected function getModelFromRequest() {
         $model = $this->getModelInstance();
         return $model::getByRequest();
     }
 
+    /**
+     * Gets empty model instance from child class
+     * @return Model
+     */
     protected abstract function getModelInstance();
 
-    protected function updateModel(Model $model) {
+    /**
+     * @param Model $model
+     * @return Model
+     */
+    protected function updateModel($model) {
         return $model->update();
     }
 
-    protected function formatUpdatedModel(Model $model) {
+    /**
+     * Format model before send
+     *
+     * @param Model $model
+     * @return Model
+     */
+    protected function formatUpdatedModel($model) {
         return $model;
     }
 
@@ -30,12 +52,10 @@ abstract class StdUpdate extends Action {
         $model = $this->getModelInstance();
         return [$model->getModelName() => $model->getReadActionStruct()];
     }
-
     public function getRequestStruct() {
         $model = $this->getModelInstance();
         return [$model->getModelName() => $model->getUpdateActionStruct()];
     }
-
     public function getActionInterface() {
         $model = $this->getModelInstance();
         $struct = [$model->getModelName() => $model->getUpdateActionStruct()];
@@ -56,7 +76,6 @@ abstract class StdUpdate extends Action {
             "flat-struct" => $flatStruct
         ];
     }
-
     private function contentToFlatArray($content, &$path = '', &$schema = null) {
         if ($schema == null) $schema = [];
         foreach ($content as $key => $value) {

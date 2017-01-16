@@ -7,9 +7,16 @@ use Graphene\Graphene;
 use Graphene\controllers\model\ModelController;
 use Graphene\controllers\model\ModelFactory;
 use Graphene\controllers\exceptions\GraphException;
+use n\Agency;
 
-abstract class Model implements \Serializable
-{
+/**
+ * @method void setId(string $id)
+ * @method string getId()
+ *
+ * @method void setVersion(int $version)
+ * @method int getVersion()
+ */
+abstract class Model implements \Serializable {
 
     const CHECK_SEP = '--';
     const CHECK_PAR = '::';
@@ -101,11 +108,48 @@ abstract class Model implements \Serializable
     /* Extensible functions */
     private $name = null;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->structs = $this->defineStruct();
         $this->modelController = new ModelController($this->getCustomCrudDriver(), $this->structs, $this, func_get_args());
     }
+
+
+    /**
+     * @param      $id
+     * @param      $model
+     *
+     * @return Model|null
+     */
+    public static function find($id, $model) {
+        $result = self::findMatches(['id' => $id], $model, false, null, 1);
+        if ($result != null) {
+            return $result->current();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param array $matchContent
+     * @param Model $model
+     * @param bool  $multiple
+     * @param int   $page
+     * @param int   $pageSize
+     *
+     * @return ModelCollection|null
+     * @throws GraphException
+     */
+    public static function findMatches($matchContent, $model, $multiple = true, $page = null, $pageSize = -1) {
+        $mod = new $model();
+        if ($mod instanceof Model) {
+            $mod->setContent($matchContent);
+
+            return $mod->read($multiple, null, $page, $pageSize);
+        } else {
+            throw new GraphException($model . " does not extends model");
+        }
+    }
+
 
     /**
      * @return array
@@ -121,23 +165,26 @@ abstract class Model implements \Serializable
 
     /**
      * @param bool $lazyChecks
+     *
      * @return Model | null
      * @throws GraphException
      */
-    public static function getByRequest($lazyChecks = false)
-    {
+    public static function getByRequest($lazyChecks = false) {
         $req = Graphene::getInstance()->getRequest();
         $requestModels = ModelFactory::createByRequest($req, null, $lazyChecks);
-        if (isset($requestModels[self::stcName()]))
+        if (isset($requestModels[self::stcName()])) {
             return $requestModels[self::stcName()];
-        else
+        } else {
             throw new GraphException('Sent model is not valid ' . self::stcName(), 400, 400);
+        }
     }
 
     /**
      * @return string
      */
-    public static function stcName(){return explode('\\', get_called_class())[1];}
+    public static function stcName() {
+        return explode('\\', get_called_class())[1];
+    }
 
     /**
      * @return string
@@ -147,33 +194,34 @@ abstract class Model implements \Serializable
             $fw = Graphene::getInstance();
             $this->domain = $fw->getApplicationName() . "." . $fw->getCurrentModule()->getNamespace() . "." . $this->getModelName();
         }
+
         return $this->domain;
     }
 
     /**
      * @return string
      */
-    public function getModelName()
-    {
+    public function getModelName() {
         if ($this->name === null) {
-            if (! is_object($this) && ! is_string($this)){ return false; }
+            if (!is_object($this) && !is_string($this)) {
+                return false;
+            }
             $class = explode('\\', get_class($this));
             /** @noinspection PhpUndefinedFieldInspection */
             $this->name = $class[count($class) - 1];
         }
+
         return $this->name;
     }
 
-    public function setLazy($boolean)
-    {
+    public function setLazy($boolean) {
         $this->modelController->setLazy($boolean);
     }
 
     /**
      * @return array
      */
-    public function getContent()
-    {
+    public function getContent() {
         return $this->content;
     }
 
@@ -184,32 +232,30 @@ abstract class Model implements \Serializable
     /**
      * @return ModelController
      */
-    public function getModelController()
-    {
+    public function getModelController() {
         return $this->modelController;
     }
 
     /**
      * @param bool $lazyCheck
+     *
      * @return bool
      */
-    public function isValid($lazyCheck = false){
+    public function isValid($lazyCheck = false) {
         return $this->modelController->checkContent($this, $lazyCheck);
     }
 
     /**
      * @return bool
      */
-    public function isEmpty()
-    {
+    public function isEmpty() {
         return count($this->content) == 0;
     }
 
     /**
      * @return string
      */
-    public function getLastTestErrors()
-    {
+    public function getLastTestErrors() {
         $errs = $this->modelController->getLastTestErrors();
         $ret = '';
         foreach ($errs as $errField) {
@@ -217,28 +263,26 @@ abstract class Model implements \Serializable
                 $ret .= $msm['message'] . ', and ';
             }
         }
-        return substr($ret, 0, - 6);
+
+        return substr($ret, 0, -6);
     }
 
-    public function getData()
-    {
+    public function getData() {
         return $this->modelController->getData($this);
     }
 
-    public function serialize()
-    {
+    public function serialize() {
         return $this->modelController->serialize($this);
     }
 
-    public function unserialize($serialized){
+    public function unserialize($serialized) {
         throw new GraphException("You can't unserialize model (yet)", 5009, 500);
     }
 
     /**
      * @return CrudStorage
      */
-    public function getStorage()
-    {
+    public function getStorage() {
         return $this->modelController->getStorage();
     }
 
@@ -246,12 +290,14 @@ abstract class Model implements \Serializable
      * @return Model | null
      * @throws GraphException
      */
-    public function create()
-    {
-        if ($this->canCreate()){
+    public function create() {
+        if ($this->canCreate()) {
             $this->onCreate();
+
             return $this->modelController->create($this);
-        }else throw new GraphException('cannot CREATE '.$this->getModelName().' model',500,500);
+        } else {
+            throw new GraphException('cannot CREATE ' . $this->getModelName() . ' model', 500, 500);
+        }
     }
 
     /**
@@ -269,15 +315,18 @@ abstract class Model implements \Serializable
      * @param null $query
      * @param null $page
      * @param null $pageSize
+     *
      * @return Model | ModelCollection | null
      * @throws GraphException
      */
-    public function read($multiple=false,$query=null,$page=null,$pageSize=null)
-    {
-        if ($this->canRead()){
+    public function read($multiple = false, $query = null, $page = null, $pageSize = null) {
+        if ($this->canRead()) {
             $this->onRead();
-            return $this->modelController->read($this,$multiple,$query,$page,$pageSize);
-        }else throw new GraphException('cannot READ '.$this->getModelName().' model',500,500);
+
+            return $this->modelController->read($this, $multiple, $query, $page, $pageSize);
+        } else {
+            throw new GraphException('cannot READ ' . $this->getModelName() . ' model', 500, 500);
+        }
     }
 
     /**
@@ -294,12 +343,14 @@ abstract class Model implements \Serializable
      * @return Model | null
      * @throws GraphException
      */
-    public function update()
-    {
-        if ($this->canUpdate()){
+    public function update() {
+        if ($this->canUpdate()) {
             $this->onUpdate();
+
             return $this->modelController->update($this);
-        }else throw new GraphException('cannot UPDATE '.$this->getModelName().' model',500,500);
+        } else {
+            throw new GraphException('cannot UPDATE ' . $this->getModelName() . ' model', 500, 500);
+        }
     }
 
     /**
@@ -318,12 +369,14 @@ abstract class Model implements \Serializable
      * @return Model | null
      * @throws GraphException
      */
-    public function delete()
-    {
-        if ($this->canDelete()){
+    public function delete() {
+        if ($this->canDelete()) {
             $this->onDelete();
+
             return $this->modelController->delete($this);
-        }else throw new GraphException('cannot DELETE '.$this->getModelName().' model',500,500);
+        } else {
+            throw new GraphException('cannot DELETE ' . $this->getModelName() . ' model', 500, 500);
+        }
     }
 
     /**
@@ -340,12 +393,14 @@ abstract class Model implements \Serializable
      * @return Model | null
      * @throws GraphException
      */
-    public function patch()
-    {
-        if ($this->canPatch()){
+    public function patch() {
+        if ($this->canPatch()) {
             $this->onPatch();
+
             return $this->modelController->patch($this);
-        }else throw new GraphException('cannot PATCH '.$this->getModelName().' model',500,500);
+        } else {
+            throw new GraphException('cannot PATCH ' . $this->getModelName() . ' model', 500, 500);
+        }
     }
 
     public function canPatch() {
@@ -358,10 +413,10 @@ abstract class Model implements \Serializable
     /**
      * @param $funct
      * @param $pars
+     *
      * @return array|bool|null
      */
-    function __call($funct, $pars)
-    {
+    function __call($funct, $pars) {
         return $this->modelController->call($funct, $pars, $this);
     }
 
@@ -385,17 +440,20 @@ abstract class Model implements \Serializable
     /**
      * @param bool $asString
      * @param bool $prettyPrint
+     *
      * @return array|string
      * @throws GraphException
      */
     final public function getStruct($asString = false, $prettyPrint = false) {
         $str = $this->modelController->getStruct();
-        if ($asString && !$prettyPrint)
+        if ($asString && !$prettyPrint) {
             return json_encode($str);
-        if ($asString && $prettyPrint)
+        }
+        if ($asString && $prettyPrint) {
             return json_encode($str, JSON_PRETTY_PRINT);
-        else
+        } else {
             return $str;
+        }
     }   // campo rilevante per le ricerche
 
     public function getUpdateActionStruct() {
@@ -410,8 +468,9 @@ abstract class Model implements \Serializable
         return $this->getStruct();
     }    // lunghezza massima del campo
 
-    public function getIdPrefix(){
-        $prefix = strtoupper(str_pad($this->getCustomPrefix(),self::PREFIX_UID_LENGTH,self::PREFIX_UID_FILLER));
+    public function getIdPrefix() {
+        $prefix = strtoupper(str_pad($this->getCustomPrefix(), self::PREFIX_UID_LENGTH, self::PREFIX_UID_FILLER));
+
         return $prefix;
     }
 

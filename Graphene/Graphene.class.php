@@ -5,6 +5,7 @@ $utilsIncl = join(DIRECTORY_SEPARATOR, [dirname(__FILE__), 'utils', 'utils.php']
 
 include_once $utilsIncl;
 
+use Graphene\db\CrudDriver;
 use Graphene\models\Module;
 use \Settings;
 use Graphene\controllers\exceptions\GraphException;
@@ -198,8 +199,10 @@ class Graphene {
         $this->supportCors();
         http_response_code($response->getStatusCode());
         $h = $response->getHeaders();
-        foreach ($h as $khdr => $hdr) {
-            header($khdr . ': ' . $hdr);
+        if (!headers_sent()) {
+            foreach ($h as $khdr => $hdr) {
+                header($khdr . ': ' . $hdr);
+            }
         }
 
         //$this->supportCors();
@@ -215,7 +218,8 @@ class Graphene {
 
     public function supportCors() {
         // Allow from any origin
-        if (!str_starts_with($_SERVER['SERVER_SOFTWARE'], "Microsoft-IIS")) {
+
+        if (!headers_sent() && !str_starts_with($_SERVER['SERVER_SOFTWARE'], "Microsoft-IIS")) {
             if (isset($_SERVER['HTTP_ORIGIN'])) {
                 header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
                 header('Access-Control-Allow-Credentials: true');
@@ -241,6 +245,9 @@ class Graphene {
         return (string)$this->getSettings()['appName'];
     }
 
+    /**
+     * @return CrudStorage
+     */
     public function getStorage() {
         return $this->storage;
     }

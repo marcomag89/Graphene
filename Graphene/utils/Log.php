@@ -62,38 +62,45 @@ class Log {
 
     public static function serializeObject($object) {
         $toString = "";
-        if ($object instanceof Model) {
-            $object = [
-                $object->getModelName() => $object->getContent()
-            ];
+
+        if ($object instanceof \Exception) {
+            $toString = $object->getMessage() . "\n---\n" . $object->getTraceAsString() . "\n---\n";
+        } else {
+            if ($object instanceof Model) {
+                $object = [
+                    $object->getModelName() => $object->getContent()
+                ];
+            }
+
+
+            if (is_object($object) || is_array($object)) {
+                $toString = "\n--------\n" . json_encode($object, JSON_PRETTY_PRINT) . "\n\n-------\n";
+            } else {
+                $toString = $object;
+            }
         }
 
-        if (is_object($object) || is_array($object)) {
-            $toString = "\n--------\n" . json_encode($object, JSON_PRETTY_PRINT) . "\n\n-------\n";
-        } else {
-            $toString = $object;
-        }
 
         return $toString;
     }
 
     public static function err($object) {
-        Log::write('ERROR', debug_backtrace(), $object);
+        Log::write('ERROR ', debug_backtrace(), $object);
     }
 
     public static function warn($object) {
-        Log::write('WARNING', debug_backtrace(), $object);
+        Log::write('WARNING ', debug_backtrace(), $object);
     }
 
     public static function request($object) {
-        Log::write('REQUEST', debug_backtrace(), $object);
+        Log::write('REQUEST ', debug_backtrace(), $object);
     }
 
     public static function info($object) {
-        Log::write('INFO', debug_backtrace(), $object);
+        Log::write('INFO ', debug_backtrace(), $object);
     }
 
     public static function logLabel($label, $object) {
-        Log::write(strtoupper($label), debug_backtrace(), $object);
+        Log::write(strtoupper($label) . ' ', debug_backtrace(), $object);
     }
 }

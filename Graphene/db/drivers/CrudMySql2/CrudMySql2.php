@@ -8,58 +8,87 @@ use Graphene\db\drivers\mysql\ModelManager;
 use Graphene\db\drivers\mysql\StorageRequest;
 use Graphene\db\CrudDriver;
 
-class CrudMySql2 implements CrudDriver{
+class CrudMySql2 implements CrudDriver {
 
-    const INFO = 'mySql driver 0.2.1, for Graphene 0.2.x';
+    const INFO = 'mySql driver 0.2.2, for Graphene 0.2.x';
     protected $connectionManager;
     protected $configManager;
 
-    public function __construct($dbConfig){
-        $this->configManager     = new ConfigManager($dbConfig);
+    public function __construct($dbConfig) {
+        $this->configManager = new ConfigManager($dbConfig);
         $this->connectionManager = new ConnectionManager($this->configManager);
-        $this->coreManager       = new CoreManager($this->configManager,$this->connectionManager);
+        $this->coreManager = new CoreManager($this->configManager, $this->connectionManager);
     }
 
-    public function getConnection(){
+    public function getConnection() {
         return $this->connectionManager->getConnection();
     }
 
-    public function getSettings(){return [];}
+    public function getSettings() {
+        return [];
+    }
 
-    public function getInfos(){
+    public function getInfos() {
         return self::INFO;
     }
 
-    public function create($json){
-        $req   = new StorageRequest($json,$this->connectionManager);
+    public function create($json) {
+        $req = new StorageRequest($json, $this->connectionManager);
         $this->coreManager->init($req->getModel());
-        $query = MySqlQuery::getCreateQuery($this->configManager,$req);
+        $query = MySqlQuery::getCreateQuery($this->configManager, $req);
         $this->connectionManager->query($query);
+
         return $this->read($req->cloneForSingleRead());
     }
 
-    public function read($json, $query = null){
-        $req   = new StorageRequest($json,$this->connectionManager,$query);
+    public function read($json, $query = null) {
+        $req = new StorageRequest($json, $this->connectionManager, $query);
         $this->coreManager->init($req->getModel());
-        $query = MySqlQuery::getReadQuery($this->configManager,$req);
-        //\Log::debug($query);
+        $query = MySqlQuery::getReadQuery($this->configManager, $req);
+        //\Log::info($query);
         $res = $this->connectionManager->query($query);
+
         return $req->serializeResponse($res);
     }
 
-    public function update($json){
-        $req   = new StorageRequest($json,$this->connectionManager);
+    public function update($json) {
+        $req = new StorageRequest($json, $this->connectionManager);
         $this->coreManager->init($req->getModel());
-        $query = MySqlQuery::getUpdateQuery($this->configManager,$req);
+        $query = MySqlQuery::getUpdateQuery($this->configManager, $req);
         $this->connectionManager->query($query);
+
         return $this->read($req->cloneForSingleRead());
     }
 
-    public function delete($json){
-        $req   = new StorageRequest($json,$this->connectionManager);
+    public function delete($json) {
+        $req = new StorageRequest($json, $this->connectionManager);
         $this->coreManager->init($req->getModel());
-        $query = MySqlQuery::getDeleteQuery($this->configManager,$req);
+        $query = MySqlQuery::getDeleteQuery($this->configManager, $req);
         $this->connectionManager->query($query);
+
         return true;
     }
+
+    public function beginTransaction() {
+        if ($this->transactionCount == 0) {
+            $this->getConnection()->beginTransaction();
+        }
+        $this->transactionCount++;
+    }
+
+    public function commit() {
+        if ($this->transactionCount == 1) {
+            $this->getConnection()->commit();
+        }
+        $this->transactionCount--;
+    }
+
+    public function rollback() {
+        if ($this->transactionCount == 1) {
+            $this->getConnection()->rollBack();
+        }
+        $this->transactionCount--;
+    }
+
+    private $transactionCount = 0;
 }

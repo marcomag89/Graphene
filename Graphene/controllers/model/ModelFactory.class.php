@@ -8,45 +8,47 @@ use Graphene\Graphene;
 use Graphene\models\Model;
 use Graphene\controllers\exceptions\GraphException;
 
-class ModelFactory
-{
+class ModelFactory {
 
     /**
      * @param $json
+     *
      * @return Object[]|Boolean|null
      * @throws GraphException
      */
-    public static function createByDbSerialization($json)
-    {
+    public static function createByDbSerialization($json) {
         // echo $json;
+        self::$BEAN_PARSING_ERRS = [];
         $modelArr = json_decode($json, true);
-        if (isset($modelArr['content']))
+        if (isset($modelArr['content'])) {
             return self::createModel($modelArr['content'], $modelArr['domain']);
-        else 
-            if (isset($modelArr['collection'])) {
-                $ret = array();
-                foreach ($modelArr['collection'] as $content) {
-                    if (($model = self::createModel($content, $modelArr['domain'])) !== false) {
-                        $ret[] = $model;
-                    } else {
-                        self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
-                        //TODO something else
-                        //echo self::$LAST_BEAN->getLastTestErrors();
-                    }
+        } else if (isset($modelArr['collection'])) {
+            $ret = [];
+            foreach ($modelArr['collection'] as $content) {
+                if (($model = self::createModel($content, $modelArr['domain'])) !== false) {
+                    $ret[] = $model;
+                } else {
+                    self::$BEAN_PARSING_ERRS[] = self::$LAST_BEAN->getLastTestErrors();
                 }
-                // if(count($ret)==0)return null;
-                return $ret;
             }
+            if (count(self::$BEAN_PARSING_ERRS) > 0) {
+                throw new GraphException("Updated model is corrupt " . json_encode(self::$BEAN_PARSING_ERRS, 2));
+            }
+
+            return $ret;
+        }
+
         return null;
     }
 
-    public static function createByRequest(GraphRequest $request, Module $mod = null, $lazyChecks = false)
-    {
-        if ($mod == null)
+    public static function createByRequest(GraphRequest $request, Module $mod = null, $lazyChecks = false) {
+        if ($mod == null) {
             $mod = Graphene::getInstance()->getCurrentModule();
-        if (($decoded = json_decode($request->getBody(), true)) === null)
+        }
+        if (($decoded = json_decode($request->getBody(), true)) === null) {
             throw new GraphException('Malformed request, check jsons structs on body', ExceptionsCodes::REQUEST_MALFORMED, 400);
-        $return = array();
+        }
+        $return = [];
         foreach ($decoded as $ModelName => $modelContent) {
             $domain = Graphene::getInstance()->getApplicationName() . '.' . $mod->getNamespace() . '.' . $ModelName;
             if (($return[$ModelName] = self::createModel($modelContent, $domain, $lazyChecks)) === false) {
@@ -58,15 +60,15 @@ class ModelFactory
         return $return;
     }
 
-    private static function createModel($modelContent, $modelDomain, $lazyChecks = false)
-    {
+    private static function createModel($modelContent, $modelDomain, $lazyChecks = false) {
         $expl = explode('.', $modelDomain);
         $modelName = $expl[1] . '\\' . $expl[2];
 
-        if (class_exists($modelName))
+        if (class_exists($modelName)) {
             $model = new $modelName();
-        else
+        } else {
             throw new GraphException('Model ' . $modelName . ' is not handlend in this module', 5000, 500);
+        }
         if ($model instanceof Model) {
             $model->setLazy(true);
             $model->setContent($modelContent);
@@ -76,16 +78,16 @@ class ModelFactory
             } else {
                 return false;
             }
-        } else
+        } else {
             throw new GraphException('Model ' . $modelName . ' is not handlend in this module', 5000, 500);
+        }
     }
 
-    public static function getModelParsingErrs()
-    {
+    public static function getModelParsingErrs() {
         return self::$BEAN_PARSING_ERRS;
     }
 
-    private static $BEAN_PARSING_ERRS = array();
+    private static $BEAN_PARSING_ERRS = [];
 
     private static $LAST_BEAN;
 }
