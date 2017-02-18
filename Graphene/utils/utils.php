@@ -13,7 +13,7 @@ G_Require('utils/autoloaders.php');
 Settings::getInstance();
 Log::setUp();
 
-function G_path($path) {
+path($path) {
     if (is_absolute_path($path) && is_readable($path)) {
         return $path;
     } else {
@@ -34,6 +34,7 @@ function G_path($path) {
     }
 }
 
+
 function G_Require($path) {
     $absolute = G_path($path);
     if (is_readable($absolute)) {
@@ -46,19 +47,19 @@ function G_Require($path) {
 }
 
 /* lib basic functions */
-function str_starts_with($haystack, $needle) {
+function str_starts_with($haystack, $needle){
     return $needle === "" || strpos($haystack, $needle) === 0;
 }
 
-function str_ends_with($haystack, $needle) {
+function str_ends_with($haystack, $needle){
     return $needle === "" || substr($haystack, -strlen($needle)) === $needle;
 }
 
-function str_contains($haystack, $needle) {
+function str_contains($haystack, $needle){
     return strpos($haystack, $needle) !== false;
 }
 
-function is_absolute_path($path) {
+function is_absolute_path($path){
     $win = 'Windows NT';
     $name = php_uname('s');
     if ($name === $win) {
@@ -68,6 +69,7 @@ function is_absolute_path($path) {
     }
 }
 
+
 function G_requestUrl() {
     $reqUri = $_SERVER["REQUEST_URI"];
     $base = Settings::getInstance()->getPar('baseUrl');
@@ -75,41 +77,52 @@ function G_requestUrl() {
         $reqUri = substr($reqUri, strlen($base));
     }
     $reqUri = '/' . url_trimAndClean($reqUri);
-
     return $reqUri;
 }
 
 function url_trimAndClean($url) {
     $url = trim($url);
-    if (str_contains($url, '?')) {
-        $url = explode('?', $url)[0];
-    }
-    if (str_starts_with($url, '/')) {
-        $url = substr($url, 1);
-    }
-    if (str_ends_with($url, '/')) {
-        $url = substr($url, 0, strlen($url) - 1);
-    }
+    if (str_contains($url, '?')) $url = explode('?', $url)[0];
+    if (str_starts_with($url, '/')) $url = substr($url, 1);
+    if (str_ends_with($url, '/')) $url = substr($url, 0, strlen($url) - 1);
+
     $url = strtolower($url);
 
     return $url;
 }
 
-function absolute_from_script($path) {
-    if (is_absolute_path($path)) {
-        return $path;
-    } else {
-        $mainScript = $_SERVER['SCRIPT_FILENAME'];
+function absolute_from_script($path){
+    if (is_absolute_path($path)) return $path;
+    else {
+        $mainScript = normalize_directory_separator($_SERVER['SCRIPT_FILENAME']);
+
         $mainScriptExpl = explode(DIRECTORY_SEPARATOR, $mainScript);
         array_pop($mainScriptExpl);
         $mainScriptRoot = join(DIRECTORY_SEPARATOR, $mainScriptExpl);
         $ret = $mainScriptRoot . DIRECTORY_SEPARATOR . $path;
-
         return $ret;
     }
 }
 
-function default_exception_handler($e) {
+/**
+ * normalize a path with DIRECTORY_SEPARATOR.
+ *
+ * @param $path
+ */
+function normalize_directory_separator($pPath){
+    $retValue = '';
+    // checks if mainScript uses DIRECTORY_SEPARATOR.
+    if (strpos($pPath, DIRECTORY_SEPARATOR) === false) {
+        // Normalize DIRECTORY_SEPARATOR if it isn't present.
+        $retValue = str_replace((DIRECTORY_SEPARATOR == '/' ? '\\' : '/'), DIRECTORY_SEPARATOR, $pPath);
+    } else {
+        $retValue = $pPath;
+    }//end if
+
+    return $retValue;
+}//end normalize_directory_separator
+
+function default_exception_handler(Exception $e){
     Log::err($e);
     global $haveException;
     $haveException = true;
@@ -127,6 +140,10 @@ function default_exception_handler($e) {
 function error_handler($errno, $errstr, $errfile, $errline) {
     global $haveException;
     $haveException = true;
+    Log::err('error no.' . $errno . ' ' . $errstr . ' at ' . $errfile . ':' . $errline);
+}
+
+function fatalErrorShutdownHandler() {
     try {
         throw new Exception('error no.' . $errno . ' ' . $errstr . ' at ' . $errfile . ':' . $errline);
     } catch (Exception $e) {
@@ -150,16 +167,16 @@ function fatalErrorShutdownHandler() {
     }
 }
 
-function rrmdir($dir) {
+function rrmdir($dir)
+{
     if (is_dir($dir)) {
         $objects = scandir($dir);
         foreach ($objects as $object) {
             if ($object != "." && $object != "..") {
-                if (filetype($dir . "/" . $object) == "dir") {
-                    rrmdir($dir . "/" . $object);
-                } else {
-                    unlink($dir . "/" . $object);
-                }
+                if (filetype($dir . "/" . $object) == "dir") 
+                  rrmdir($dir . "/" . $object); 
+                else 
+                  unlink($dir . "/" . $object);
             }
         }
         reset($objects);
