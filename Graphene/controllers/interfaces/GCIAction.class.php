@@ -90,7 +90,9 @@ abstract class GCIAction extends Action {
         $sortBy = $this->getSortField($data);
         $sortMode = $this->getSortMode($data);
 
-        $protocol = stripos($_SERVER['SERVER_PROTOCOL'], 'https') === true ? 'https://' : 'http://';
+        //$protocol = stripos($_SERVER['SERVER_PROTOCOL'], 'https') === true ? 'https://' : 'http://';
+        $protocol = (strtolower($_SERVER['HTTPS']) == 'on') ? 'https://' : 'http://';
+
         $url = $protocol . $_SERVER['HTTP_HOST'] . Graphene::getInstance()->getSettings()['baseUrl'] . $this->request->getUrl();
 
         $httpQ = [
