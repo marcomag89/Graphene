@@ -16,20 +16,21 @@ class MySqlQuery {
     private static $DELETE_QUERY_MODEL = 'DELETE FROM <identifier> WHERE `id`=<id>;';
 
     public static function getTableExistsQuery($settings, $model) {
-        return str_replace('<identifier>', self::getDbTableIdentifier($settings, $model),
-            self::$TABLE_EXISTS_QUERY_MODEL);
+        return str_replace('<identifier>', self::getDbTableIdentifier($settings, $model), self::$TABLE_EXISTS_QUERY_MODEL);
     }
 
     public static function getDbTableIdentifier($settings, $model) {
         $q = self::$TABLE_IDENTIFIER_MODEL;
         $q = str_replace('<dbname>', $settings->getDbname(), $q);
         $q = str_replace('<tableName>', $settings->getPrefix() . $model->getModelTableName(), $q);
+
         return $q;
     }
 
     /**
      * @param ConfigManager $settings
-     * @param RequestModel $model
+     * @param RequestModel  $model
+     *
      * @return string
      */
     public static function getTableCreateQuery($settings, $model) {
@@ -47,12 +48,14 @@ class MySqlQuery {
         $q = str_replace('<identifier>', self::getDbTableIdentifier($settings, $model), $q);
         $q = str_replace('<fields>', $colsStr, $q);
         $q = str_replace('<uniqueIndexes>', $uniColsStr, $q);
+
         return $q;
     }
 
     /**
-     * @param ConfigManager $settings
+     * @param ConfigManager  $settings
      * @param StorageRequest $request
+     *
      * @return string
      */
     public static function getCreateQuery($settings, $request) {
@@ -70,18 +73,21 @@ class MySqlQuery {
         $q = str_replace('<identifier>', self::getDbTableIdentifier($settings, $request->getModel()), $q);
         $q = str_replace('<fields>', $colNames, $q);
         $q = str_replace('<values>', $colValues, $q);
+
         return $q;
     }
 
     /**
-     * @param ConfigManager $settings
+     * @param ConfigManager  $settings
      * @param StorageRequest $request
+     *
      * @return string
      * @throws GraphException
      */
     public static function getReadQuery($settings, $request) {
         $qComponents = self::getReadQueryComponents($settings, $request);
         $q = self::composeReadQuery($qComponents);
+
         return $q;
     }
 
@@ -97,7 +103,8 @@ class MySqlQuery {
 
     /**
      * @param  StorageRequest $request
-     * @param  ConfigManager $settings
+     * @param  ConfigManager  $settings
+     *
      * @return string
      */
     private static function getSelect($request, $settings) {
@@ -111,9 +118,9 @@ class MySqlQuery {
                 $likes = '';
                 $searchTherms = $request->getSearchTherms();
                 foreach ($searchTherms as $therm) {
-                    $likes .= ' `' . $field . '` LIKE \'%' . $therm . '%\' OR';
+                    $likes .= ' `' . $field . '` LIKE \'%' . $therm . '%\' AND';
                 }
-                $likes = rtrim($likes, 'OR');
+                $likes = rtrim($likes, 'AND');
                 $toAdd = str_replace('<selection>', '*', $toAdd);
                 $toAdd = str_replace('<identifier>', self::getDbTableIdentifier($settings, $request->getModel()), $toAdd);
                 $toAdd = str_replace('<cond>', '(' . self::getCondition($request) . ') AND (' . $likes . ')', $toAdd);
@@ -126,11 +133,13 @@ class MySqlQuery {
         } else {
             $select = self::getDbTableIdentifier($settings, $request->getModel());
         }
+
         return $select;
     }
 
     /**
      * @param StorageRequest $request
+     *
      * @return string
      */
     private static function getCondition($request) {
@@ -147,7 +156,7 @@ class MySqlQuery {
             $clauses = ' AND';
             $fields = $request->getModel()->getFlatDbValues();
             foreach ($fields as $field => $value) {
-                $op = $request->getOperator($field);
+                $op = $request->getOperator($field, $value);
                 $clauses .= ' `' . $field . '` ' . $op . ' ' . $value . ' AND';
             }
             $clauses = rtrim($clauses, 'AND');
@@ -175,6 +184,7 @@ class MySqlQuery {
 
     /**
      * @param StorageRequest $request
+     *
      * @return string
      */
     private static function getPaging($request) {
@@ -222,12 +232,14 @@ class MySqlQuery {
         $q = str_replace('<identifier>', $queryComponents['from'], $q);
         $q = str_replace('<cond>', $condition, $q);
         $q = str_replace('<paging>', $queryComponents['paging'], $q);
+
         return $q;
     }
 
     /**
-     * @param ConfigManager $settings
+     * @param ConfigManager  $settings
      * @param StorageRequest $request
+     *
      * @return string
      * @throws GraphException
      */
@@ -244,12 +256,14 @@ class MySqlQuery {
         $q = str_replace('<identifier>', self::getDbTableIdentifier($settings, $request->getModel()), $q);
         $q = str_replace('<kv>', $kv, $q);
         $q = str_replace('<id>', $cols['id'], $q);
+
         return $q;
     }
 
     /**
-     * @param ConfigManager $settings
+     * @param ConfigManager  $settings
      * @param StorageRequest $request
+     *
      * @return string
      * @throws GraphException
      */
@@ -258,6 +272,7 @@ class MySqlQuery {
         $cols = $request->getModel()->getFlatDbValues();
         $q = str_replace('<identifier>', self::getDbTableIdentifier($settings, $request->getModel()), $q);
         $q = str_replace('<id>', $cols['id'], $q);
+
         return $q;
     }
 

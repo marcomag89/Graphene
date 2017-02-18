@@ -6,10 +6,10 @@ use Graphene\controllers\interfaces\StdUpdate;
 use Graphene\models\Model;
 
 class Update extends StdUpdate {
+
     function getModelInstance() {
         return new User();
     }
-
     function getModelFromRequest() {
         //\Log::debug($this->request->getData());
         if (!array_key_exists('User', $this->request->getData())) {
@@ -20,8 +20,7 @@ class Update extends StdUpdate {
         $user->setContent($userData);
         return $user;
     }
-
-    protected function updateModel(Model $model) {
+    function updateModel($model) {
         if ($model instanceof User) {
             $tUser = new User();
             $tUser->setContent([
@@ -40,8 +39,7 @@ class Update extends StdUpdate {
             throw new GraphException('Invalid user');
         }
     }
-
-    protected function formatUpdatedModel(Model $user) {
+    protected function formatUpdatedModel($user) {
         $userC = $user->getContent();
         unset($userC['password']);
         unset($userC['editingKey']);

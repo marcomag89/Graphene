@@ -20,6 +20,12 @@ interface CrudDriver
 
     public function delete($json);
 
+    public function beginTransaction();
+
+    public function commit();
+
+    public function rollback();
+
     const CONNECTION_ERROR_CODE = 100;
 
     const INITALIZATION_ERROR_CODE = 101;

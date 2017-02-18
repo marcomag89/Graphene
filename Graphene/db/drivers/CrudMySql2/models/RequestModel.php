@@ -5,57 +5,59 @@ namespace Graphene\db\drivers\mysql;
 use Graphene\db\drivers\MySqlTypes;
 use Graphene\models\Model;
 
-class RequestModel{
-    private
-        $flatValues,
-        $flatTypes,
-        $modelTableName,
-        $structure,
-        $content,
-        $domain,
-        $convertedFlatTypes,
-        /**
-         * @var ConnectionManager
-         */
+class RequestModel {
+    private $flatValues, $flatTypes, $modelTableName, $structure, $content, $domain, $convertedFlatTypes, /**
+     * @var ConnectionManager
+     */
         $connectionManager;
 
     /**
-     * @param $structure
-     * @param $content
-     * @param $domain
+     * @param                   $structure
+     * @param                   $content
+     * @param                   $domain
      * @param ConnectionManager $connection
      */
-    public function __construct($structure,$content,$domain,$connection){
-        $this -> connectionManager  = $connection;
-        $this -> structure          = $structure;
-        $this -> content            = $content;
-        $this -> domain             = $domain;
-        $this -> name               = $this->parseModelName($domain);
-        $this -> flatValues         = $this->contentToFlatArray ($this->content);
-        $this -> flatTypes          = $this->contentToFlatArray ($this->structure);
+    public function __construct($structure, $content, $domain, $connection) {
+        $this->connectionManager = $connection;
+        $this->structure = $structure;
+        $this->content = $content;
+        $this->domain = $domain;
+        $this->name = $this->parseModelName($domain);
+        $this->flatValues = $this->contentToFlatArray($this->content);
+        $this->flatTypes = $this->contentToFlatArray($this->structure);
 
-        $this -> convertedFlatTypes = MySqlTypes::convertFlatStructTypes($this->flatTypes);
-        $this -> modelTableName     = strtolower(str_replace('.', '_', $domain) . '_model');
+        $this->convertedFlatTypes = MySqlTypes::convertFlatStructTypes($this->flatTypes);
+        $this->modelTableName = strtolower(str_replace('.', '_', $domain) . '_model');
     }
 
-    private function parseModelName($domain){
-        $expl = explode('.',$domain);
-        $name=$expl[(count($expl)-1)];
+    private function parseModelName($domain) {
+        $expl = explode('.', $domain);
+        $name = $expl[(count($expl) - 1)];
+
         //echo "\n".$domain.' : '.$name;
         return $name;
     }
 
     private function contentToFlatArray($content, &$path = '', &$schema = null) {
-        if ($schema == null) $schema = [];
-        foreach ($content as $key => $value) {
-            if (strcmp($path, '') == 0) $tmpPath = $key;
-            else $tmpPath = $path . '_' . $key;
+        if ($schema == null) {
+            $schema = [];
+        }
+        if ($content != null) {
+            foreach ($content as $key => $value) {
+                if (strcmp($path, '') == 0) {
+                    $tmpPath = $key;
+                } else {
+                    $tmpPath = $path . '_' . $key;
+                }
 
-            if (is_array($value) && $content != null) $this->contentToFlatArray($value, $tmpPath, $schema);
-            else {
-                $schema[$tmpPath] = $value;
+                if (is_array($value) && $content != null) {
+                    $this->contentToFlatArray($value, $tmpPath, $schema);
+                } else {
+                    $schema[$tmpPath] = $value;
+                }
             }
         }
+
         return $schema;
     }
 
@@ -74,36 +76,50 @@ class RequestModel{
                 }
                 // Popolate leaf
                 $tRes = $v;
-            } else $tRes[$k] = $v;
+            } else {
+                $tRes[$k] = $v;
+            }
         }
+
         return $res;
     }
 
-    public function getName(){
+    public function getName() {
         return $this->name;
     }
 
-    public function getStructure(){
+    public function getStructure() {
         return $this->struct;
     }
 
-    public function getContent(){
+    public function getContent() {
         return $this->content;
     }
 
-    public function getDomain(){
+    public function getDomain() {
         return $this->domain;
     }
 
-    public function getFlatDbValues(){
-        $ret=[];
-        foreach($this->getFlatValues() as $key=>$value){
+    public function getFlatDbValues() {
+        $ret = [];
+        foreach ($this->getFlatValues() as $key => $value) {
             //Bool fix
-            if (str_contains($this->flatTypes[$key], Model::BOOLEAN) && $value !== null) {
-                $value = $value ? '1' : '0';
+            try {
+                if (str_contains($this->flatTypes[$key], Model::BOOLEAN) && $value !== null) {
+                    $value = $value ? '1' : '0';
+                }
+                if ($value === null) {
+                    $ret[$key] = 'NULL';
+                } else {
+                    $ret[$key] = $this->connectionManager->getConnection()->quote($value);
+                }
+            } catch (\Exception $e) {
+                \Log::err($this->flatTypes);
+                \Log::err($this->getFlatValues());
+                throw $e;
             }
-            $ret[$key]=$this->connectionManager->getConnection()->quote($value);
         }
+
         return $ret;
     }
 
@@ -111,25 +127,27 @@ class RequestModel{
         return $this->flatValues;
     }
 
-    public function getFlatColumnsDbTypes(){
+    public function getFlatColumnsDbTypes() {
         return $this->convertedFlatTypes;
     }
 
-    public function getModelTableName(){
-       return $this->modelTableName;
+    public function getModelTableName() {
+        return $this->modelTableName;
     }
 
-    public function getSearchableFields(){
+    public function getSearchableFields() {
         return $this->getFieldsByType(Model::SEARCHABLE);
     }
 
-    public function getFieldsByType($fieldType){
-        $cols=$this->getFlatTypes();
-        $ret=[];
+    public function getFieldsByType($fieldType) {
+        $cols = $this->getFlatTypes();
+        $ret = [];
         foreach ($cols as $col => $type) {
-            if (in_array(substr($fieldType, strlen(Model::CHECK_SEP)), explode(Model::CHECK_SEP, $type)))
-                $ret[]=$col;
+            if (in_array(substr($fieldType, strlen(Model::CHECK_SEP)), explode(Model::CHECK_SEP, $type))) {
+                $ret[] = $col;
+            }
         }
+
         return $ret;
     }
 
@@ -148,13 +166,13 @@ class RequestModel{
                 return true;
             }
         }
+
         return false;
     }
 
-    private function colsToJsonArr($row,$json)
-    {
-        $res = array();
-        $struct = json_decode($json,true)['struct'];
+    private function colsToJsonArr($row, $json) {
+        $res = [];
+        $struct = json_decode($json, true)['struct'];
 
         foreach ($row as $k => $v) {
             $expl = explode('_', $k);
@@ -163,23 +181,33 @@ class RequestModel{
             if (count($expl) > 1) {
                 // goto leaf
                 foreach ($expl as $e) {
-                    if (! isset($tRes[$e])){
-                        $tRes[$e] = array();
-                        $tStruct  = &$struct[$e];
+                    if (!isset($tRes[$e])) {
+                        $tRes[$e] = [];
+                        $tStruct = &$struct[$e];
                     }
                     $tRes = &$tRes[$e];
                 }
                 // Popolate leaf
                 $tRes = $v;
             } else {
-                if(str_contains($tStruct[$k],Model::DATETIME) && $v === '0000-00-00 00:00:00'){$v=null;}
-                else if(str_contains($tStruct[$k],Model::BOOLEAN)){if($v === 1 || $v === '1') $v = true; else $v=false;}
-                else if(str_contains($tStruct[$k],Model::INTEGER) && ($v !==null || $v!=='')){$v=intval($v);}
-                else if(str_contains($tStruct[$k],Model::DECIMAL) && ($v !==null || $v!=='')){$v=floatval($v);}
+                if (str_contains($tStruct[$k], Model::DATETIME) && $v === '0000-00-00 00:00:00') {
+                    $v = null;
+                } else if (str_contains($tStruct[$k], Model::BOOLEAN)) {
+                    if ($v === 1 || $v === '1') {
+                        $v = true;
+                    } else {
+                        $v = false;
+                    }
+                } else if (str_contains($tStruct[$k], Model::INTEGER) && ($v !== null || $v !== '')) {
+                    $v = intval($v);
+                } else if (str_contains($tStruct[$k], Model::DECIMAL) && ($v !== null || $v !== '')) {
+                    $v = floatval($v);
+                }
 
                 $tRes[$k] = $v;
             }
         }
+
         return $res;
     }
 }

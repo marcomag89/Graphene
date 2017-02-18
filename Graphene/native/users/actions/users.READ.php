@@ -10,7 +10,7 @@ class Read extends StdRead {
         return new User();
     }
 
-    protected function formatReadedModel(Model $user) {
+    function formatReadedModel( $user) {
         if ($user !== null) {
             $userC = $user->getContent();
             unset($userC['password']);

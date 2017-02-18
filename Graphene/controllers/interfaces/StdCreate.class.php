@@ -19,11 +19,11 @@ abstract class StdCreate extends Action {
 
     protected abstract function getModelInstance();
 
-    protected function createModel(Model $model) {
+    protected function createModel($model) {
         return $model->create();
     }
 
-    protected function formatCreatedModel(Model $createdModel) {
+    protected function formatCreatedModel($createdModel) {
         return $createdModel;
     }
 
