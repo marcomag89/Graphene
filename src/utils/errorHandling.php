@@ -3,9 +3,9 @@
 namespace Graphene\utils;
 
 use Graphene\Graphene;
+use Logger;
 
-function default_exception_handler(Exception $e)
-{
+$__GrapheneDefaultExceptionHandler = function (Exception $e) {
     Log::err($e);
     global $haveException;
     $haveException = true;
@@ -18,19 +18,17 @@ function default_exception_handler(Exception $e)
     foreach ($st as $entry) {
         echo "\t" . 'funct ' . $entry['function'] . '() in ' . $entry['file'] . "\n";
     }
-}
+};
 
-function error_handler($errno, $errstr, $errfile, $errline)
-{
+$__GrapheneErrorHandler = function ($errno, $errstr, $errfile, $errline) {
     global $haveException;
     $haveException = true;
-    $logger = Graphene::getLogger();
-    $logger->
-    Log::err('error no.' . $errno . ' ' . $errstr . ' at ' . $errfile . ':' . $errline);
-}
+    $logger = Graphene::getLogger('graphene_err');
+    $logger->error('error no.' . $errno . ' ' . $errstr . ' at ' . $errfile . ':' . $errline);
+};
 
-function fatalErrorShutdownHandler()
-{
+$__GrapheneFatalErrorShutdownHandler = function () {
+    global $__GrapheneErrorHandler;
     $last_error = error_get_last();
     if ($last_error['type'] === E_ERROR) {
         // fatal error
@@ -42,14 +40,14 @@ function fatalErrorShutdownHandler()
                 'code' => '500'
             ]
         ], JSON_PRETTY_PRINT));;
-        error_handler(E_ERROR, $last_error['message'], $last_error['file'], $last_error['line']);
+        call_user_func($__GrapheneErrorHandler, E_ERROR, $last_error['message'], $last_error['file'], $last_error['line']);
     }
-}
+};
 
 
 $haveException = false;
 
-set_exception_handler("default_exception_handler");
-register_shutdown_function('fatalErrorShutdownHandler');
-set_error_handler("error_handler", E_ALL);
+set_exception_handler($__GrapheneDefaultExceptionHandler);
+register_shutdown_function($__GrapheneFatalErrorShutdownHandler);
+set_error_handler($__GrapheneErrorHandler, E_ALL);
 

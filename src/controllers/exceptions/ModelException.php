@@ -1,9 +1,8 @@
 <?php
 namespace Graphene\controllers\exceptions;
 
-use \Exception;
 
-class ModelException extends Exception
+class ModelException extends GraphException
 {
 
     public function __construct($msg, $code)

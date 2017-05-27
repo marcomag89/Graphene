@@ -1,5 +1,5 @@
 <?php
-namespace Graphene\db\drivers\mysql;
+namespace Graphene\db\drivers\mysql\models;
 use Graphene\models\Model;
 
 class StorageRequest

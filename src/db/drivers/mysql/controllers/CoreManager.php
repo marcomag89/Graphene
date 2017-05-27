@@ -1,7 +1,6 @@
 <?php
-namespace Graphene\db\drivers\mysql;
-use Graphene\db\drivers\MySqlQuery;
-use \Log;
+namespace Graphene\db\drivers\mysql\controllers;
+use Graphene\db\drivers\mysql\utils\MySqlQuery;
 use \PDOStatement;
 
 class CoreManager {

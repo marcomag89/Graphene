@@ -1,5 +1,5 @@
 <?php
-namespace Graphene\db\drivers;
+namespace Graphene\db\drivers\mysql\utils;
 
 
 use Graphene\db\drivers\mysql\ConfigManager;

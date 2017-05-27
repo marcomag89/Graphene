@@ -1,7 +1,5 @@
 <?php
-namespace Graphene\db\drivers\mysql;
-
-use \Log;
+namespace Graphene\db\drivers\mysql\controllers;
 
 class ConfigManager
 {

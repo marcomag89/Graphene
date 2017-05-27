@@ -1,5 +1,5 @@
 <?php
-namespace Graphene\db\drivers\mysql;
+namespace Graphene\db\drivers\mysql\controllers;
 
 use \Log;
 use Graphene\controllers\exceptions\GraphException;

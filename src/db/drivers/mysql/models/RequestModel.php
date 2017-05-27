@@ -1,8 +1,9 @@
 <?php
-namespace Graphene\db\drivers\mysql;
+namespace Graphene\db\drivers\mysql\models;
 
 
-use Graphene\db\drivers\MySqlTypes;
+use Graphene\db\drivers\mysql\utils\MySqlTypes;
+use Graphene\Graphene;
 use Graphene\models\Model;
 use Graphene\utils\Strings;
 

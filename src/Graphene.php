@@ -69,7 +69,7 @@ class Graphene
 
     /**
      * @param null $label
-     * @return Logger\
+     * @return Logger
      */
     public static function getLogger($label = null)
     {
@@ -148,10 +148,10 @@ class Graphene
      */
     public static function registerAutoloaders()
     {
-        spl_autoload_register("autol_namespace");
         spl_autoload_register("autol_moduleResources");
 
         /*
+                spl_autoload_register("autol_namespace");
                 spl_autoload_register("autol_db_drivers");
                 spl_autoload_register("autol_models");
         */
@@ -180,7 +180,7 @@ class Graphene
         Graphene::getLogger()->info($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
         $this->filterManager = new FilterManager();
         $this->router = new GrapheneRouter($request);
-        $crudDriver = 'Graphene\\db\\drivers\\' . (string)$this->getSettings()->getSettingsArray()['storageConfig']['driver'];
+        $crudDriver = $this->getSettings()->getSettingsArray()['storageConfig']['driver'];
         $this->storage = new CrudStorage(new $crudDriver($this->getSettings()->getSettingsArray()['storageConfig']));
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
