@@ -24,12 +24,12 @@
         "type": "git",
         "reference": "composer-integrated"
       },
-      "autoload": {
-        "psr-4" : {
-          "Graphene\\Graphene" : "src"
-        }
-      }
     }
   ],
+  "autoload": {
+    "psr-4" : {
+      "Graphene\\Graphene" : "src"
+    }
+  }
   "minimum-stability": "dev"
 }
