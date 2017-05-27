@@ -1,15 +1,18 @@
 {
-  "name": "graphene/graphene",
-  "description": "php rest framework",
-  "minimum-stability": "dev",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "mm",
-      "email": "marcomagnetti@gmail.com"
-    }
-  ],
-  "require": {
-    "apache/log4php": "^2.3"
-  }
+    "name": "graphene/graphene",
+    "description": "PHP rest framework",
+    "type": "framework",
+    "require": {
+        "apache/log4php": "^2.3",
+        "doctrine/orm": "^2.5",
+        "ptcong/php-cache-manager": "dev-master"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "GrapheneTeam",
+            "email": "marcomagnetti@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
 }

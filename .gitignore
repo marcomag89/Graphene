@@ -7,3 +7,4 @@ cgi-bin
 .idea
 vendor
 composer.lock
+*.iml
