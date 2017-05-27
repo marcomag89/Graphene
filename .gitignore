@@ -8,3 +8,4 @@ cgi-bin
 .idea
 /logs
 settings.json
+*.iml
