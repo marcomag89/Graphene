@@ -25,7 +25,7 @@
         "reference": "composer-integrated"
       },
       "autoload": {
-        "psr-0" : {
+        "psr-4" : {
           "Graphene\\Graphene" : "src"
         }
       }
