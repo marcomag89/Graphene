@@ -23,6 +23,11 @@
         "url": "git://github.com/marcomag89/Graphene.git",
         "type": "git",
         "reference": "composer-integrated"
+      },
+      "autoload": {
+        "psr-0" : {
+          "Graphene\\Graphene" : "src"
+        }
       }
     }
   ],
