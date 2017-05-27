@@ -2,6 +2,7 @@
 namespace acl;
 
 use Graphene\controllers\exceptions\GraphException;
+use Graphene\Graphene;
 use Graphene\models\Model;
 
 class UserGroupOld extends Model {
@@ -58,13 +59,14 @@ class UserGroupOld extends Model {
             }
         }
 
-        \Log::debug('First check pass');
+
+        Graphene::getLogger()->debug('First check pass');
 
         //Check if already assigned
         if ($this->read() !== null) {
             throw new GraphException('user ' . $this->getUserId() . ' already assigned at ' . $this->getGroup(), 400);
         }
-        \Log::debug('Second check pass');
+        Graphene::getLogger()->debug('Second check pass');
 
     }
 

@@ -3,9 +3,7 @@
 /.settings/
 .DS_Store
 
-modules
 cgi-bin
 .idea
-/logs
-settings.json
-*.iml
+vendor
+composer.lock

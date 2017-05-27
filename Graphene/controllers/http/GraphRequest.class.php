@@ -102,8 +102,8 @@ class GraphRequest
 
     public function getProtocol()
     {
-        if       (str_starts_with($this->url, 'http//'))  return 'http';
-        elseif   (str_starts_with($this->url, 'https//')) return 'https';
+        if       (Strings::startsWith($this->url, 'http//'))  return 'http';
+        elseif   (Strings::startsWith($this->url, 'https//')) return 'https';
         else     return 'graphene';
     }
 

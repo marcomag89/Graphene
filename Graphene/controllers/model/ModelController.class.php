@@ -5,6 +5,7 @@ use Graphene\models\Model;
 use Graphene\Graphene;
 use Graphene\db\CrudDriver;
 use Graphene\db\CrudStorage;
+use Graphene\utils\Strings;
 
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\exceptions\GraphException;
@@ -80,8 +81,8 @@ class ModelController
     {
         $splitted = explode('_', substr($funct, 3));
         $splitted[0] = lcfirst($splitted[0]);
-        if     (str_starts_with($funct, 'get')) return $this->serveGet($splitted, $model);
-        elseif (str_starts_with($funct, 'set')) return $this->serveSet($splitted, $pars[0], $model);
+        if     (Strings::startsWith($funct, 'get')) return $this->serveGet($splitted, $model);
+        elseif (Strings::startsWith($funct, 'set')) return $this->serveSet($splitted, $pars[0], $model);
         else   return null;
     }
 

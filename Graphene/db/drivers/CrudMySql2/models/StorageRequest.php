@@ -106,13 +106,13 @@ class StorageRequest
         foreach($data as $item){
             foreach($item as $k=>$val){
                 if(array_key_exists($k,$struct)){
-                    if(str_contains($struct[$k],Model::DATETIME) && $val === '0000-00-00 00:00:00'){$retItem[$k] = null;}
-                    else if(str_contains($struct[$k],Model::BOOLEAN)){
+                    if(Strings::contains($struct[$k],Model::DATETIME) && $val === '0000-00-00 00:00:00'){$retItem[$k] = null;}
+                    else if(Strings::contains($struct[$k],Model::BOOLEAN)){
                         if($val === 1 || $val === '1') $retItem[$k] = true;
                         else $retItem[$k] = false;
                     }
-                    else if(str_contains($struct[$k],Model::INTEGER) && ($val !==null || $val!=='')){$retItem[$k]=intval($val);}
-                    else if(str_contains($struct[$k],Model::DECIMAL) && ($val !==null || $val!=='')){$retItem[$k]=floatval($val);}
+                    else if(Strings::contains($struct[$k],Model::INTEGER) && ($val !==null || $val!=='')){$retItem[$k]=intval($val);}
+                    else if(Strings::contains($struct[$k],Model::DECIMAL) && ($val !==null || $val!=='')){$retItem[$k]=floatval($val);}
                     else $retItem[$k] = $val;
                 }
             }

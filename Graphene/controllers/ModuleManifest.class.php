@@ -1,8 +1,11 @@
 <?php
+
 namespace Graphene\controllers;
 
 use Graphene\Graphene;
 use Graphene\controllers\exceptions\GraphException;
+use Graphene\utils\Strings;
+use Graphene\utils\Paths;
 
 
 class ModuleManifest
@@ -10,9 +13,11 @@ class ModuleManifest
     private static $cache;
     private $modulePath;
     private $manifest;
+    private $logger;
 
     public function __construct($modulePath = null)
     {
+        $this->logger = Graphene::getLogger('graphene_manifest');
         if (self::$cache == null) self::$cache = [];
         if ($modulePath !== null) {
             $this->read($modulePath);
@@ -113,7 +118,7 @@ class ModuleManifest
                 $manifest['actions'][$k]['pars'] = $this->parseCommas($rManifest['actions'][$k]['pars']);
 
             } else {
-                //Log::err('action '.$k.' name is not defined in: '.$modulePath);
+                $this->logger->error('acton ' . $k . ' name is not defined in: ' . $modulePath);
             }
         }
 
@@ -125,6 +130,7 @@ class ModuleManifest
                 $rManifest['filters'][$k]['name'] = strtoupper($filter['name']);
                 if (!array_key_exists('handler', $filter)) {
                     $rManifest['filters'][$k]['handler'] = $this->filterNameToCamel($filter['name']) . '@' . $rManifest['info']['filters-path'] . '/' . $rManifest['info']['namespace'] . '.' . $filter['name'] . '.php';
+                    //$this->logger->debug("FilterHandler: " . $rManifest['filters'][$k]['handler']);
                 }
                 if (!array_key_exists('scope', $filter)) $rManifest['filters'][$k]['scope'] = 'MODULE';
                 if (!array_key_exists('after', $filter)) $rManifest['filters'][$k]['after'] = '';
@@ -142,11 +148,10 @@ class ModuleManifest
                 $manifest['filters'][$k]['after'] = $this->parseCommas($rManifest['filters'][$k]['after']);
 
             } else {
-                //Log::err('filter '.$k.' name is not defined in: '.$modulePath);
+                $this->logger->error('filter ' . $k . ' name is not defined in: ' . $modulePath);
             }
         }
-        //Log::debug("\n-------\nLOADED MANIFEST\n--------\n".json_encode($manifest,JSON_PRETTY_PRINT));
-        //print_r($manifest);
+        //$this->logger->debug("\n-------\nLOADED MANIFEST\n--------\n" . json_encode($manifest, JSON_PRETTY_PRINT));
         self::$cache[$modulePath] = $manifest;
         $this->manifest = $manifest;
         Graphene::getInstance()->stopStat('loadManifest', $modulePath);
@@ -221,10 +226,10 @@ class ModuleManifest
             if (!array_key_exists('imported', $action)) {
                 $actions[$ak]['imported'] = 'false';
             }
-            if (str_starts_with($action['name'], '$')) {
+            if (Strings::startsWith($action['name'], '$')) {
                 $injectionPath = strtoupper(substr($action['name'], 1));
-                if (!str_contains($injectionPath, '/')) {
-                    $injectionPath = G_path('imports/' . $injectionPath);
+                if (!Strings::contains($injectionPath, '/')) {
+                    $injectionPath = Paths::path('imports/' . $injectionPath);
                 }
 
                 //Log::debug('resolving import: '.$injectionPath);
@@ -255,7 +260,7 @@ class ModuleManifest
 
                 //Finalizing import
                 foreach ($stdActions as $k => $v) {
-                    if (!str_starts_with($v['name'], '$')) {
+                    if (!Strings::startsWith($v['name'], '$')) {
                         $expl = explode('@', $v['handler']);
                         $stdActions[$k]['handler'] = $expl[0] . '@' . $injectionPath . '/' . $expl[1];
                         $stdActions[$k]['imported'] = 'true';
@@ -285,16 +290,11 @@ class ModuleManifest
 
     private function cleanUrl($url, $modulePath)
     {
-        if (!is_absolute_path($url)) $url = absolute_from_script($modulePath) . DIRECTORY_SEPARATOR . trim($url, DIRECTORY_SEPARATOR);
-        $expl = explode(DIRECTORY_SEPARATOR, $url);
-        $urlArr = [];
-        foreach ($expl as $dir) {
-            if ($dir !== '') {
-                $urlArr[] = $dir;
-            }
+        if (!Paths::isAbsolute($url)) {
+            $url = Paths::path($modulePath) . DIRECTORY_SEPARATOR . trim($url, DIRECTORY_SEPARATOR);
         }
-        return (php_uname('s') === 'Windows NT' ? '' : DIRECTORY_SEPARATOR) . join(DIRECTORY_SEPARATOR, $urlArr);
-        //return DIRECTORY_SEPARATOR.join(DIRECTORY_SEPARATOR,$urlArr);
+
+        return $url;
     }
 
     private function filterNameToCamel($filterName)

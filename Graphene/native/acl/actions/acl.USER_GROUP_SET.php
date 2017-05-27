@@ -46,7 +46,7 @@ class UserGroupSet extends Action {
                         ]
                     ], 'DELETE');
                 } catch (\Exception $e) {
-                    \Log::err($e->getMessage());
+                    Graphene::getLogger()->error($e->getMessage());
                 }
             }
         }

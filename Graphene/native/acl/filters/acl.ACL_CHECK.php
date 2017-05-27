@@ -142,7 +142,7 @@ class AclCheck extends Filter {
         $tneedle = strtoupper($needle);
         $taction = strtoupper($action);
 
-        if (str_ends_with($tneedle, '.*') && str_starts_with($taction, substr($tneedle, 0, strlen($tneedle - 1))))
+        if (str_ends_with($tneedle, '.*') && Strings::startsWith($taction, substr($tneedle, 0, strlen($tneedle - 1))))
             self::$cache['matches'][$needle . '_' . $action] = true;
         else if ($tneedle === $taction) self::$cache['matches'][$needle . '_' . $action] = true;
         else self::$cache['matches'][$needle . '_' . $action] = false;

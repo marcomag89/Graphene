@@ -1,4 +1,5 @@
 <?php
+
 namespace Graphene\models;
 
 use \Exception;
@@ -7,8 +8,7 @@ use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\controllers\ModuleManifest;
 use Graphene\Graphene;
-use \Settings;
-use \Log;
+use Logger;
 
 class Module
 {
@@ -26,54 +26,70 @@ class Module
     private $currentAction;
     private $manifest;
     private $request;
+    /**
+     * @var Logger|null
+     */
+    private $logger;
 
     /**
      * @param  $modulePath
      * @throws \Graphene\controllers\GraphException
      */
-    public function __construct($modulePath){
+    public function __construct($modulePath)
+    {
         $this->module_dir = $modulePath;
         $this->manifestManager = new ModuleManifest();
-        try{
+        $this->logger = Graphene::getLogger('unknown_module');
+        try {
             $this->manifestManager->read($modulePath);
             $this->manifest = $this->manifestManager->getManifest();
 
-            $this->version    = $this->manifest['info']['version'];
-            $this->namespace  = $this->manifest['info']['namespace'];
-            $this->name       = $this->manifest['info']['name'];
-            $this->author     = $this->manifest['info']['author'];
-            $this->domain     = $this->manifest['info']['domain'];
+            $this->version = $this->manifest['info']['version'];
+            $this->namespace = $this->manifest['info']['namespace'];
+            $this->name = $this->manifest['info']['name'];
+            $this->author = $this->manifest['info']['author'];
+            $this->domain = $this->manifest['info']['domain'];
+            $this->logger = Graphene::getLogger($this->getName());
 
             //Load filters
             $this->loadFilters($this->manifest['filters']);
-        }catch (Exception $e){
-            Log::err($e->getMessage());
+        } catch (Exception $e) {
+            $this->getLogger()->error($e->getMessage());
         }
     }
 
-    private function loadFilters($filters){
+    protected function getLogger()
+    {
+        return $this->logger;
+    }
+
+    private function loadFilters($filters)
+    {
         foreach ($filters as $filter) {
             if (file_exists($filter['file'])) {
                 require_once $filter['file'];
                 $filterClass = $this->namespace . '\\' . $filter['class'];
                 $filterClass = new $filterClass();
-                $filterClass -> setUp($this, $filter);
-                Graphene::getInstance() -> addFilter($filterClass);
-            }else{
-                Log::err('filter file: '.$filter['file'].' not found');
+                $filterClass->setUp($this, $filter);
+                Graphene::getInstance()->addFilter($filterClass);
+            } else {
+                $this->getLogger()->error('filter file: ' . $filter['file'] . ' not found');
             }
         }
     }
 
-    public function getManifestManager() {
+    public function getManifestManager()
+    {
         return $this->manifestManager;
     }
 
-    public function getModelDirectory($modelClass) {
+    public function getModelDirectory($modelClass)
+    {
         return $this->getModuleDir() . '/' . $this->manifest['info']['models-path'] . '/' . $modelClass . '.php';
     }
 
-    public function getModuleDir() {
+    public function getModuleDir()
+    {
         return $this->module_dir;
     }
 
@@ -84,8 +100,8 @@ class Module
         foreach ($this->actions as $action) {
             $this->currentAction = $action;
             if ($action->isHandled()) {
-                Graphene::getInstance()->stopStat('DispatchingTime',$request->getMethod().' '.$request->getUrl().' '.$request->getContextPar('dispatchingId'));
-                Log::debug($action->getUniqueActionName() . ' HANDLED');
+                Graphene::getInstance()->stopStat('DispatchingTime', $request->getMethod() . ' ' . $request->getUrl() . ' ' . $request->getContextPar('dispatchingId'));
+                $this->getLogger()->debug($action->getUniqueActionName() . ' HANDLED');
                 $this->currentAction = $action;
                 return $action->start();
             } else
@@ -107,29 +123,29 @@ class Module
     private function loadAction($action, $request)
     {
         //Log::debug('loading action \''.$action['unique-name']);
-        if($action['imported']==='true')$namespace = 'imports';
+        if ($action['imported'] === 'true') $namespace = 'imports';
         else $namespace = $this->getNamespace();
 
-        $file        = $action['file'];
-        $class       = $namespace . '\\' .$action['class'];
+        $file = $action['file'];
+        $class = $namespace . '\\' . $action['class'];
 
         if (file_exists($file)) {
             /** @noinspection PhpIncludeInspection */
             require_once $file;
-            if(class_exists($class)){
-                $actionClass  =  new $class();
-                if($actionClass instanceof Action){
-                    $actionClass  -> setUp($this, $action, $request);
+            if (class_exists($class)) {
+                $actionClass = new $class();
+                if ($actionClass instanceof Action) {
+                    $actionClass->setUp($this, $action, $request);
                     $this->actions[] = $actionClass;
                     //Log::debug('Action '.str_pad($action['unique-name'],50).' loaded');
-                }else{
-                    Log::err('Action '.str_pad($action['unique-name'],50).' not loaded'.str_pad('',10).'handler class '.$class.' is not an instance of Action in '.$file);
+                } else {
+                    Log::err('Action ' . str_pad($action['unique-name'], 50) . ' not loaded' . str_pad('', 10) . 'handler class ' . $class . ' is not an instance of Action in ' . $file);
                 }
-            }else{
-                Log::err('Action '.str_pad($action['unique-name'],50).' not loaded'.str_pad('',10).' handler class '.$class.' not found in '.$file);
+            } else {
+                Log::err('Action ' . str_pad($action['unique-name'], 50) . ' not loaded' . str_pad('', 10) . ' handler class ' . $class . ' not found in ' . $file);
             }
-        }else{
-            Log::err('Action '.str_pad($action['unique-name'],50).' not loaded'.str_pad('',10).' handler file '.$file.' not found');
+        } else {
+            Log::err('Action ' . str_pad($action['unique-name'], 50) . ' not loaded' . str_pad('', 10) . ' handler file ' . $file . ' not found');
         }
     }
 
@@ -138,22 +154,26 @@ class Module
         return $this->namespace;
     }
 
-    private function getOptionResponse(GraphRequest $request) {
+    private function getOptionResponse(GraphRequest $request)
+    {
         $res = new GraphResponse();
         $res->setStatusCode(200);
         $res->setHeader('allow', 'HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS');
         return $res;
     }
 
-    public function getActionUrl(GraphRequest $request) {
-        return substr($request->getUrl(), strlen((string) $this->domain) + 2);
+    public function getActionUrl(GraphRequest $request)
+    {
+        return substr($request->getUrl(), strlen((string)$this->domain) + 2);
     }
 
-    public function getCurrentAction() {
+    public function getCurrentAction()
+    {
         return $this->currentAction;
     }
 
-    public function getAction($action) {
+    public function getAction($action)
+    {
         $this->actions = [];
     }
 
@@ -176,25 +196,29 @@ class Module
     {
         return $this->actions;
     }
- // richiesta
+
+    // richiesta
 
     public function getSupport()
     {
         return $this->manifest['info']['support'];
     }
- // azioni
+
+    // azioni
 
     public function getVersion()
     {
         return $this->manifest['info']['version'];
     }
- // nome univoco del modulo
+
+    // nome univoco del modulo
 
     public function isActionsModule()
     {
         return $this->actions != null;
     }
- // Pathname del modulo
+
+    // Pathname del modulo
 
     public function haveAction($action)
     {
@@ -205,7 +229,8 @@ class Module
         }
         return false;
     }
- // Dominio del modulo all'interno dell'api
+
+    // Dominio del modulo all'interno dell'api
 
     public function getActionNames()
     {
@@ -215,53 +240,59 @@ class Module
         }
         return $ret;
     }
- // Versione del modulo
 
-    public function getActionDocs($advanced=false,$detail=false)
+    // Versione del modulo
+
+    public function getActionDocs($advanced = false, $detail = false)
     {
         $this->instantiateActions($this->manifest['actions'], new GraphRequest());
         $protocol = stripos($_SERVER['SERVER_PROTOCOL'], 'https') === true ? 'https://' : 'http://';
-        $serverUrl = $protocol . $_SERVER['HTTP_HOST'] . Graphene::getInstance()->getSettings()['baseUrl'];
+        $serverUrl = $protocol . $_SERVER['HTTP_HOST'] . Graphene::getInstance()->getSettings()->getSettingsArray()['baseUrl'];
 
         //$baseUrl= $_SERVER['SERVER_NAME'].Settings::getInstance()->getPar('baseUrl');
-        //if(!str_starts_with($baseUrl,'http://'))$baseUrl='http://'.$baseUrl;
-        $ret=array();
+        //if(!Strings::startsWith($baseUrl,'http://'))$baseUrl='http://'.$baseUrl;
+        $ret = array();
         foreach ($this->actions as $action) {
-            if($action instanceof Action){
+            if ($action instanceof Action) {
                 $index = count($ret);
-                $ret[$index] = ["name"   => $action->getUniqueActionName(),];
-                if($advanced){
-                    $ret[$index]['method']        = $action->getHandlingMethod();
+                $ret[$index] = ["name" => $action->getUniqueActionName(),];
+                if ($advanced) {
+                    $ret[$index]['method'] = $action->getHandlingMethod();
                     $ret[$index]['url'] = $serverUrl . '/' . $action->getActionUrl();
-                    $ret[$index]['module']        = $action->getOwnerModule()->getName();
-                    $ret[$index]['interface']     = $action->getActionInterface();
+                    $ret[$index]['module'] = $action->getOwnerModule()->getName();
+                    $ret[$index]['interface'] = $action->getActionInterface();
 
                     $reqBody = $action->getRequestStruct();
                     $resBody = $action->getResponseStruct();
-                    if($reqBody !== null) $ret[$index]['request-data']  = $reqBody;
-                    if($resBody !== null) $ret[$index]['response-data'] = $resBody;
+                    if ($reqBody !== null) $ret[$index]['request-data'] = $reqBody;
+                    if ($resBody !== null) $ret[$index]['response-data'] = $resBody;
                 }
-                if($detail){
+                if ($detail) {
                     $ret[$index]['description'] = $action->getDescription();
                 }
             }
         }
         return $ret;
     }
- // Nome esteso del modulo
 
-    public function getName() {
+    // Nome esteso del modulo
+
+    public function getName()
+    {
         return $this->name;
     }
 
     // Autore o autori del modulo
 
-    public function getDipendences(){
+    public function getDipendences()
+    {
         return $this->manifest['info']['depends'];
     }
- // email degli autori
 
-    private function injectActions($injection, $request) {
+    // email degli autori
+
+    private function injectActions($injection, $request)
+    {
         $injectionDir = Graphene::getInstance()->getRouter()->getInjectionDir();
         $injectionName = strtoupper(substr($injection['name'], 1));
         if (file_exists($injectionDir . '/' . $injectionName . '/manifest.xml')) {
@@ -273,7 +304,7 @@ class Module
 
             foreach ($actions as $action) {
                 $action = $action['@attributes'];
-                if (str_starts_with($action['name'], '$'))
+                if (Strings::startsWith($action['name'], '$'))
                     $this->injectActions($action, $request);
                 else {
                     if (isset($injection['pars']))

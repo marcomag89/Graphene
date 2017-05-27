@@ -1,13 +1,22 @@
 <?php
-namespace Graphene;
-//Header function
-$utilsIncl = join(DIRECTORY_SEPARATOR, [dirname(__FILE__), 'utils', 'utils.php']);
 
-include_once $utilsIncl;
+namespace Graphene;
+
+date_default_timezone_set('Europe/Rome');
+
+
+/** @noinspection PhpIncludeInspection */
+include_once join(DIRECTORY_SEPARATOR, [__DIR__, 'utils', 'errorHandling.php']);
+
+/** @noinspection PhpIncludeInspection */
+include_once join(DIRECTORY_SEPARATOR, [__DIR__, 'utils', 'autoloaders.php']);
+
 
 use Graphene\db\CrudDriver;
 use Graphene\models\Module;
-use \Settings;
+use Graphene\utils\Settings;
+use Graphene\utils\Strings;
+use Graphene\utils\Paths;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
@@ -15,13 +24,14 @@ use Graphene\controllers\GrapheneRouter;
 use Graphene\controllers\Filter;
 use Graphene\controllers\FilterManager;
 use Graphene\db\CrudStorage;
+use Logger;
 
 //use \Log;
 
 
 /**
  * Graphene Framework
- * Graphene framework permette la creazione di servizi restFul basandosi su un
+ * Graphene framework permette la creazione di servizi RESTful basandosi su un
  * approccio ad azioni
  *
  * Classe Singletone fornito un metodo getInstance()
@@ -29,12 +39,19 @@ use Graphene\db\CrudStorage;
  * @author Marco Magnetti <marcomagnetti@gmail.com>
  *
  */
-class Graphene {
-
+class Graphene
+{
     const VERSION = '0.3.0 rc1';
     const V_NAME = 'aluminium';
     const INFO = 'Graphene 0.3.0 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
+    private static $LOGGER = null;
+    private static $GRAPHENE_DIR = __DIR__;
+
     private static $instance = null;
+    /**
+     * @var Settings
+     */
+    private $settings;
     private $startTime, $endTime;
     private $filterManager;
     private $requests;
@@ -43,8 +60,44 @@ class Graphene {
     private $systemToken;
     private $stats;
     private $requestId;
+    private $initialFile;
 
-    private function __construct() {
+    public static function getDirectory()
+    {
+        return self::$GRAPHENE_DIR;
+    }
+
+    /**
+     * @param null $label
+     * @return Logger\
+     */
+    public static function getLogger($label = null)
+    {
+        $ret = null;
+        if ($label != null) {
+            $ret = Logger::getLogger($label);
+        } else {
+            if (self::$LOGGER == null) {
+                Logger::configure(Graphene::getInstance()->getSettings()->get('logging'));
+                self::$LOGGER = Logger::getLogger('graphene_main');
+
+            }
+            $ret = self::$LOGGER;
+        }
+
+        return $ret;
+    }
+
+
+    private function __construct($configuration = null)
+    {
+        //retrieve initial file
+        $stack = debug_backtrace();
+        $firstFrame = $stack[count($stack) - 1];
+        $this->initialFile = $firstFrame['file'];
+
+        $this->settings = Settings::load($configuration);
+
         $this->startTime = round(microtime(true) * 1000);
         $this->stats = [];
         $this->systemToken = uniqid('SYS_') . $this->startTime;
@@ -62,12 +115,14 @@ class Graphene {
         }
     }
 
-    public function isDebugMode() {
-        return Settings::getInstance()->getPar('debug') === true;
+    public function getInitialFile()
+    {
+        return $this->initialFile;
     }
 
-    public static function path($path = null) {
-        return G_path($path);
+    public function isDebugMode()
+    {
+        return $this->settings->get('debug', false) === true;
     }
 
     /**
@@ -76,26 +131,34 @@ class Graphene {
      * @return Graphene instance
      *
      */
-    public static function getInstance() {
-        if (Graphene::$instance == null) {
-            Graphene::registerAutoloaders();
-            Graphene::$instance = new Graphene();
+    public static function getInstance($settings = null)
+    {
+        if (self::$instance == null) {
+            self::registerAutoloaders();
+            self::$instance = new Graphene($settings);
+            self::getLogger()->info('Starting Graphene!');
+            //\Log::debug("olle!");
         }
 
-        return Graphene::$instance;
+        return self::$instance;
     }
 
     /**
      * Registra gli autoloaders basati su namespace o su modulo
      */
-    public static function registerAutoloaders() {
-        spl_autoload_register("autol_db_drivers");
+    public static function registerAutoloaders()
+    {
         spl_autoload_register("autol_namespace");
-        spl_autoload_register("autol_moduleContent");
-        spl_autoload_register("autol_models");
+        spl_autoload_register("autol_moduleResources");
+
+        /*
+                spl_autoload_register("autol_db_drivers");
+                spl_autoload_register("autol_models");
+        */
     }
 
-    public static function host() {
+    public static function host()
+    {
         return $_SERVER['SERVER_NAME'];
     }
 
@@ -104,7 +167,8 @@ class Graphene {
      * informazioni base
      * per generare la richiesta
      */
-    public function start() {
+    public function start()
+    {
         //sleep(2);
         ignore_user_abort(true);
         set_time_limit(0);
@@ -113,16 +177,13 @@ class Graphene {
         $this->requestId = uniqid("RID");
         $this->createRequest();
         $request = $this->getRequest();
-        \Log::request($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
+        Graphene::getLogger()->info($request->getMethod() . ' ' . $request->getUrl() . ' from ' . $_SERVER['REMOTE_ADDR']);
         $this->filterManager = new FilterManager();
         $this->router = new GrapheneRouter($request);
-        $crudDriver = 'Graphene\\db\\drivers\\' . (string)$this->getSettings()['storageConfig']['driver'];
-        $this->storage = new CrudStorage(new $crudDriver($this->getSettings()['storageConfig']));
+        $crudDriver = 'Graphene\\db\\drivers\\' . (string)$this->getSettings()->getSettingsArray()['storageConfig']['driver'];
+        $this->storage = new CrudStorage(new $crudDriver($this->getSettings()->getSettingsArray()['storageConfig']));
         $response = $this->router->dispatch($this->getRequest());
         $this->sendResponse($response);
-        if (Settings::getInstance()->getPar('stats')) {
-            //Log::logLabel('STATS', $this->stats);
-        }
     }
 
     /**
@@ -130,9 +191,10 @@ class Graphene {
      *
      * @return GraphRequest request
      */
-    private function createRequest() {
+    private function createRequest()
+    {
         $req = new GraphRequest();
-        $req->setUrl(G_requestUrl());
+        $req->setUrl(Paths::getRelativeRequestUrl());
         $req->setIp($_SERVER['REMOTE_ADDR']);
         $req->setMethod($_SERVER['REQUEST_METHOD']);
         if (count($_POST) > 0 || count($_FILES) > 0) {
@@ -153,7 +215,8 @@ class Graphene {
         $this->pushRequest($req);
     }
 
-    public static function treeFromFlat($rows) {
+    public static function treeFromFlat($rows)
+    {
         $res = [];
         foreach ($rows as $k => $v) {
             $expl = explode('_', $k);
@@ -176,18 +239,24 @@ class Graphene {
         return $res;
     }
 
-    private function pushRequest(GraphRequest $request) {
+    private function pushRequest(GraphRequest $request)
+    {
         array_push($this->requests, $request);
     }
 
-    public function getRequest() {
+    public function getRequest()
+    {
         $current = end($this->requests);
 
         return $current;
     }
 
-    public function getSettings() {
-        return Settings::getInstance()->getSettingsArray();
+    /**
+     * @return Settings
+     */
+    public function getSettings()
+    {
+        return $this->settings;
     }
 
     /**
@@ -195,7 +264,8 @@ class Graphene {
      *
      * @param GraphResponse $response
      */
-    private function sendResponse(GraphResponse $response) {
+    private function sendResponse(GraphResponse $response)
+    {
         $this->supportCors();
         http_response_code($response->getStatusCode());
         $h = $response->getHeaders();
@@ -216,10 +286,11 @@ class Graphene {
         }
     }
 
-    public function supportCors() {
+    public function supportCors()
+    {
         // Allow from any origin
 
-        if (!headers_sent() && !str_starts_with($_SERVER['SERVER_SOFTWARE'], "Microsoft-IIS")) {
+        if (!headers_sent() && !Strings::startsWith($_SERVER['SERVER_SOFTWARE'], "Microsoft-IIS")) {
             if (isset($_SERVER['HTTP_ORIGIN'])) {
                 header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
                 header('Access-Control-Allow-Credentials: true');
@@ -241,28 +312,30 @@ class Graphene {
         }
     }
 
-    public function getApplicationName() {
-        return (string)$this->getSettings()['appName'];
+    public function getApplicationName()
+    {
+        return (string)$this->getSettings()->get('appName', 'graphene-app');
     }
 
     /**
      * @return CrudStorage
      */
-    public function getStorage() {
+    public function getStorage()
+    {
         return $this->storage;
     }
 
     /**
-     * Esegue il forwarding della richiesta per ottenere informazioni da altri
-     * moduli
+     * Esegue il forwarding della richiesta per ottenere informazioni da altri moduli
      *
      * @param GraphRequest $request
      *
      * @return GraphResponse
      * @throws GraphException
      */
-    public function forward(GraphRequest $request) {
-        if (!str_starts_with($request->getUrl(), "http://")) {
+    public function forward(GraphRequest $request)
+    {
+        if (!Strings::startsWith($request->getUrl(), "http://")) {
             $this->pushRequest($request);
             $resp = $this->router->dispatch($request);
             $this->popRequest();
@@ -289,11 +362,13 @@ class Graphene {
         }
     }
 
-    private function popRequest() {
+    private function popRequest()
+    {
         array_pop($this->requests);
     }
 
-    private function parseResponse($str) {
+    private function parseResponse($str)
+    {
         $res = new GraphResponse();
         $schema = explode("\r\n\r\n", $str);
         $res->setBody($schema[1]);
@@ -309,11 +384,13 @@ class Graphene {
         return $res;
     }
 
-    public function getCurrentModule() {
+    public function getCurrentModule()
+    {
         return $this->router->getCurrentModule();
     }
 
-    public function getInstalledModulesInfos() {
+    public function getInstalledModulesInfos()
+    {
         $mods = $this->router->getInstalledModules();
         $ret = [];
         foreach ($mods as $mod) {
@@ -338,7 +415,8 @@ class Graphene {
      *
      * @return Module | Bool
      */
-    public function getModule($namespace) {
+    public function getModule($namespace)
+    {
         if ($this->router != null) {
             $mod = $this->router->getModuleByNamespace($namespace);
             if ($mod == null) {
@@ -351,23 +429,28 @@ class Graphene {
         }
     }
 
-    public function addFilter(Filter $filter) {
+    public function addFilter(Filter $filter)
+    {
         $this->filterManager->addFilter($filter);
     }
 
-    public function getFilterManager() {
+    public function getFilterManager()
+    {
         return $this->filterManager;
     }
 
-    public function getRouter() {
+    public function getRouter()
+    {
         return $this->router;
     }
 
-    public function getSystemToken() {
+    public function getSystemToken()
+    {
         return $this->systemToken;
     }
 
-    public function getDoc($actionName, $detail) {
+    public function getDoc($actionName, $detail)
+    {
         $mods = $this->router->getInstalledModules();
         $ret = [];
         foreach ($mods as $mod) {
@@ -384,8 +467,9 @@ class Graphene {
         return $ret;
     }
 
-    public function startStat($statName, $statId = null) {
-        if (!Settings::getInstance()->getPar('stats')) {
+    public function startStat($statName, $statId = null)
+    {
+        if (!$this->settings->get('stats')) {
             return;
         }
         if (!array_key_exists($statName, $this->stats)) {
@@ -400,8 +484,9 @@ class Graphene {
         $this->stats[$statName][$statId]['begin'] = round(microtime(true) * 1000);
     }
 
-    public function stopStat($statName, $statId = null) {
-        if (!Settings::getInstance()->getPar('stats')) {
+    public function stopStat($statName, $statId = null)
+    {
+        if (!$this->settings->get('stats')) {
             return;
         }
         if ($statId === null) {
@@ -415,11 +500,13 @@ class Graphene {
 
     }
 
-    public function getStats($calculateAverages = false) {
+    public function getStats($calculateAverages = false)
+    {
         return ['Graphene Stats' => $this->stats];
     }
 
-    public function getRequestId() {
+    public function getRequestId()
+    {
         return $this->requestId;
     }
 }

@@ -1,10 +1,13 @@
 <?php
+
 namespace Graphene\controllers;
 
 use Graphene\controllers\http\GraphRequest;
 use Graphene\controllers\http\GraphResponse;
 use Graphene\models\Module;
 use Graphene\Graphene;
+use Graphene\utils\Paths;
+use Graphene\utils\Strings;
 
 //use \Log;
 
@@ -20,7 +23,7 @@ use Graphene\Graphene;
  * - Dispatching della richiesta al servizio
  *
  * @author Marco Magnetti <marcomagnetti@gmail.com>
- *        
+ *
  */
 class GrapheneRouter
 {
@@ -32,12 +35,16 @@ class GrapheneRouter
     private $modulesDir;
     private $injectionDir;
     private $nativePath;
+    private $logger;
 
     public function __construct()
     {
-        $r = Graphene::getInstance();
-        $this->modulesDir = $r->getSettings()['modulesUrl'];
-        $this->baseUrl = Graphene::path();
+        $logger = Graphene::getLogger();
+        $settings = Graphene::getInstance()->getSettings();
+        $this->baseUrl = Graphene::getDirectory();
+
+        $this->modulesDir = Paths::path($settings->get('modulesPath', 'modules'));
+        $logger->info("modules directory: " . $this->modulesDir);
         $this->nativePath = $this->baseUrl . '/native';
         $this->injectionDir = $this->baseUrl . '/injections';
         $this->routeTable = array();
@@ -52,14 +59,14 @@ class GrapheneRouter
      */
     private function loadModules()
     {
-        $modules = array();
+        $modules = [];
         try {
             $mods = scandir($this->modulesDir);
         } catch (\Exception $e) {
-            $mods = array();
+            $mods = [];
         }
         foreach ($mods as $key => $moduleDir) {
-            if (is_dir($this->modulesDir . "/" . $moduleDir) && ! str_starts_with($moduleDir, '.')) {
+            if (is_dir($this->modulesDir . "/" . $moduleDir) && !Strings::startsWith($moduleDir, '.')) {
                 $module = new Module($this->modulesDir . "/" . $moduleDir);
                 if ($module != null) {
                     $modules[$module->getName()] = $module;
@@ -68,41 +75,44 @@ class GrapheneRouter
         }
         $sysMods = scandir($this->nativePath);
         foreach ($sysMods as $key => $moduleDir) {
-            if (is_dir($this->nativePath . '/' . $moduleDir) && ! str_starts_with($moduleDir, '.')) {
+            if (is_dir($this->nativePath . '/' . $moduleDir) && !Strings::startsWith($moduleDir, '.')) {
                 $module = new Module($this->nativePath . "/" . $moduleDir);
                 if ($module != null) {
                     $modules[$module->getName()] = $module;
                 }
             }
         }
-        $this->modules=$this->checkModulesDipendences($modules);
+        $this->modules = $this->checkModulesDipendences($modules);
     }
 
     /**
      * @param $modules
      * @return array
      */
-    private function checkModulesDipendences($modules){
+    private function checkModulesDipendences($modules)
+    {
         $available = array();
-        $ret       = array();
-        foreach($modules as $name => $module){$available[$name] = $module->getDipendences();}
-        do{
+        $ret = array();
+        foreach ($modules as $name => $module) {
+            $available[$name] = $module->getDipendences();
+        }
+        do {
             $completed = true;
-            foreach($available as $name => $dips){
-                foreach($dips as $dip){
-                    if(!array_key_exists($dip,$available)){
+            foreach ($available as $name => $dips) {
+                foreach ($dips as $dip) {
+                    if (!array_key_exists($dip, $available)) {
                         $completed = false;
                         //Log::err('unable to load '.$name. ' module because dipendency '.$dip.' is not installed');
                     }
                 }
-                if(!$completed){
+                if (!$completed) {
                     unset ($available[$name]);
                     break;
                 }
             }
-        }while(!$completed);
+        } while (!$completed);
 
-        foreach($available as $name=>$dp){
+        foreach ($available as $name => $dp) {
             $ret[$name] = $modules[$name];
         }
         return $ret;
@@ -115,14 +125,15 @@ class GrapheneRouter
      * @param GraphRequest $request
      * @return GraphResponse
      */
-    public function dispatch(GraphRequest $request) {
+    public function dispatch(GraphRequest $request)
+    {
         $request->setContextPar('dispatchingId', uniqid());
         Graphene::getInstance()->startStat('DispatchingTime', $request->getMethod() . ' ' . $request->getUrl() . ' ' . $request->getContextPar('dispatchingId'));
         $response = null;
-        $url = url_trimAndClean($request->getUrl());
+        $url = Paths::urlTrimAndClean($request->getUrl());
         foreach ($this->modules as $dir => $module) {
             $domain = (string)$module->getDomain();
-            if (str_starts_with($url, strtolower($domain))) {
+            if (Strings::startsWith($url, strtolower($domain))) {
                 $this->pushModule($module);
                 $response = $module->exec($request);
                 $this->popModule();
@@ -138,11 +149,13 @@ class GrapheneRouter
         return $this->getSafeResponse($response);
     }
 
-    private function pushModule($module) {
+    private function pushModule($module)
+    {
         array_push($this->modStack, $module);
     }
 
-    private function popModule() {
+    private function popModule()
+    {
         $pop = array_pop($this->modStack);
     }
 
@@ -156,7 +169,7 @@ class GrapheneRouter
     private function getSafeResponse($response)
     {
         $filterManager = Graphene::getInstance()->getFilterManager();
-        
+
         if ($response === null) {
             $response = new GraphResponse();
             $response->setHeader('content-type', 'application/json');
@@ -191,10 +204,12 @@ class GrapheneRouter
     public function getModuleByActionName($actionName)
     {
         $modules = $this->getInstalledModules();
-        foreach ($modules as $mod) {}
+        foreach ($modules as $mod) {
+        }
     }
 
-    public function getInstalledModules() {
+    public function getInstalledModules()
+    {
         $ret = [];
         foreach ($this->modules as $md => $mod) {
             $ret[] = $mod;

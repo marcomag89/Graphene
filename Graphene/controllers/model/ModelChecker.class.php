@@ -2,6 +2,7 @@
 namespace Graphene\controllers\model;
 
 use Graphene\models\Model;
+use Graphene\utils\Strings;
 
 class ModelChecker
 {
@@ -113,7 +114,7 @@ class ModelChecker
      */
     public function isValidLabel($label)
     {
-        if (! preg_match('/^[a-zA-Z]{1}\w*$/', $label) || str_contains($label, '_')) {
+        if (! preg_match('/^[a-zA-Z]{1}\w*$/', $label) || Strings::contains($label, '_')) {
             return false;
         } else
             return true;

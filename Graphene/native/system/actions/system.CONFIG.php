@@ -49,7 +49,7 @@ class Config extends Action {
         $this->send($baseConfig);
     }
 
-    private function checkRequest($request) {
+    private function checkRequest() {
         $configRequest = $this->request->getData();
         if (!array_key_exists('Config', $configRequest)) throw new GraphException('Config request is not valid');
         if (!array_key_exists('admin', $configRequest['Config'])) throw new GraphException('cannot config application without admin user');

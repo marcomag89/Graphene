@@ -23,7 +23,7 @@ class GetClientStatus extends Action {
         ];
 
         foreach ($this->request->getContextPars() as $key => $value) {
-            if (str_starts_with($key, 'client_') && $value !== null) {
+            if (Strings::startsWith($key, 'client_') && $value !== null) {
                 $ret[str_replace('client_', '', $key)] = $this->request->getContextPar($value);
             }
         }

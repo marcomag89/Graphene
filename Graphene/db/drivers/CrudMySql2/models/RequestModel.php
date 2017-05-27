@@ -4,6 +4,7 @@ namespace Graphene\db\drivers\mysql;
 
 use Graphene\db\drivers\MySqlTypes;
 use Graphene\models\Model;
+use Graphene\utils\Strings;
 
 class RequestModel {
     private $flatValues, $flatTypes, $modelTableName, $structure, $content, $domain, $convertedFlatTypes, /**
@@ -105,7 +106,7 @@ class RequestModel {
         foreach ($this->getFlatValues() as $key => $value) {
             //Bool fix
             try {
-                if (str_contains($this->flatTypes[$key], Model::BOOLEAN) && $value !== null) {
+                if (Strings::contains($this->flatTypes[$key], Model::BOOLEAN) && $value !== null) {
                     $value = $value ? '1' : '0';
                 }
                 if ($value === null) {
@@ -114,8 +115,8 @@ class RequestModel {
                     $ret[$key] = $this->connectionManager->getConnection()->quote($value);
                 }
             } catch (\Exception $e) {
-                \Log::err($this->flatTypes);
-                \Log::err($this->getFlatValues());
+                Graphene::getlogger()->error($this->flatTypes);
+                Graphene::getlogger()->error($this->getFlatValues());
                 throw $e;
             }
         }
@@ -190,17 +191,17 @@ class RequestModel {
                 // Popolate leaf
                 $tRes = $v;
             } else {
-                if (str_contains($tStruct[$k], Model::DATETIME) && $v === '0000-00-00 00:00:00') {
+                if (Strings::contains($tStruct[$k], Model::DATETIME) && $v === '0000-00-00 00:00:00') {
                     $v = null;
-                } else if (str_contains($tStruct[$k], Model::BOOLEAN)) {
+                } else if (Strings::contains($tStruct[$k], Model::BOOLEAN)) {
                     if ($v === 1 || $v === '1') {
                         $v = true;
                     } else {
                         $v = false;
                     }
-                } else if (str_contains($tStruct[$k], Model::INTEGER) && ($v !== null || $v !== '')) {
+                } else if (Strings::contains($tStruct[$k], Model::INTEGER) && ($v !== null || $v !== '')) {
                     $v = intval($v);
-                } else if (str_contains($tStruct[$k], Model::DECIMAL) && ($v !== null || $v !== '')) {
+                } else if (Strings::contains($tStruct[$k], Model::DECIMAL) && ($v !== null || $v !== '')) {
                     $v = floatval($v);
                 }
 

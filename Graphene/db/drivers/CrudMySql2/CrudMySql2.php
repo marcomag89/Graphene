@@ -45,7 +45,7 @@ class CrudMySql2 implements CrudDriver {
         $req = new StorageRequest($json, $this->connectionManager, $query);
         $this->coreManager->init($req->getModel());
         $query = MySqlQuery::getReadQuery($this->configManager, $req);
-        //\Log::info($query);
+        //Graphene::getLogger()->info($query);
         $res = $this->connectionManager->query($query);
 
         return $req->serializeResponse($res);

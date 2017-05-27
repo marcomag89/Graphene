@@ -49,7 +49,7 @@ class GroupOld extends Model {
     }
 
     public static function getGroupName($groupId) {
-        if (!str_starts_with($groupId, self::$idPrefix)) {
+        if (!Strings::startsWith($groupId, self::$idPrefix)) {
             return $groupId;
         }
 
@@ -158,7 +158,7 @@ class GroupOld extends Model {
     }
 
     public static function getGroupId($groupName) {
-        if (str_starts_with($groupName, self::$idPrefix)) {
+        if (Strings::startsWith($groupName, self::$idPrefix)) {
             return $groupName;
         }
         $name = self::standardizeGroupName($groupName);

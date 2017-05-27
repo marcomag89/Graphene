@@ -19,7 +19,7 @@ class AppPermissionsSet extends Action {
         $doAdd = [];
         $doRemove = [];
 
-        \Log::info($permissions);
+        Graphene::getLogger()->info($permissions);
         //controllo permessi da aggiungere
         foreach ($permissions as $permission) {
             if (!in_array($permission, $rPermissions)) {
