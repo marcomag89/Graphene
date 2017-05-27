@@ -1,5 +1,5 @@
 {
-  "name": "m/graphene",
+  "name": "marcomag/graphene",
   "description": "PHP rest framework",
   "type": "library",
   "keywords": ["rest","API"],
