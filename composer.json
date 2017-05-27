@@ -30,6 +30,6 @@
     "psr-4" : {
       "Graphene\\Graphene" : "src"
     }
-  }
+  },
   "minimum-stability": "dev"
 }
