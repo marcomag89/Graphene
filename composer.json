@@ -2,6 +2,11 @@
     "name": "marcomag89/Graphene",
     "description": "PHP rest framework",
     "type": "framework",
+    "source": {
+        "url": "git://github.com/marcomag89/Graphene.git",
+        "type": "git",
+        "reference": "composer-integrated"
+    },
     "require": {
         "apache/log4php": "^2.3",
         "doctrine/orm": "^2.5",
