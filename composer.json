@@ -1,7 +1,23 @@
 {
   "name": "marcomag89/Graphene",
   "description": "PHP rest framework",
-  "type": "framework",
+  "type": "library",
+  "keywords": ["rest","API"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Marco Magnetti",
+      "email": "marcomagnetti@gmail.com"
+    }
+  ],
+
+
+  "require": {
+    "apache/log4php": "^2.3",
+    "doctrine/orm": "^2.5",
+    "ptcong/php-cache-manager": "dev-master",
+    "php": ">=5.6.0"
+  },
   "repositories": [
     {
       "type": "package",
@@ -15,18 +31,6 @@
           "Graphene\\Graphene" : "src"
         }
       }
-    }
-  ],
-  "require": {
-    "apache/log4php": "^2.3",
-    "doctrine/orm": "^2.5",
-    "ptcong/php-cache-manager": "dev-master"
-  },
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "GrapheneTeam",
-      "email": "marcomagnetti@gmail.com"
     }
   ],
   "minimum-stability": "dev"
