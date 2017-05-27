@@ -1,4 +1,4 @@
-#Graphene [Aluminium] beta#
+# Graphene [Aluminium] beta
 This framework allows you to create Action Oriented REST services with less lines of code, like this:
 ```PHP
 class HelloWorld extends Action{
@@ -9,13 +9,13 @@ class HelloWorld extends Action{
 }
 ```
 
-##Install Graphene in 4 steps##
+## Install Graphene in 4 steps
 1. [Download Graphene](https://github.com/marcomag89/Graphene/releases/latest) as ZIP file and extract content into your project root.
 2. Create [settings.json](#setting-up-graphene) file.
 3. Check if you are [ready to go](https://github.com/marcomag89/Graphene/wiki#ready-to-go) on `<yourProject.com>/system/status` on your browser.
 4. Enjoy creating your [first module](https://github.com/marcomag89/Graphene/wiki/Hello-World-tutorial)!
 
-##Setting up graphene##
+## Setting up graphene
 Create `settings.json` file into your project root pairs to Graphene folder and `.htaccess` or `web.config` file and paste the following content.
 
 ```JSON
@@ -40,10 +40,10 @@ Create `settings.json` file into your project root pairs to Graphene folder and 
 ```
 for more details visit [settings.json reference](https://github.com/marcomag89/Graphene/wiki/settings.json)
 
-##Action approach##
+## Action approach
 Any http request to Graphene matches an "action". In graphene action mapping is quick and smart, ball actions are collected in separate modules.
 
-###Defining module###
+### Defining module
 you can define your module creating folder in your moduleUrl, definded in [settings.json](#setting-up-graphene).
 
 ```JSON
@@ -62,7 +62,7 @@ you can define your module creating folder in your moduleUrl, definded in [setti
 in this case we have created a module named "com.profile", with "profiles" as namespace.
 this module does not have any action.
 
-###Creating actions###
+### Creating actions
 now we can ceate a simple action "HELLO_WORLD", mapping that on request *GET host/profiles/hello*
 you can add this action creating this entry in your module manifest:
 ```JSON
@@ -79,11 +79,11 @@ class HelloWorld extends Action{
     }
 }
 ```
-###Model###
+### Model
 Graphene supports model checking and storage
 _doc work in progress_
 
-###Scaffolding###
+### Scaffolding
 When you create a new module, we recomends this directory structure for your models and actions
 ```
 _module namespace_
@@ -99,9 +99,9 @@ _module namespace_
 ```
 
 
-##Wiki##
+## Wiki
 we are very excited that you want to use Graphene therefore we are working so that you can use it to its full potential by writing up to date wiki.
 [Go to Graphene wiki](https://github.com/marcomag89/Graphene/wiki)
 
-###HowTo###
+### HowTo
 **Hello world** [tutorial](https://github.com/marcomag89/Graphene/wiki/Hello-World-tutorial)
