@@ -2,7 +2,10 @@
   "name": "graphene/graphene",
   "description": "PHP rest framework",
   "type": "library",
-  "keywords": ["rest","API"],
+  "keywords": [
+    "rest",
+    "API"
+  ],
   "license": "MIT",
   "authors": [
     {
@@ -10,7 +13,11 @@
       "email": "marcomagnetti@gmail.com"
     }
   ],
-
+  "autoload": {
+    "psr-4": {
+      "Graphene\\Graphene": "src"
+    }
+  },
   "require": {
     "apache/log4php": "^2.3",
     "doctrine/orm": "^2.5",
@@ -23,13 +30,8 @@
         "url": "git://github.com/marcomag89/Graphene.git",
         "type": "git",
         "reference": "composer-integrated"
-      },
+      }
     }
   ],
-  "autoload": {
-    "psr-4" : {
-      "Graphene\\Graphene" : "src"
-    }
-  },
   "minimum-stability": "dev"
 }
