@@ -11,11 +11,9 @@
     }
   ],
 
-
   "require": {
     "apache/log4php": "^2.3",
     "doctrine/orm": "^2.5",
-    "ptcong/php-cache-manager": "dev-master",
     "php": ">=5.6.0"
   },
   "repositories": [
