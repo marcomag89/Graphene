@@ -229,10 +229,12 @@ class ModuleManifest
             if (Strings::startsWith($action['name'], '$')) {
                 $injectionPath = strtoupper(substr($action['name'], 1));
                 if (!Strings::contains($injectionPath, '/')) {
-                    $injectionPath = Paths::path('imports/' . $injectionPath);
+                    $injectionPath = join(
+                        DIRECTORY_SEPARATOR, [Graphene::getDirectory(), 'imports', $injectionPath]
+                    );
                 }
 
-                //Log::debug('resolving import: '.$injectionPath);
+                Graphene::getLogger()->debug('resolving import: ' . $injectionPath);
                 $stdActions = array();
                 /*
                  *
@@ -255,7 +257,7 @@ class ModuleManifest
                         $stdActions = $impJson['actions'];
                     }
                 } else {
-                    //Log::err('manifest file not found in: ' . $injectionPath);
+                    Graphene::getLogger()->warn('manifest file not found in: ' . $injectionPath);
                 }
 
                 //Finalizing import
