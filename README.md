@@ -1,5 +1,6 @@
-# Graphene [Aluminium] beta
+# Graphene [Barium] beta
 This framework allows you to create Action Oriented REST services with less lines of code, like this:
+
 ```PHP
 class HelloWorld extends Action{
 	public function run ()
@@ -9,36 +10,29 @@ class HelloWorld extends Action{
 }
 ```
 
-## Install Graphene in 4 steps
-1. [Download Graphene](https://github.com/marcomag89/Graphene/releases/latest) as ZIP file and extract content into your project root.
-2. Create [settings.json](#setting-up-graphene) file.
-3. Check if you are [ready to go](https://github.com/marcomag89/Graphene/wiki#ready-to-go) on `<yourProject.com>/system/status` on your browser.
-4. Enjoy creating your [first module](https://github.com/marcomag89/Graphene/wiki/Hello-World-tutorial)!
+## Install Graphene with composer
 
-## Setting up graphene
-Create `settings.json` file into your project root pairs to Graphene folder and `.htaccess` or `web.config` file and paste the following content.
+Graphene is can be installed using [composer](https://getcomposer.org/):
 
-```JSON
-{
-  "debug"        : true,
-  "stats"        : false,
-  "baseUrl"      : "",
-  "frameworkDir" : "",
-  "modulesUrl"   : "modules",
-  "appName"      : "Graphene",
-  "logsDir"      : "logs",
-  "storageConfig" : {
-    "host"      : "localhost",
-    "driver"    : "CrudMySql2",
-    "type"      : "mysql",
-    "dbName"    : "graphene_db",
-    "prefix"    : "gdb_",
-    "username"  : "dbuser",
-    "password"  : "dbpass"
-  }
-}
+```bash
+composer require graphene/graphene
 ```
-for more details visit [settings.json reference](https://github.com/marcomag89/Graphene/wiki/settings.json)
+
+after install you can bootstrap you application doing
+
+```bash
+cp ./vendor/graphene/graphene/_installation/* .
+```
+
+this command extracts from downloaded graphene library:
+* __index.php__ Contains simple graphene launcher
+* __settings.php__ Contains basic settings for logging and persistence
+* __cli.php__ Simple CLI adapter for graphene
+* __.htaccess__ Apache file with url rewriting and redirecting to `index.php`
+* __web.config__  same with `.htaccess`, for windows ISS
+
+## Graphene settings file
+[work in progress]
 
 ## Action approach
 Any http request to Graphene matches an "action". In graphene action mapping is quick and smart, ball actions are collected in separate modules.
