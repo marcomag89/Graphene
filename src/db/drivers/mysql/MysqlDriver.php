@@ -14,8 +14,20 @@ class MysqlDriver implements CrudDriver
 {
 
     const INFO = 'mySql driver 0.2.3, for Graphene 0.3.x';
-    protected $connectionManager;
-    protected $configManager;
+    protected
+
+        /**
+         * @var ConnectionManager
+         */
+        $connectionManager,
+        /**
+         * @var ConfigManager
+         */
+        $configManager,
+        /**
+         * @var CoreManager
+         */
+        $coreManager;
 
     public function __construct($dbConfig)
     {
