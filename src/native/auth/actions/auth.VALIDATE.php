@@ -1,18 +1,22 @@
 <?php
+
 namespace auth;
 
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
+use Graphene\Graphene;
+use \Logger;
 
-class Validate extends Action {
-    public function run() {
+class Validate extends Action
+{
+    public function run()
+    {
         $token = $this->request->getPar('at');
         $session = new Session();
         $session->setAccessToken($token);
         $result = $session->read();
-
         if ($result === null) {
-            throw new GraphException('Access token not valid', 404);
+            throw new GraphException('Access token ' . $token . ' not valid', 404);
         }
         if ($result->getEnabled() === false) {
             throw new GraphException('Session is closed', 400);

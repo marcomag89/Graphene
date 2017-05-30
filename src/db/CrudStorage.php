@@ -132,12 +132,12 @@ class CrudStorage {
      * i campi compilati come criterio di ricerca in <b>AND<b> tra loro
      *
      * @param Model $model
-     * @param bool  $multiple
-     * @param null  $query
-     * @param null  $pageNo
-     * @param null  $pageElements
+     * @param bool $multiple
+     * @param null $query
+     * @param null $page
+     * @param null $pageSize
      *
-     * @return Model | ModelCollection Uno o piu model che corrispondono ai criteri di ricerca
+     * @return Model|ModelCollection Uno o piu model che corrispondono ai criteri di ricerca
      * @throws GraphException
      * @internal param $ <b>Model</b> modello parzialmente compilato*            <b>Model</b> modello parzialmente
      *           compilato

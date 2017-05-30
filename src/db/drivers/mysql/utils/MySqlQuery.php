@@ -3,8 +3,10 @@ namespace Graphene\db\drivers\mysql\utils;
 
 
 use Graphene\db\drivers\mysql\ConfigManager;
+use Graphene\db\drivers\mysql\MysqlDriver;
 use Graphene\db\drivers\mysql\RequestModel;
 use Graphene\db\drivers\mysql\StorageRequest;
+use Graphene\Graphene;
 
 class MySqlQuery {
     private static $TABLE_IDENTIFIER_MODEL = ' `<dbname>`.`<tableName>` ';
@@ -87,7 +89,6 @@ class MySqlQuery {
     public static function getReadQuery($settings, $request) {
         $qComponents = self::getReadQueryComponents($settings, $request);
         $q = self::composeReadQuery($qComponents);
-
         return $q;
     }
 

@@ -101,7 +101,7 @@ abstract class Action {
         } catch (Exception $e) {
             Graphene::getInstance()->stopStat('Action run', '[' . $startId . '] ' . $this->getUniqueActionName());
             $this->onError($e);
-            Graphene::getlogger()->error($e);
+            //Graphene::getlogger()->error($e);
             Graphene::getLogger()->info("Action transaction was rolled back!");
             $this->rollback();
         }

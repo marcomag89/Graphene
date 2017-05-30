@@ -234,7 +234,7 @@ class ModuleManifest
                     );
                 }
 
-                Graphene::getLogger()->debug('resolving import: ' . $injectionPath);
+                Graphene::getLogger()->trace('resolving import: ' . $injectionPath);
                 $stdActions = array();
                 /*
                  *
