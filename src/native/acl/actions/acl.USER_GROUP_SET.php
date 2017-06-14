@@ -1,10 +1,14 @@
 <?php
+
 namespace acl;
 
 use Graphene\controllers\Action;
+use Graphene\Graphene;
 
-class UserGroupSet extends Action {
-    public function run() {
+class UserGroupSet extends Action
+{
+    public function run()
+    {
         //Lettura gruppi utente
         $request = $this->request->getData()['UserGroup'];
         $uGroups = $this->forward('/acl/userGroup/byUser/' . $request['userId'])->getData()['UserGroups'];
@@ -13,18 +17,20 @@ class UserGroupSet extends Action {
         $this->send($uGroups = $this->forward('/acl/userGroup/byUser/' . $request['userId'])->getData());
     }
 
-    private function doAdd($userId, $groups) {
+    private function doAdd($userId, $groups)
+    {
         foreach ($groups as $group) {
             $this->forward('/acl/userGroup', [
                 "UserGroup" => [
                     "userId" => $userId,
-                    "group"  => $group
+                    "group" => $group
                 ]
             ], 'POST');
         }
     }
 
-    private function getNotOwned($owned, $compares) {
+    private function getNotOwned($owned, $compares)
+    {
         $ret = [];
         foreach ($compares as $compare) {
             if (!in_array($compare, $owned)) {
@@ -35,14 +41,15 @@ class UserGroupSet extends Action {
         return $ret;
     }
 
-    private function doRemove($userId, $groups) {
+    private function doRemove($userId, $groups)
+    {
         foreach ($groups as $group) {
             if ($group != Group::$superUserGroupName) {
                 try {
                     $this->forward('/acl/userGroup', [
                         "UserGroup" => [
                             "userId" => $userId,
-                            "group"  => $group
+                            "group" => $group
                         ]
                     ], 'DELETE');
                 } catch (\Exception $e) {
