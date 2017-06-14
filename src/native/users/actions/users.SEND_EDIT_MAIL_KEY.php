@@ -1,15 +1,18 @@
 <?php
+
 namespace users;
 
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\Graphene;
 
-class SendEditMailKey extends Action {
+class SendEditMailKey extends Action
+{
 
     private static $DEFAULT_TEMPLATE = "Account Reset\n------------\n\n\t- Application name: {{app-name}}\n\t- Editing key: {{editing-key}}\n";
 
-    public function run() {
+    public function run()
+    {
         /*
          * ResetMail:{
          *   email:'',
@@ -30,7 +33,7 @@ class SendEditMailKey extends Action {
         $userContent = $user->generateEditingKey()->getContent();
 
         $editingKey = $userContent['editingKey'];
-        $appName = Graphene::getInstance()->getSettings()['appName'];
+        $appName = Graphene::getInstance()->getSettings()->get('appName');
         $subject = array_key_exists('subject', $data['ResetMail']) && $data['ResetMail']['subject'] !== null ? $data['ResetMail']['subject'] : $appName;
         $t = array_key_exists('template', $data['ResetMail']) && $data['ResetMail']['template'] !== null ? $data['ResetMail']['template'] : self::$DEFAULT_TEMPLATE;
         $t = str_replace('{{editing-key}}', $editingKey, $t);
