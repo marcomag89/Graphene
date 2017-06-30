@@ -44,7 +44,7 @@ class GrapheneRouter
         $this->baseUrl = Graphene::getDirectory();
 
         $this->modulesDir = Paths::path($settings->get('modulesPath', 'modules'));
-        $logger->info("modules directory: " . $this->modulesDir);
+        //$logger->info("modules directory: " . $this->modulesDir);
         $this->nativePath = $this->baseUrl . '/native';
         $this->injectionDir = $this->baseUrl . '/injections';
         $this->routeTable = array();

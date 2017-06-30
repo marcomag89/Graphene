@@ -40,6 +40,7 @@
             } else {
                 $this->send(null);
             }
+
         }
 
         protected abstract function getModelInstance();

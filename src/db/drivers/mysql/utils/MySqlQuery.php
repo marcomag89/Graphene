@@ -227,6 +227,7 @@ class MySqlQuery {
     public static function composeReadQuery($queryComponents) {
         $condition = $queryComponents['condition'];
         $condition = array_key_exists('groupBy', $queryComponents) ? $condition . ' GROUP BY ' . $queryComponents['groupBy'] : $condition;
+        $condition = array_key_exists('orderBy', $queryComponents) ? $condition . ' ORDER BY ' . $queryComponents['orderBy'] : $condition;
 
         $q = $queryComponents['model'];
         $q = str_replace('<selection>', $queryComponents['selection'], $q);

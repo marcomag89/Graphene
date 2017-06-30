@@ -1,7 +1,9 @@
 <?php
 namespace Graphene\db\drivers\mysql\controllers;
 
-use \Log;
+use Exception;
+use Graphene\db\drivers\mysql\utils\ExceptionConverter;
+use Graphene\Graphene;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\controllers\exceptions\ExceptionCodes;
 use \PDO;
@@ -18,8 +20,11 @@ class ConnectionManager {
      */
     private $configManager = null;
 
+    private $logger = null;
+
     public function __construct($configManager) {
         $this->configManager = $configManager;
+        $this->logger = Graphene::getLogger(ConnectionManager::class);
     }
 
     /**
@@ -51,7 +56,7 @@ class ConnectionManager {
             //Log::debug('mySql connection success as: '.$this->configManager->getUserName());
             return $this->connection;
         } catch (Exception $e) {
-            Log::err('mySql connection fails: ' . $e->getMessage());
+            $this->logger->error('mySql connection fails: ' . $e->getMessage());
             $this->connection = null;
             $ex = new GraphException('Error on mysql connection: ' . $e->getMessage(), ExceptionCodes::DRIVER_CONNECTION, 500);
             ExceptionConverter::throwException($ex);
@@ -74,7 +79,7 @@ class ConnectionManager {
         $res = $this->connection->query($query);
         $err = $this->connection->errorInfo();
         if (strcasecmp($err[0], '00000') != 0) {
-            Log::err("\n" . 'MySql exception: ' . $err[2] . "\n" . 'Query no' . $this->queryCounter . "\n__________\n" . $query . "\n");
+            $this->logger->error("\n" . 'MySql exception: ' . $err[2] . "\n" . 'Query no' . $this->queryCounter . "\n__________\n" . $query . "\n");
             ExceptionConverter::throwException($err);
             //throw new GraphException('mySql exception on query no.' . $this->queryCounter . ', see log for more info', ExceptionCodes::DRIVER_CREATE, 500);
         } else if ($res instanceof PDOStatement) {
@@ -89,7 +94,7 @@ class ConnectionManager {
 
             return $results;
         } else {
-            Log::err('Unexpected result for query ' . $this->queryCounter . "\n__________\n" . $query . "\n");
+            $this->logger->error('Unexpected result for query ' . $this->queryCounter . "\n__________\n" . $query . "\n");
             throw new GraphException('mySql exception on query no.' . $this->queryCounter . ', see log for more info', ExceptionCodes::DRIVER_CREATE, 500);
         }
     }
