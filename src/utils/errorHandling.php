@@ -9,20 +9,11 @@
     $haveException = false;
 
 
-    $__GrapheneDefaultExceptionHandler = function (Exception $e) {
+    $__GrapheneDefaultExceptionHandler = function ($e) {
         global $haveException;
         $haveException = true;
-        /*
-               echo "Oops qualcosa non va\n";
-                echo "Stiamo lavorando duro per risolvere il problema\n";
-                echo "[Eccezione] $msg";
-                echo "\n----\nStackTrace:\n";
-        */
-        /*        $msg = $e->getMessage();
-                $st = $e->getTrace();
-                foreach ($st as $entry) {
-                    echo "\t" . 'funct ' . $entry['function'] . '() in ' . $entry['file'] . "\n";
-                }*/
+        $logger = Graphene::getLogger('graphene_err');
+        $logger->error('error: ', $e);
     };
 
     $__GrapheneErrorHandler = function ($errno,$errstr,$errfile,$errline) {
