@@ -40,9 +40,9 @@
      *
      */
     class Graphene {
-        const VERSION = '0.3.0 rc1';
+        const VERSION = '0.3.3 rc1';
         const V_NAME = 'aluminium';
-        const INFO = 'Graphene 0.3.0 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
+        const INFO = 'Graphene 0.3.3 rc1 [aluminium] developed by Marco Magnetti [marcomagnetti@gmail.com]';
         private static $LOGGER = null;
         private static $GRAPHENE_DIR = __DIR__;
 
