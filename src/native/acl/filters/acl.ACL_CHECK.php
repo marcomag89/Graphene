@@ -149,7 +149,7 @@
             $tneedle = strtoupper($needle);
             $taction = strtoupper($action);
 
-            if (Strings::endsWith($tneedle,'.*') && Strings::startsWith($taction,substr($tneedle,0,strlen($tneedle - 1))))
+            if (Strings::endsWith($tneedle,'.*') && Strings::startsWith($taction,substr($tneedle,0,strlen($tneedle) - 1)))
                 self::$cache['matches'][$needle . '_' . $action] = true;
             else if ($tneedle === $taction)
                 self::$cache['matches'][$needle . '_' . $action] = true;
