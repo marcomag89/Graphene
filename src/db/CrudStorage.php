@@ -23,17 +23,19 @@ class CrudStorage {
     private $page = 1;
     private $driver;
     private $pageElements;
+    private $logger;
 
     public function __construct(CrudDriver $driver) {
         $this->driver = $driver;
+        $this->logger = Graphene::getLogger('database_crud_driver');
     }
 
     public function checkConnection() {
         try {
             $this->driver->getConnection();
-
             return true;
         } catch (Exception $e) {
+            $this->logger->error('Unable to connect do database', $e);
             return false;
         }
     }
