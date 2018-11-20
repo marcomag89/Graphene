@@ -12,7 +12,7 @@ class Utils {
         $max = strlen($codeAlphabet); // edited
 
         for ($i = 0; $i < $length; $i++) {
-            $token .= $codeAlphabet[crypto_rand_secure(0, $max - 1)];
+            $token .= $codeAlphabet[self::crypto_rand_secure(0, $max - 1)];
         }
 
         return $token;
