@@ -93,9 +93,9 @@
             $sortMode = $this->getSortMode($data);
 
             //$protocol = stripos($_SERVER['SERVER_PROTOCOL'], 'https') === true ? 'https://' : 'http://';
-            $protocol = array_key_exists('HTTPS',$_SERVER) && strtolower($_SERVER['HTTPS']) == 'on' ? 'https://' : 'http://';
+            //$protocol = array_key_exists('HTTPS',$_SERVER) && strtolower($_SERVER['HTTPS']) == 'on' ? 'https://' : 'http://';
 
-            $url = $protocol . $_SERVER['HTTP_HOST'] . Graphene::getInstance()->getSettings()->get('baseUrl') . $this->request->getUrl();
+            $url = Graphene::getInstance()->getSettings()->get('baseUrl') . $this->request->getUrl();
 
             $httpQ = [
                 'search'       => $query,
