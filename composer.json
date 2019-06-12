@@ -23,6 +23,5 @@
     "php": ">=5.6.0",
     "phpmailer/phpmailer": "^6.0",
     "mustache/mustache": "dev-master"
-  },
-  "minimum-stability": "dev"
+  }
 }
