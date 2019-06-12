@@ -5,45 +5,33 @@ namespace users;
 use Graphene\controllers\Action;
 use Graphene\controllers\exceptions\GraphException;
 use Graphene\Graphene;
+use Graphene\utils\Mailer;
 
-class SendEditMailKey extends Action
-{
+class SendEditMailKey extends Action {
 
     private static $DEFAULT_TEMPLATE = "Account Reset\n------------\n\n\t- Application name: {{app-name}}\n\t- Editing key: {{editing-key}}\n";
 
-    public function run()
-    {
-        /*
-         * ResetMail:{
-         *   email:'',
-         *   template:'wellcome to {{app-name}}!\n you can activate by this url: http://url/{{editing-key}}'
-         * }
-         *
-         * */
+    public function run() {
+        $settings = Graphene::getInstance()->getSettings()->getSettingsArray();
+
         $data = $this->request->getData();
-        if (!array_key_exists('ResetMail', $data)) throw new GraphException('invalid request', 400);
+        if (!array_key_exists('ResetMail', $data)) throw new GraphException('invalid request, set "ResetMail" as root', 400);
+
+        //Finding user by email
         $email = $data['ResetMail']['email'];
-        //Graphene::getLogger()->debug($data);
-        //Graphene::getLogger()->debug($email);
         $user = new User();
         $user->setEmail($email);
         $user = $user->read();
-        if ($user === null) throw new GraphException('User email is not valid, or not found', 400);
 
         $userContent = $user->generateEditingKey()->getContent();
 
-        $editingKey = $userContent['editingKey'];
-        $appName = Graphene::getInstance()->getSettings()->get('appName');
-        $subject = array_key_exists('subject', $data['ResetMail']) && $data['ResetMail']['subject'] !== null ? $data['ResetMail']['subject'] : $appName;
-        $t = array_key_exists('template', $data['ResetMail']) && $data['ResetMail']['template'] !== null ? $data['ResetMail']['template'] : self::$DEFAULT_TEMPLATE;
-        $t = str_replace('{{editing-key}}', $editingKey, $t);
-        $t = str_replace('{{app-name}}', $appName, $t);
-
-        $sMess = wordwrap($t, 80);
         try {
-            mail($email, $subject, $sMess);
+            Mailer::send($userContent['email'], 'Reset password per ' . $userContent['name'] . ' ' . $userContent['surname'],
+                file_get_contents($settings['users']['password_reset']['template']),
+                $userContent
+            );
         } catch (\Exception $e) {
+            Graphene::getLogger('user')->error($e);
         }
-        $this->send(['User' => $userContent]);
     }
 }
