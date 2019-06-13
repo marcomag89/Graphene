@@ -16,13 +16,16 @@ class Mailer {
     static function send($to, $subject, $template, $data) {
         try {
             $config = Graphene::getInstance()->getSettings()->getSettingsArray()['notifications']['mail'];
+
             // Preparing mailer
             $mail = new PHPMailer(true);
+            $mail->Debugoutput = function ($str, $level) { Graphene::getLogger('mailer')->debug($str); };
+            $mail->SMTPDebug = 2;                           // Enable verbose debug output
+
             $mail->CharSet = 'UTF-8';
             //Server settings
             $mail->IsSMTP();
             $mail->IsHTML(true);
-            $mail->SMTPDebug = 2;                             // Enable verbose debug output
             $mail->Host = $config['host'];                    // Specify main and backup SMTP servers
             $mail->SMTPAuth = $config['auth_enabled'];        // Enable SMTP authentication
             $mail->Username = $config['user'];                // SMTP username

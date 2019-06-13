@@ -48,7 +48,7 @@ class User extends Model {
     public function checkEmail() {
         $mail = $this->content['email'];
 
-        return preg_match('/^[\w\.]*@[\w\.]*$/', $mail);
+        return preg_match('/^[\w\.\+]*@[\w\.]*$/', $mail);
     }
 
     public function encryptPassword() {
