@@ -14,7 +14,7 @@ class CreateExternal extends Action {
         $created = $this->forward('/users/user', ['User' => $user->getContent()])->getData();
         $userData = $this->forward('/users/sendEditMail', [
             'ResetMail' => [
-                'email'    => $this->request->getData()['UserExternal']['email'],
+                'email'    => $created['User']['email'],
                 'template' => $this->request->getData()['UserExternal']['template']
             ]
         ])->getData();
