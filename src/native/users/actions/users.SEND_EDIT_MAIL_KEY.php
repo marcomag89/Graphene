@@ -24,12 +24,14 @@ class SendEditMailKey extends Action {
         $user = $user->read();
 
         $userContent = $user->generateEditingKey()->getContent();
+        $updated = $user->update();
 
         try {
             Mailer::send($userContent['email'], 'Reset password per ' . $userContent['name'] . ' ' . $userContent['surname'],
                 file_get_contents($settings['users']['password_reset']['template']),
                 $userContent
             );
+            $this->send($updated);
         } catch (\Exception $e) {
             Graphene::getLogger('user')->error($e);
         }
