@@ -1,7 +1,8 @@
 <?php
+
 namespace Graphene\models;
 
-class ModelCollection implements \Iterator, \Serializable {
+class ModelCollection implements \Iterator, \Serializable, \Countable {
 
     public function __construct(Model $model) {
         $this->acceptedClass = get_class($model);
@@ -136,8 +137,22 @@ class ModelCollection implements \Iterator, \Serializable {
         $this->curUrl = $url;
     }
 
+    public function count() {
+        return count($this->content);
+    }
+
     private $content;
     private $nxtUrl, $prvUrl, $curUrl;
     private $pageNo, $pageSize;
     private $acceptedClass;
+
+    /**
+     * Count elements of an object
+     * @link https://php.net/manual/en/countable.count.php
+     * @return int The custom count as an integer.
+     * </p>
+     * <p>
+     * The return value is cast to an integer.
+     * @since 5.1.0
+     */
 }
